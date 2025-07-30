@@ -24,8 +24,12 @@ const providers = [
 		domain: env.auth0_domain,
 		clientId: env.auth0_client,
 		authorizationParams: {
-			redirect_uri: window.location.origin
-		}
+			redirect_uri: window.location.origin,
+			audience: env.auth0_api_aud,
+    		scope: 'openid profile email offline_access',
+		},
+		cacheLocation: 'localstorage', // or 'memory' for better security in production
+      	useRefreshTokens: true,
 	})
 ];
 

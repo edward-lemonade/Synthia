@@ -4,9 +4,9 @@ html, body { height: 100%; }
 body { 
 	margin: 0; 
 	font-family: Roboto, "Helvetica Neue", sans-serif; 
-	background: #17151bff; /* defined as APP_BG in theme.ts */
+	background: rgba(29, 26, 35, 1); /* defined as APP_BG in theme.ts */
 }
 .app-content-bg {
-	background: #17151bff; /* defined as APP_BG in theme.ts */
+	background: rgba(29, 26, 35, 1); /* defined as APP_BG in theme.ts */
 	min-height: 100vh;
 }

@@ -1,6 +1,6 @@
 export const COLORS = {
 	APP_BG: 			'rgba(29, 26, 35, 1)', // not directly used in styles.css
-	APP_BG_LIGHT: 		'rgba(89, 80, 108, 1)', 
+	SIDEBAR_BG: 		'rgb(22, 17, 27)', 
 
 	ACCENT_YELLOW: 		'rgba(233, 217, 136, 1)',
 	ACCENT_YELLOW_L:	'rgba(231, 224, 189, 1)',

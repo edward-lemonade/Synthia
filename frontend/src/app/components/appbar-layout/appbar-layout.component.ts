@@ -9,31 +9,9 @@ import { AuthService } from '@auth0/auth0-angular';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
 import { COLORS, SPACES } from '../../theme';
-/*
-<mat-toolbar class="appbar">
-	<span>NoteFlyte</span>
-	<span class="spacer"></span>
 
-	<ng-container *ngIf="auth.isAuthenticated$ | async">	
-		<button mat-button class="appbar-btn" (click)="auth.logout({ 
-			logoutParams: { returnTo: document.location.origin } 
-		})">
-			Log out
-		</button>
-	</ng-container>
-
-	<ng-container *ngIf="!(auth.isAuthenticated$ | async)">	
-		<button mat-button class="appbar-btn" (click)="auth.loginWithRedirect({
-			appState: { target: '/projects/all-projects' }
-		})">
-			Login
-		</button>
-	</ng-container>
-
-</mat-toolbar>
-*/
 @Component({
-	selector: 'app-appbar',
+	selector: 'app-appbar-layout',
 	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule],
 	template: `
 		<ng-container *ngIf="auth.isAuthenticated$ | async">	
@@ -92,6 +70,8 @@ import { COLORS, SPACES } from '../../theme';
 				</button>
 			</mat-toolbar>
 		</ng-container>
+
+		<router-outlet></router-outlet>
 	`,
 	styles: [`
 		.appbar {
@@ -99,6 +79,9 @@ import { COLORS, SPACES } from '../../theme';
 			padding-right: ${SPACES.PAD_ENDS};
             background: ${COLORS.APPBAR_BG};
 			color: ${COLORS.APPBAR_TEXT};
+			position: sticky;
+			top: 0;
+			z-index: 1000;
         }
         .appbar span {
             color: ${COLORS.APPBAR_TEXT};
@@ -126,7 +109,7 @@ import { COLORS, SPACES } from '../../theme';
         }
   	`]
 })
-export class AppbarComponent {
+export class AppbarLayoutComponent {
 	constructor(
 		@Inject(DOCUMENT) public document: Document, 
 		public auth: AuthService
