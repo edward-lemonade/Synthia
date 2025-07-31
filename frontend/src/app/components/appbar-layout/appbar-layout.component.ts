@@ -8,7 +8,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { AuthService } from '@auth0/auth0-angular';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
-import { COLORS, SPACES } from '../../theme';
+import { COLORS, SPACES } from '@theme';
 
 @Component({
 	selector: 'app-appbar-layout',

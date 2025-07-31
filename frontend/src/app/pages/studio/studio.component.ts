@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
+import { StudioToolbarTopComponent } from '@components/studio/studio-toolbar-top/studio-toolbar-top.component';
+import { StudioToolbarDetailsComponent } from '@src/app/components/studio/studio-toolbar-details/studio-toolbar-details.component';
+
 @Component({
 	selector: 'app-studio',
-	imports: [],
+	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent],
 	template: `
-		<p>
-			studio works! Session ID: {{ sessionId }}
-		</p>
+		<app-studio-toolbar-top></app-studio-toolbar-top>
+		<app-studio-toolbar-details></app-studio-toolbar-details>
 	`,
 	styles: ``
 })

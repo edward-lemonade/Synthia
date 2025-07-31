@@ -8,7 +8,7 @@ import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http'
 import { AuthService } from '@auth0/auth0-angular';
 import { env } from '@env/environment';
 
-import { COLORS, SPACES } from '../../theme';
+import { COLORS, SPACES } from '@theme';
 
 @Component({
 	selector: 'app-projects-layout',

@@ -26,6 +26,7 @@
 			"@pages/*": ["./src/app/pages/*"],
 			"@components/*": ["./src/app/components/*"],
 			"@env/*": ["./src/env/*"],
+			"@theme": ["./src/app/theme"],
 			"@shared/*": ["../shared/*"],
 			"@shared_types/*": ["../shared/types/*"]
 		},		
