@@ -1,0 +1,49 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatDivider } from '@angular/material/divider';
+import { MatIcon } from '@angular/material/icon';
+
+@Component({
+	selector: 'studio-toolbar-details-playback',
+	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, MatDivider, MatIcon],
+	template: `
+		<mat-button-toggle-group class='btn-group'>
+			<button 
+				mat-button 
+				class="playback-btn back">
+				<mat-icon>fast_rewind</mat-icon>
+			</button>
+			<mat-divider class="divider" [vertical]="true"></mat-divider>
+			<button 
+				mat-button 
+				class="playback-btn forward">
+				<mat-icon>fast_forward</mat-icon>
+			</button>
+			<mat-divider class="divider" [vertical]="true"></mat-divider>
+			<button 
+				mat-button 
+				class="playback-btn play">
+				<mat-icon>play_arrow</mat-icon>
+			</button>
+			<mat-divider class="divider" [vertical]="true"></mat-divider>
+			<button 
+				mat-button 
+				class="playback-btn beginning">
+				<mat-icon>skip_previous</mat-icon>
+			</button>
+			<mat-divider class="divider" [vertical]="true"></mat-divider>
+			<button 
+				mat-button 
+				class="playback-btn record">
+				<mat-icon style="color: rgb(192, 56, 79)" >circle</mat-icon>
+			</button>
+		</mat-button-toggle-group>
+	`,
+	styleUrl: './playback.component.scss'
+})
+export class PlaybackComponent {
+
+}

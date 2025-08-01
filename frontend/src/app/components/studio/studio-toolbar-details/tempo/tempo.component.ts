@@ -8,10 +8,10 @@ import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { TimeSignature } from '@src/app/lib/music';
+import { TimeSignature, TimeSigMaxN, TimeSigMaxD, TimeSigDefault } from '@src/app/lib/music';
 
 @Component({
-	selector: 'studio-toolbar-details-tempo-buttons',
+	selector: 'studio-toolbar-details-tempo',
 	imports: [CommonModule, FormsModule, MatButtonModule, MatButtonToggleModule, MatIcon, MatDivider, MatMenuModule],
 	template: `
 		<mat-button-toggle-group class='btn-group'>
@@ -49,12 +49,39 @@ import { TimeSignature } from '@src/app/lib/music';
 			</button>
 		</mat-button-toggle-group>
 		<mat-menu #timeSigMenu="matMenu" class="time-sig-menu">
-
+			<div class="time-sig-menu-content">
+				<div class="time-sig-column">
+					<div class="time-sig-grid">
+						<button 
+							*ngFor="let n of getNumeratorOptions()" 
+							mat-button 
+							class="time-sig-option"
+							[class.selected]="timeSig.N === n"
+							(click)="$event.stopPropagation(); setTimeSig({N: n, D: timeSig.D})">
+							{{ n }}
+						</button>
+					</div>
+				</div>
+				<mat-divider class="time-sig-divider" [vertical]="true"></mat-divider>
+				<div class="time-sig-column">
+					<div class="time-sig-grid">
+						<button 
+							*ngFor="let d of getDenominatorOptions()" 
+							mat-button 
+							class="time-sig-option"
+							[class.selected]="timeSig.D === d"
+							(click)="$event.stopPropagation();setTimeSig({N: timeSig.N, D: d})">
+							{{ d }}
+						</button>
+					</div>
+				</div>
+			</div>
 		</mat-menu>
 	`,
-	styleUrls: ['./tempo-buttons.component.scss']
+	styleUrls: ['./tempo.component.scss']
 })
-export class TempoButtonsComponent {
+
+export class TempoComponent {
 	metronome = false;
 	setMetronome(m : boolean) {
 		this.metronome = m;
@@ -76,8 +103,16 @@ export class TempoButtonsComponent {
 		(event.target as HTMLInputElement).value = this.bpm.toString();
 	}
 
-	timeSig: TimeSignature = {N: 12, D: 1};
+	timeSig: TimeSignature = TimeSigDefault;
 	setTimeSig(timeSig : TimeSignature) {
 		this.timeSig = timeSig;
+	}
+
+	getNumeratorOptions(): TimeSignature['N'][] {
+		return Array.from({length: TimeSigMaxN}, (_, i) => (i + 1) as TimeSignature['N']);
+	}
+
+	getDenominatorOptions(): TimeSignature['D'][] {
+		return Array.from({length: TimeSigMaxD}, (_, i) => (i + 1) as TimeSignature['D']);
 	}
 }

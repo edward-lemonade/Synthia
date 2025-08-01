@@ -125,8 +125,61 @@ input[type=number] {
 /* TIME SIG MENU */
 
 ::ng-deep .mat-mdc-menu-content {
-	padding: 8px !important;
+	padding: 4px !important;
 	background: $appbar-accent-1 !important;
+}
+
+::ng-deep .mat-mdc-menu-panel {
+	max-height: none !important;
+	overflow: visible !important;
+}
+
+.time-sig-menu-content {
+	display: flex;
+}
+
+.time-sig-column {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.time-sig-grid {
+	display: grid;
+	grid-template-columns: repeat(1, 1fr);
+}
+
+.time-sig-option {
+	min-width: 40px;
+	height: 32px;
+	font-size: 14px;
+	font-weight: 500;
+	color: $appbar-text !important;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.time-sig-option:hover {
+	background: $appbar-accent-2;
+	border-color: $appbar-accent-1;
+}
+
+.time-sig-option.selected {
+	background: $accent-orange;
+	color: $appbar-accent-1 !important;
+	border-color: $accent-orange;
+}
+
+.time-sig-divider {
+	margin: 0 8px;
+	border-width: 2px !important;
+	border-color: $appbar-accent-2 !important;
 }
 
 /* DIVIDERS */

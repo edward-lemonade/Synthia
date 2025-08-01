@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { Key, KeyListAligned } from 'src/app/lib/music';
 
 @Component({
-	selector: 'studio-toolbar-details-key-select',
+	selector: 'studio-toolbar-details-key',
 	imports: [CommonModule, MatIcon, MatMenuModule, MatButtonModule],
 	template: `
 		<button mat-button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
@@ -51,9 +51,9 @@ import { Key, KeyListAligned } from 'src/app/lib/music';
 			</div>
 		</mat-menu>
 	`,
-	"styleUrls": ['./key-select.component.scss'],
+	"styleUrls": ['./key.component.scss'],
 })
-export class KeySelectComponent {
+export class KeyComponent {
 	KeyListAligned = KeyListAligned;
 
 	selectedKeyType: 'maj'|'min' = 'maj';

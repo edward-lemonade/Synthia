@@ -52,3 +52,4 @@ export interface TimeSignature {
 }
 export const TimeSigMaxN = 16;
 export const TimeSigMaxD = 16;
+export const TimeSigDefault = {N: 4, D: 4} as TimeSignature;

@@ -3,7 +3,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
 @Component({
-	selector: 'studio-toolbar-details-volume-slider',
+	selector: 'studio-toolbar-details-volume',
 	imports: [MatIcon, MatSliderModule],
 	template: `
 		<div class='volume'>
@@ -13,7 +13,7 @@ import { MatSliderModule } from "@angular/material/slider";
 			</mat-slider>
 		</div>
 	`,
-	styleUrls: ['./volume-slider.component.scss']
+	styleUrls: ['./volume.component.scss']
 })
 
-export class VolumeSliderComponent {}
+export class VolumeComponent {}

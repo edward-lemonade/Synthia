@@ -9,7 +9,8 @@
 				"@schematics/angular:component": {
 					"skipTests": true,
 					"inlineTemplate": true,
-					"inlineStyle": true
+					"inlineStyle": false,
+					"style": "scss"
 				}
 			},
 			"root": "",

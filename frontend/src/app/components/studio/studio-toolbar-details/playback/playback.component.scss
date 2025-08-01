@@ -1,0 +1,50 @@
+@use "theme" as *;
+
+.btn-group {
+	display: flex;
+	overflow: hidden;
+	background: $appbar-accent-2;
+	height: 40px;
+	border-radius: 40px;
+	max-height: 40px;
+	border: none;
+	padding: 0 !important;
+}
+
+.btn-group mat-icon {
+	margin: 0;
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+	line-height: 20px;
+}
+
+.playback-btn {
+	flex: 1;
+	min-width: 40px;
+	height: 40px;
+	border: none;
+	background: transparent;
+	color: $appbar-text;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border-radius: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+	padding: 0px !important;
+}
+
+/* Pill shape */
+.playback-btn:first-child { border-top-left-radius: 40px; border-bottom-left-radius: 40px; }
+.playback-btn:not(:first-child):not(:last-child) { border-radius: 0; width: 40px; }
+.playback-btn:last-child { border-top-right-radius: 40px; border-bottom-right-radius: 40px; }
+
+.divider {
+	border-width: 2px !important;
+	border-color: $appbar-accent-1 !important;
+}
