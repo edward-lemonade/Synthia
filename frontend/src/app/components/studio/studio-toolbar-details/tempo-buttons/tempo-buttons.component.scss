@@ -1,0 +1,137 @@
+@use "theme" as *;
+
+.btn-group {
+	display: flex;
+	overflow: hidden;
+	background: $appbar-accent-2;
+	height: 40px;
+	border-radius: 40px;
+	max-height: 40px;
+	border: none;
+}
+
+.tempo-btn {
+	flex: 1;
+	min-width: 60px;
+	height: 40px;
+	border: none;
+	background: transparent;
+	color: $appbar-text;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border-radius: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
+}
+/* Pill shape */
+.tempo-btn:first-child { border-top-left-radius: 40px; border-bottom-left-radius: 40px; }
+.tempo-btn:last-child { border-top-right-radius: 40px; border-bottom-right-radius: 40px; }
+.tempo-btn:not(:first-child):not(:last-child) { border-radius: 0; }
+
+.tempo-btn:hover {
+	background: $appbar-accent-1;
+}
+
+/* METRONOME */
+
+.metronome {
+	flex: 0 0 40px;
+	min-width: 60px;
+	max-width: 60px;
+	padding: 0;
+	justify-content: center;
+	align-items: center;
+}
+.metronome mat-icon {
+	margin: 0 auto;
+	font-size: 20px;
+}
+.metronome.selected {
+	background: $accent-orange !important;
+	color: $appbar-bg-l;
+}
+
+/* BPM*/
+
+.bpm-number {
+	font-size: 1.4em;
+	color: #fff;
+	font-weight: 700;
+	background: transparent;
+	border: none;
+	outline: none;
+	text-align: center;
+	width: 40px;
+	font-family: inherit;
+	line-height: 1;
+	vertical-align: middle;
+	padding: 0;
+	margin: 0;
+}
+.bpm-number::placeholder {
+	color: $appbar-text;
+	opacity: 0.5;
+}
+.bpm-number:focus {
+	background: $appbar-accent-1;
+	border-radius: 4px;
+}
+.bpm-label {
+	font-size: 0.8em;
+	color: $appbar-text;
+	opacity: 0.7;
+	font-weight: 400;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+input[type=number] {
+	-moz-appearance: textfield;
+}
+
+/* TIME SIG */
+
+.time-sig {
+	font-size: 0.8em;
+	min-width: 60px;
+	max-width: 60px;
+	padding: 0px;
+}
+.time-sig-wrapper {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	width: 100%;
+}
+.time-sig-N {
+	justify-self: right;
+}
+.time-sig-D {
+	justify-self: left;
+}
+.time-sig-sep {
+	padding: 0 0.25ch
+}
+
+/* TIME SIG MENU */
+
+::ng-deep .mat-mdc-menu-content {
+	padding: 8px !important;
+	background: $appbar-accent-1 !important;
+}
+
+/* DIVIDERS */
+
+.divider {
+	border-width: 2px !important;
+	border-color: $appbar-accent-1 !important;
+}

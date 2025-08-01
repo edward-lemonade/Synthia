@@ -8,8 +8,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { AuthService } from '@auth0/auth0-angular';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
-import { COLORS, SPACES } from '@theme';
-
 @Component({
 	selector: 'app-appbar-layout',
 	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule],
@@ -73,41 +71,7 @@ import { COLORS, SPACES } from '@theme';
 
 		<router-outlet></router-outlet>
 	`,
-	styles: [`
-		.appbar {
-			padding-left: ${SPACES.PAD_ENDS};
-			padding-right: ${SPACES.PAD_ENDS};
-            background: ${COLORS.APPBAR_BG};
-			color: ${COLORS.APPBAR_TEXT};
-			position: sticky;
-			top: 0;
-			z-index: 1000;
-        }
-        .appbar span {
-            color: ${COLORS.APPBAR_TEXT};
-        }
-		
-		.nav {
-			display: flex;
-			gap: 8px;
-			padding-left: 16px;
-		}
-		.nav-btn {
-            background: ${COLORS.APPBAR_ACCENT_1};
-            color: ${COLORS.APPBAR_TEXT} !important;
-            transition: background 0.2s;
-        }
-
-		.spacer {
-			flex: 1 1 auto;
-		}
-
-		.appbar-btn {
-            background: ${COLORS.APPBAR_ACCENT_2};
-            color: #fff !important;
-            transition: background 0.2s;
-        }
-  	`]
+	styleUrls: ['./appbar-layout.component.scss']
 })
 export class AppbarLayoutComponent {
 	constructor(

@@ -1,0 +1,128 @@
+@use "theme" as *;
+.toolbar {
+	background: $appbar-bg;
+	color: $appbar-text;
+	height: 40px;
+
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+
+	width: 100%;
+	box-sizing: border-box;
+	padding-left: 8px;
+	padding-right: 8px;
+
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.toolbar-section {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	height: 100%;
+}
+.left-section {
+	justify-content: flex-start;
+	gap: 8px;
+}
+.center-section {
+	justify-content: center;
+}
+.right-section {
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.menu-btn {
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	border-radius: 8px;
+	background: transparent;	
+	border: none;
+	color: #fff;
+}
+
+.title-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 300px;
+	height: 14px;
+	padding: 8px 12px;
+	border-radius: 8px;
+	background: transparent;
+	border: 1px solid transparent;
+	transition: all 0.2s ease;
+	cursor: text;
+}
+.title-container:hover {
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.2);
+}
+.title-container:focus-within {
+	background: rgba(255, 255, 255, 0.15);
+	border-color: rgba(255, 255, 255, 0.3);
+}
+.title-icon {
+	color: $appbar-text;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	opacity: 0.7;
+}
+.title-input {
+	flex: 1;
+	background: transparent;
+	border: none;
+	outline: none;
+	color: $appbar-text;
+	font-size: 14px;
+	font-weight: 500;
+}
+.title-input::placeholder {
+	color: $appbar-text;
+	opacity: 0.6;
+}
+
+.toolbar-btn {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 8px 12px;
+	border: none;
+	color: $appbar-bg;
+	cursor: pointer;
+	border-radius: 8px;
+	transition: background-color 0.1s;
+}
+.toolbar-btn mat-icon {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+.save-btn 		{ 
+	background: transparent; 
+	box-shadow: 0 0 0 2px $accent-yellow inset; 
+	color: $accent-yellow; 
+}
+.save-btn:hover 	{ 
+	background: $accent-yellow !important; 
+	color: $appbar-bg !important; 
+}
+.export-btn 	{ 
+	background: transparent; 
+	box-shadow: 0 0 0 2px $accent-orange inset; 
+	color: $accent-orange; 
+}
+.export-btn:hover 	{ 
+	background: $accent-orange !important; 
+	color: $appbar-bg !important; 
+}
+.publish-btn 	{ background: $accent-pink; }
+.publish-btn:hover 	{ background: $accent-pink-l !important; }
+.share-btn 		{ background: $accent-purple; }
+.share-btn:hover 	{ background: $accent-purple-l !important; }

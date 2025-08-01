@@ -11,7 +11,7 @@ import { Component } from '@angular/core';
 	`,
 	styles: [`
 		h1 {
-			color: #3f51b5;
+			color:rgb(0, 255, 8);
 		}
 	`]
 })

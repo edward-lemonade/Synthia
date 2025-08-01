@@ -8,8 +8,6 @@ import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http'
 import { AuthService } from '@auth0/auth0-angular';
 import { env } from '@env/environment';
 
-import { COLORS, SPACES } from '@theme';
-
 @Component({
 	selector: 'app-projects-layout',
 	standalone: true,
@@ -48,61 +46,7 @@ import { COLORS, SPACES } from '@theme';
 			</mat-sidenav-content>
 		</mat-sidenav-container>
 	`,
-	styles: [`
-		.sidenav-container {
-			height: calc(100vh - 64px);
-			background: ${COLORS.APP_BG};
-		}
-		mat-sidenav { width: 400px; }
-		.sidebar {
-			display: flex;
-			flex-direction: column;
-			align-items: flex-start;
-			padding-top: 10px; 
-			padding-left: ${SPACES.PAD_ENDS};
-			background: ${COLORS.SIDEBAR_BG};
-			border-radius: 0;
-		}
-	   	.sidebar-btn {
-			gap: 8px;
-			justify-content: flex-start; 
-			text-align: left;
-
-			background: ${COLORS.ACCENT_ORANGE};
-			color: ${COLORS.APP_BG};
-			transition: background 0.2s;
-	
-			margin-top: 8px;
-			width: 200px;
-		}
-		.sidebar-btn[routerLinkActive].sidebar-btn-active {
-            background: #fff !important;
-            font-weight: bold;
-        }
-		.sidebar-btn:hover {
-            background: ${COLORS.ACCENT_ORANGE_L} !important;
-        }
-
-		.sidebar-btn2 {
-			gap: 8px;
-			justify-content: flex-start; 
-			text-align: left;
-
-			background: ${COLORS.ACCENT_PURPLE};
-			color: ${COLORS.APP_BG};
-			transition: background 0.2s;
-	
-			margin-top: 24px;
-			width: 200px;
-		}
-		.sidebar-btn2:hover {
-            background: ${COLORS.ACCENT_PURPLE_L} !important;
-        }
-
-		.projects-content {
-			background: ${COLORS.APP_BG};
-		}
-	`]
+	styleUrls: ['./projects-layout.component.scss']
 })
 export class ProjectsLayoutComponent {
 	constructor(

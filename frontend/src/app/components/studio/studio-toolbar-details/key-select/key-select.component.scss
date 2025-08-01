@@ -1,0 +1,112 @@
+@use "theme" as *;
+
+::ng-deep .mat-mdc-menu-content {
+	padding: 8px !important;
+	background: $appbar-accent-1 !important;
+}
+
+.key-menu-btn {
+	display: flex;
+	height: 40px;
+	border-radius: 20px;
+	background: $appbar-accent-2;
+	border: none;
+	color: $appbar-text;
+	cursor: pointer;
+	transition: background-color 0.2s;
+
+	width: 80px;
+	justify-content: left;
+	align-items: center;
+}
+.key-menu-btn .mat-icon {
+	flex-shrink: 0;
+}
+.key-menu-btn sup {
+	vertical-align: super;
+	line-height: 0;
+}
+.key-menu-btn:hover {
+	background: $appbar-accent-1;
+}
+
+
+.key-type-toggle {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.key-type-toggle button.selected {
+	background: $accent-orange;
+	color: $appbar-bg-l !important;
+}
+.key-type-btn {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 8px 12px;
+	border: none;
+	color: $accent-orange !important;
+	cursor: pointer;
+	border-radius: 8px;
+	transition: background-color 0.1s;
+	background: transparent; 
+	box-shadow: 0 0 0 2px $accent-orange inset; 
+}
+.key-type-btn:hover 	{ 
+	background: $accent-orange-l !important; 
+	color: $appbar-bg-l !important;
+}
+
+.key-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.accidentals-row, .naturals-row {
+	display: flex;
+	flex-direction: row;
+	gap: 4px;
+}
+.key-opt-space {
+	width: 32px; 
+}
+.key-opt-space-half {
+	width: 15px; /* idk why 16 isnt centered */
+}
+::ng-deep .key-option.mat-mdc-button {
+	width: 32px !important;       
+	height: 32px !important;
+	min-width: 32px !important;      
+	min-height: 32px !important;
+	max-width: 32px !important;
+	max-height: 32px !important;
+
+	padding: 0 !important;    
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	box-sizing: border-box !important;
+
+	line-height: 1 !important;
+	border: 2px solid $appbar-accent-2 !important;
+	border-radius: 8px !important;
+
+	background: $appbar-accent-1 !important;
+	color: $accent-orange !important;
+	border-color: $appbar-bg !important;
+}
+.key-option.selected {
+	background: $accent-orange-l !important;
+	color: $appbar-bg-l !important;
+	border-color: $accent-orange !important;
+}
+.key-option:hover {
+	background: $appbar-accent-2 !important;
+	color: $accent-orange !important;
+}
+.key-option sup {
+	vertical-align: super;
+	line-height: 0;
+}

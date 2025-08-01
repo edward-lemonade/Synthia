@@ -1,0 +1,31 @@
+@use "theme" as *;
+
+.volume {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	border-radius: 20px;
+	padding-left: 12px;
+	padding-right: 12px;
+	background: $appbar-accent-2;
+}
+.volume-icon {
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+}
+::ng-deep .mat-mdc-slider .mdc-slider__track--active_fill {
+	border-color: $accent-yellow-l !important;
+	background-color: $accent-yellow-l !important;
+}
+::ng-deep .mat-mdc-slider .mdc-slider__track--inactive {
+	background-color: rgba(200, 200, 200, 1) !important;
+}
+::ng-deep .mat-mdc-slider .mdc-slider__thumb-knob {
+	background-color: $accent-yellow !important;
+	border-color: $accent-yellow !important;
+}
+::ng-deep .mat-mdc-slider .mdc-slider__value-indicator {
+	background-color: $accent-yellow !important;
+}

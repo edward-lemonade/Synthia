@@ -1,0 +1,35 @@
+@use "theme" as *;
+
+.appbar {
+	padding-left: $pad-ends;
+	padding-right: $pad-ends;
+	background: $appbar-bg;
+	color: $appbar-text;
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+}
+.appbar span {
+	color: $appbar-text;
+}
+
+.nav {
+	display: flex;
+	gap: 8px;
+	padding-left: 16px;
+}
+.nav-btn {
+	background: $appbar-accent-1;
+	color: $appbar-text !important;
+	transition: background 0.2s;
+}
+
+.spacer {
+	flex: 1 1 auto;
+}
+
+.appbar-btn {
+	background: $appbar-accent-2;
+	color: #fff !important;
+	transition: background 0.2s;
+}

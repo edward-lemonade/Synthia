@@ -43,3 +43,12 @@ export const KeyListAligned = {
 		"acc": [Keys.Csharp_m, Keys.Eflat_m, null, Keys.Fsharp_m, Keys.Gsharp_m, Keys.Bflat_m],
 	}
 }
+
+
+
+export interface TimeSignature {
+	N: 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16,
+	D: 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16,
+}
+export const TimeSigMaxN = 16;
+export const TimeSigMaxD = 16;

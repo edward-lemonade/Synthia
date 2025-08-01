@@ -1,0 +1,16 @@
+@use "theme" as *;
+
+// Styles using variables
+html, body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	background: $app-bg;
+}
+
+.app-content-bg {
+	background: $app-bg;
+	min-height: 100vh;
+}

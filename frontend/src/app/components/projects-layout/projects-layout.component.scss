@@ -1,0 +1,55 @@
+@use "theme" as *;
+
+.sidenav-container {
+	height: calc(100vh - 64px);
+	background: $app-bg;
+}
+mat-sidenav { width: 400px; }
+.sidebar {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	padding-top: 10px; 
+	padding-left: $pad-ends;
+	background: $sidebar-bg;
+	border-radius: 0;
+}
+.sidebar-btn {
+	gap: 8px;
+	justify-content: flex-start; 
+	text-align: left;
+
+	background: $accent-orange;
+	color: $app-bg;
+	transition: background 0.2s;
+
+	margin-top: 8px;
+	width: 200px;
+}
+.sidebar-btn[routerLinkActive].sidebar-btn-active {
+	background: #fff !important;
+	font-weight: bold;
+}
+.sidebar-btn:hover {
+	background: $accent-orange-l !important;
+}
+
+.sidebar-btn2 {
+	gap: 8px;
+	justify-content: flex-start; 
+	text-align: left;
+
+	background: $accent-purple;
+	color: $app-bg;
+	transition: background 0.2s;
+
+	margin-top: 24px;
+	width: 200px;
+}
+.sidebar-btn2:hover {
+	background: $accent-purple-l !important;
+}
+
+.projects-content {
+	background: $app-bg;
+}
