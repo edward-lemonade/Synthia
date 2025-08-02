@@ -42,7 +42,7 @@ import { env } from '@env/environment';
 				</mat-nav-list>
 			</mat-sidenav>
 			<mat-sidenav-content class="projects-content">
-				<router-outlet></router-outlet>
+				<ng-content></ng-content>
 			</mat-sidenav-content>
 		</mat-sidenav-container>
 	`,

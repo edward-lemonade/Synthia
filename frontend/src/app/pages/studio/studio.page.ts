@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
-import { StudioToolbarTopComponent } from '@components/studio/studio-toolbar-top/studio-toolbar-top.component';
-import { StudioToolbarDetailsComponent } from '@src/app/components/studio/studio-toolbar-details/studio-toolbar-details.component';
+import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
+import { StudioToolbarDetailsComponent } from './components/studio-toolbar-details/studio-toolbar-details.component';
 
 @Component({
 	selector: 'app-studio',
@@ -13,7 +13,7 @@ import { StudioToolbarDetailsComponent } from '@src/app/components/studio/studio
 	`,
 	styles: ``
 })
-export class StudioComponent implements OnInit {
+export class StudioPage implements OnInit {
 	sessionId: string = '';
 
 	constructor(private route: ActivatedRoute) {}

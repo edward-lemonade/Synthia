@@ -15,4 +15,4 @@ import { Component } from '@angular/core';
 		}
 	`]
 })
-export class HomeComponent {}
+export class HomePage {}

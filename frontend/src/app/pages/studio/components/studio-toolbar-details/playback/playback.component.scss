@@ -39,6 +39,10 @@
 	padding: 0px !important;
 }
 
+.playback-btn:hover {
+	background: $appbar-accent-1;
+}
+
 /* Pill shape */
 .playback-btn:first-child { border-top-left-radius: 40px; border-bottom-left-radius: 40px; }
 .playback-btn:not(:first-child):not(:last-child) { border-radius: 0; width: 40px; }
