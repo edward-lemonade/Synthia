@@ -1,0 +1,49 @@
+@use "theme" as *;
+
+.btn-group {
+	display: flex;
+	overflow: hidden;
+	background: $appbar-accent-2;
+	height: 40px;
+	max-height: 40px;
+	border-radius: 40px;
+	border: none;
+}
+
+.btn {
+	flex: 0 0 auto;
+	min-width: 40px;
+	width: 40px;
+	height: 40px;
+
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	color: $appbar-text;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+.btn mat-icon {
+	margin: 0;
+	font-size: 20px;
+}
+
+/* Pill shape */
+.btn:first-child { border-top-left-radius: 40px; border-bottom-left-radius: 40px; }
+.btn:last-child { border-top-right-radius: 40px; border-bottom-right-radius: 40px; }
+.btn:not(:first-child):not(:last-child) { border-radius: 0; }
+
+.btn:hover {
+	background: $appbar-accent-1;
+}
+
+.divider {
+	border-width: 2px !important;
+	border-color: $appbar-accent-1 !important;
+}
