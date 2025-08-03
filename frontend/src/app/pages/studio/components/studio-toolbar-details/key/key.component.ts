@@ -7,7 +7,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
-import { Key, KeyListAligned } from 'src/app/lib/music';
+import { Key, KeyListAligned } from '@shared_types/Key'
+
+import { StudioService } from '../../../studio.service';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
@@ -57,14 +59,14 @@ import { Key, KeyListAligned } from 'src/app/lib/music';
 	"styleUrls": ['./key.component.scss'],
 })
 export class KeyComponent {
+	constructor(public studioService: StudioService, private sanitizer: DomSanitizer) {}
+
 	KeyListAligned = KeyListAligned;
 
 	selectedKeyType: 'maj'|'min' = 'maj';
 	selectedKeyRow: 'nat'|'acc' = 'nat'
 	selectedKeyIndex = 0;
 	selectedKey: Key | null = KeyListAligned[this.selectedKeyType][this.selectedKeyRow][this.selectedKeyIndex]; // default Cmaj
-
-	constructor(private sanitizer: DomSanitizer) {}
 
 	getKeyDisplayHtml(key: Key): SafeHtml {
 		let html = key.display[0];

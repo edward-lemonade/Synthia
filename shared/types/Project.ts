@@ -1,8 +1,8 @@
 export interface Project { // common data for frequent fetches / project page
 	_id: string;
-	authors: string[];
-	authorIds: string[];
 	title: string;
+	authorIds: string[];
+	authors: string[];
 	createdAt: Date;
 	updatedAt: Date;
 

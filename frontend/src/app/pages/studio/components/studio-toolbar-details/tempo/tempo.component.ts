@@ -8,7 +8,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { TimeSignature, TimeSigMaxN, TimeSigMaxD, TimeSigDefault } from '@src/app/lib/music';
+import { TimeSignature, TimeSigMaxN, TimeSigMaxD, TimeSigDefault } from '@shared_types/TimeSignature';
 
 @Component({
 	selector: 'studio-toolbar-details-tempo',

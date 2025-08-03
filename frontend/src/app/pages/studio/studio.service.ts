@@ -20,14 +20,11 @@ export class StudioService {
 	// Master settings
 
 	bpm = signal<number>(140);
-	bpmType = signal<"fixed" | "variable">("fixed");
-	bpmPoints = signal<{ time: number; bpm: number }[]>([]);
-	
 	key = signal<string | null>(null);
-	keyType = signal<"fixed" | "variable">("fixed");
-	keyPoints = signal<{ time: number; key: string }[]>([]);
 	centOffset = signal<number>(0);
 	
+	masterVolume = signal<number>(100); // default master volume
+
 	// Files and tracks
 	
 	files = signal<Record<string, {
@@ -65,12 +62,9 @@ export class StudioService {
 		this.isRemixOf.set(null);
 		this.isReleased.set(false);
 		this.bpm.set(140);
-		this.bpmType.set('fixed');
-		this.bpmPoints.set([]);
 		this.key.set(null);
-		this.keyType.set('fixed');
-		this.keyPoints.set([]);
 		this.centOffset.set(0);
+		this.masterVolume.set(100); // default master volume
 		this.files.set({});
 		this.tracks.set([]);
 	}
@@ -88,11 +82,7 @@ export class StudioService {
 		this.isRemixOf.set(projectData.isRemixOf ?? null);
 		this.isReleased.set(projectData.isReleased ?? false);
 		this.bpm.set(projectData.bpm ?? 140);
-		this.bpmType.set(projectData.bpmType ?? 'fixed');
-		this.bpmPoints.set(projectData.bpmPoints ?? []);
 		this.key.set(projectData.key ?? null);
-		this.keyType.set(projectData.keyType ?? 'fixed');
-		this.keyPoints.set(projectData.keyPoints ?? []);
 		this.centOffset.set(projectData.centOffset ?? 0);
 		this.files.set(projectData.files ?? {});
 		this.tracks.set(projectData.tracks ?? []);

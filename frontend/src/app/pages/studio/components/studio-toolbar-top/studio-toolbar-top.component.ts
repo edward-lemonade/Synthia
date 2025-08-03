@@ -51,8 +51,7 @@ import { StudioService } from '../../studio.service';
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
 export class StudioToolbarTopComponent {
-	constructor(public studioService: StudioService) {
-	}
+	constructor(public studioService: StudioService) {}
 
 	get title(): string { return this.studioService.title(); }
 	set title(value: string) { this.studioService.title.set(value); }

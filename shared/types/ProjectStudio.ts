@@ -1,6 +1,6 @@
 import { Project } from "./Project";
 
-export interface ProjectInternal extends Project { // inner project data, accessible only to authors
+export interface ProjectStudio extends Project { // inner project data, accessible only to authors
 	// MASTER SETTINGS
 
 	bpm: number | 140;
@@ -11,6 +11,8 @@ export interface ProjectInternal extends Project { // inner project data, access
 	keyType: "fixed" | "variable";
 	keyPoints: { time: number; key: string }[]; // only supports straight lines (no modulation)
 	centOffset: number; // microtonal offset
+
+	masterVolume: number; // 0-100
 
 	// FILES
 	files: {
