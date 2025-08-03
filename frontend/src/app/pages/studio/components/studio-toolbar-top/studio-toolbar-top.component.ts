@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatToolbar } from '@angular/material/toolbar';
+import { FormsModule } from '@angular/forms';
 
+import { StudioService } from '../../studio.service';
 
 @Component({
 	selector: 'app-studio-toolbar-top',
-	imports: [MatIcon, MatToolbar],
+	imports: [MatIcon, MatToolbar, FormsModule],
 	template: `
 		<mat-toolbar class="toolbar">
 			<div class="toolbar-section left-section">
@@ -18,7 +20,11 @@ import { MatToolbar } from '@angular/material/toolbar';
 			<div class="toolbar-section center-section">
 				<div class="title-container">
 					<mat-icon class="title-icon">edit</mat-icon>
-					<input class="title-input" placeholder="Untitled" type="text">
+					<input 
+						class="title-input" 
+						placeholder="Untitled" 
+						type="text"
+						[(ngModel)]="title">
 				</div>
 			</div>
 
@@ -45,5 +51,9 @@ import { MatToolbar } from '@angular/material/toolbar';
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
 export class StudioToolbarTopComponent {
+	constructor(public studioService: StudioService) {
+	}
 
-}
+	get title(): string { return this.studioService.title(); }
+	set title(value: string) { this.studioService.title.set(value); }
+}	

@@ -16,31 +16,28 @@ import { TimeSignature, TimeSigMaxN, TimeSigMaxD, TimeSigDefault } from '@src/ap
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button
-				mat-button 
-				class="tempo-btn metronome" 
+				class="btn metronome" 
 				[class.selected]="metronome"
 				(click)="setMetronome(!metronome)">
 				<mat-icon>timer</mat-icon>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				mat-button 
-				class="tempo-btn bpm">
-				<input 
-				type="text"
-				maxlength="3"
-				[value]="bpmInput"
-				(input)="validateBpm($event)"
-				placeholder="bpm"
-				class="bpm-number" />
+				class="btn bpm">
+				<input
+					type="text"
+					maxlength="3"
+					[value]="bpmInput"
+					(input)="validateBpm($event)"
+					placeholder="bpm"
+					class="bpm-number" />
 				
 				<span class="bpm-label">bpm</span>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				mat-button 
 				[matMenuTriggerFor]="timeSigMenu"
-				class="tempo-btn time-sig" >
+				class="btn time-sig" >
 				<div class="time-sig-wrapper">
 					<span class="time-sig-N">{{ timeSig.N }}</span>
 					<span class="time-sig-sep"> | </span> 
@@ -54,7 +51,6 @@ import { TimeSignature, TimeSigMaxN, TimeSigMaxD, TimeSigDefault } from '@src/ap
 					<div class="time-sig-grid">
 						<button 
 							*ngFor="let n of getNumeratorOptions()" 
-							mat-button 
 							class="time-sig-option"
 							[class.selected]="timeSig.N === n"
 							(click)="$event.stopPropagation(); setTimeSig({N: n, D: timeSig.D})">
@@ -67,7 +63,6 @@ import { TimeSignature, TimeSigMaxN, TimeSigMaxD, TimeSigDefault } from '@src/ap
 					<div class="time-sig-grid">
 						<button 
 							*ngFor="let d of getDenominatorOptions()" 
-							mat-button 
 							class="time-sig-option"
 							[class.selected]="timeSig.D === d"
 							(click)="$event.stopPropagation();setTimeSig({N: timeSig.N, D: d})">

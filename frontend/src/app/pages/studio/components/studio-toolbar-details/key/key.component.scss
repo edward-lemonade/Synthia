@@ -5,25 +5,37 @@
 	background: $appbar-accent-1 !important;
 }
 
-.key-menu-btn {
+.btn-group {
 	display: flex;
+	overflow: hidden;
+	background: $appbar-accent-2;
 	height: 40px;
 	border-radius: 20px;
-	background: $appbar-accent-2;
 	border: none;
-	color: $appbar-text;
-	cursor: pointer;
-	transition: background-color 0.2s;
+}
 
-	width: 80px;
+.key-menu-btn {
+	display: flex;
+	align-items: center;
 	justify-content: left;
+
+	width: 70px !important;
+	max-width: 70px !important;
+
+	background: transparent;
+	color: $appbar-text;
+	border-radius: 20px;
+	border: none;
+
+	cursor: pointer;
+	transition: all 0.2s ease;
 }
 .key-menu-btn sup {
 	vertical-align: super;
 	line-height: 0;
 }
 .key-menu-btn:hover {
-	background: $appbar-accent-1;
+	background: $appbar-accent-3;
 }
 
 

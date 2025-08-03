@@ -12,32 +12,27 @@ import { MatIcon } from '@angular/material/icon';
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button 
-				mat-button 
-				class="playback-btn back">
+				class="btn back">
 				<mat-icon>fast_rewind</mat-icon>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				mat-button 
-				class="playback-btn forward">
+				class="btn forward">
 				<mat-icon>fast_forward</mat-icon>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
-			<button 
-				mat-button 
-				class="playback-btn play">
+			<button  
+				class="btn play">
 				<mat-icon>play_arrow</mat-icon>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				mat-button 
-				class="playback-btn beginning">
+				class="btn beginning">
 				<mat-icon>skip_previous</mat-icon>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				mat-button 
-				class="playback-btn record">
+				class="btn record">
 				<mat-icon style="color: rgb(192, 56, 79)" >circle</mat-icon>
 			</button>
 		</mat-button-toggle-group>

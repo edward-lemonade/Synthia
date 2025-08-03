@@ -5,17 +5,20 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { Key, KeyListAligned } from 'src/app/lib/music';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
-	imports: [CommonModule, MatIcon, MatMenuModule, MatButtonModule],
+	imports: [CommonModule, MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
 	template: `
-		<button mat-button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
-			<mat-icon>music_note</mat-icon>
-			<span [innerHTML]="getKeyDisplayHtml(selectedKey!)"></span>
-		</button>
+		<mat-button-toggle-group class='btn-group'>
+			<button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
+				<mat-icon>music_note</mat-icon>
+				<span [innerHTML]="getKeyDisplayHtml(selectedKey!)"></span>
+			</button>
+		</mat-button-toggle-group>
 		<mat-menu #keyMenu="matMenu" class="key-menu">
 			<div class="key-type-toggle">
 				<button mat-button class="key-type-btn" [class.selected]="selectedKeyType === 'maj'" (click)="$event.stopPropagation(); setType('maj')">Major</button>
@@ -65,7 +68,13 @@ export class KeyComponent {
 
 	getKeyDisplayHtml(key: Key): SafeHtml {
 		let html = key.display[0];
-		if (key.display[1])	{ html += `<sup style="vertical-align: super; line-height: 0;">${key.display[1]}</sup>`; }
+		if (key.display[1])	{ 
+			if (key.display[1] === 'm') {
+				html += key.display[1];
+			} else {
+				html += `<sup style="vertical-align: super; line-height: 0;">${key.display[1]}</sup>`; 
+			}
+		}
 		if (key.display[2]) { html += key.display[2]; }
 		return this.sanitizer.bypassSecurityTrustHtml(html);
 	}

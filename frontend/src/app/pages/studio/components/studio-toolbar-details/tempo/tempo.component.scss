@@ -5,33 +5,35 @@
 	overflow: hidden;
 	background: $appbar-accent-2;
 	height: 40px;
-	border-radius: 40px;
-	max-height: 40px;
+	border-radius: 20px;
 	border: none;
 }
 
-.tempo-btn {
-	flex: 1;
-	min-width: 60px;
-	height: 40px;
+.btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 60px !important;
+	max-width: 60px !important;
+	border-radius: 0;
+
 	border: none;
 	background: transparent;
 	color: $appbar-text;
-	font-family: inherit;
-	font-size: 12px;
-	font-weight: 500;
+
 	cursor: pointer;
 	transition: all 0.2s ease;
-	border-radius: 0;
 }
-/* Pill shape */
-.tempo-btn:first-child { border-top-left-radius: 40px; border-bottom-left-radius: 40px; }
-.tempo-btn:last-child { border-top-right-radius: 40px; border-bottom-right-radius: 40px; }
-.tempo-btn:not(:first-child):not(:last-child) { border-radius: 0; }
 
-.tempo-btn:hover {
-	background: $appbar-accent-1;
+.btn:hover {
+	background: $appbar-accent-3;
 }
+
+/* Pill shape */
+.btn:first-child { border-top-left-radius: 20px; border-bottom-left-radius: 20px; }
+.btn:not(:first-child):not(:last-child) { border-radius: 0; }
+.btn:last-child { border-top-right-radius: 20px; border-bottom-right-radius: 20px; }
 
 /* METRONOME */
 
@@ -44,8 +46,10 @@
 	align-items: center;
 }
 .metronome mat-icon {
-	margin: 0 auto;
-	font-size: 20px;
+	font-size: 20px; // inherit from .btn
+	width: 1em;
+	height: 1em;
+	margin: 0 !important;
 }
 .metronome.selected {
 	background: $accent-orange !important;
@@ -53,16 +57,19 @@
 }
 
 /* BPM*/
-
+.bpm {
+	width: 70px !important;
+	max-width: 70px !important;
+}
 .bpm-number {
-	font-size: 1.4em;
+	font-size: 1.3em;
 	color: #fff;
 	font-weight: 700;
 	background: transparent;
 	border: none;
 	outline: none;
 	text-align: center;
-	width: 40px;
+	width: 34px;
 	font-family: inherit;
 	line-height: 1;
 	vertical-align: middle;
@@ -80,8 +87,8 @@
 .bpm-label {
 	font-size: 0.8em;
 	color: $appbar-text;
-	opacity: 0.7;
-	font-weight: 400;
+	opacity: 0.8;
+	font-weight: 200;
 }
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {

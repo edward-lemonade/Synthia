@@ -5,43 +5,42 @@
 	overflow: hidden;
 	background: $appbar-accent-2;
 	height: 40px;
-	max-height: 40px;
-	border-radius: 40px;
+	border-radius: 20px;
 	border: none;
 }
 
 .btn {
-	flex: 0 0 auto;
-	min-width: 40px;
-	width: 40px;
-	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 40px !important;
+	max-width: 40px !important;
+	border-radius: 0;
 
 	border: none;
-	border-radius: 0;
 	background: transparent;
 	color: $appbar-text;
-	font-family: inherit;
-	font-size: 12px;
-	font-weight: 500;
+
 	cursor: pointer;
 	transition: all 0.2s ease;
-	padding: 0 !important;
-	margin: 0 !important;
 }
 
 .btn mat-icon {
-	margin: 0;
-	font-size: 20px;
+	font-size: 20px; // inherit from .btn
+	width: 1em;
+	height: 1em;
+	margin: 0 !important;
+}
+
+.btn:hover {
+	background: $appbar-accent-3;
 }
 
 /* Pill shape */
-.btn:first-child { border-top-left-radius: 40px; border-bottom-left-radius: 40px; }
-.btn:last-child { border-top-right-radius: 40px; border-bottom-right-radius: 40px; }
+.btn:first-child { border-top-left-radius: 20px; border-bottom-left-radius: 20px; }
 .btn:not(:first-child):not(:last-child) { border-radius: 0; }
-
-.btn:hover {
-	background: $appbar-accent-1;
-}
+.btn:last-child { border-top-right-radius: 20px; border-bottom-right-radius: 20px; }
 
 .divider {
 	border-width: 2px !important;

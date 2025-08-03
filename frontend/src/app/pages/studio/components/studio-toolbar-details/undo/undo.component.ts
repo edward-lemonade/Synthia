@@ -11,13 +11,11 @@ import { MatDivider } from '@angular/material/divider';
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button
-				mat-button 
 				class="btn">
 				<mat-icon>undo</mat-icon>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				mat-button 
 				class="btn">
 				<mat-icon>redo</mat-icon>
 			</button>
