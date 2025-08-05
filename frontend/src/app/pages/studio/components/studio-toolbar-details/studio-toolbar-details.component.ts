@@ -15,17 +15,12 @@ import { TimeComponent } from './time/time.component';
 	imports: [MatToolbar, CommonModule, VolumeComponent, KeyComponent, TempoComponent, PlaybackComponent, TimeComponent, UndoComponent],
 	template: `
 		<mat-toolbar class='toolbar'>
-			<studio-toolbar-details-undo></studio-toolbar-details-undo>
-
-			<studio-toolbar-details-volume></studio-toolbar-details-volume>
-
-			<studio-toolbar-details-key></studio-toolbar-details-key>
-
-			<studio-toolbar-details-tempo></studio-toolbar-details-tempo>
-
-			<studio-toolbar-details-playback></studio-toolbar-details-playback>
-
-			<studio-toolbar-details-time></studio-toolbar-details-time>
+			<studio-toolbar-details-undo/>
+			<studio-toolbar-details-volume/>
+			<studio-toolbar-details-key/>
+			<studio-toolbar-details-tempo/>
+			<studio-toolbar-details-playback/>
+			<studio-toolbar-details-time/>
 		</mat-toolbar>
 	`,
 	styleUrls: ['./studio-toolbar-details.component.scss']

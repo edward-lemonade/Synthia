@@ -3,11 +3,16 @@ import { MatIcon } from '@angular/material/icon';
 import { MatToolbar } from '@angular/material/toolbar';
 import { FormsModule } from '@angular/forms';
 
+import { SaveComponent } from './save/save.component';
+import { ExportComponent } from './export/export.component';
+import { PublishComponent } from './publish/publish.component';
+import { ShareComponent } from './share/share.component';
+
 import { ProjectMetadataService } from '../../services/project-metadata.service';
 
 @Component({
 	selector: 'app-studio-toolbar-top',
-	imports: [MatIcon, MatToolbar, FormsModule],
+	imports: [MatIcon, MatToolbar, FormsModule, SaveComponent, ExportComponent, PublishComponent, ShareComponent],
 	template: `
 		<mat-toolbar class="toolbar">
 			<div class="toolbar-section left-section">
@@ -29,22 +34,10 @@ import { ProjectMetadataService } from '../../services/project-metadata.service'
 			</div>
 
 			<div class="toolbar-section right-section">
-				<button class="toolbar-btn save-btn">
-					<mat-icon>save</mat-icon>
-					Save
-				</button>
-				<button class="toolbar-btn export-btn">
-					<mat-icon>file_download</mat-icon>
-					Export
-				</button>
-				<button class="toolbar-btn publish-btn">
-					<mat-icon>cloud_upload</mat-icon>
-					Publish
-				</button>
-				<button class="toolbar-btn share-btn">
-					<mat-icon>people</mat-icon>
-					Share
-				</button>
+				<studio-toolbar-top-save/>
+				<studio-toolbar-top-export/>
+				<studio-toolbar-top-publish/>
+				<studio-toolbar-top-share/>
 			</div>
 		</mat-toolbar>
 	`,

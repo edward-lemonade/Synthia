@@ -36,6 +36,8 @@
 	gap: 8px;
 }
 
+// LEFT SECTION
+
 .menu-btn {
 	display: flex;
 	align-items: center;
@@ -45,6 +47,8 @@
 	border: none;
 	color: #fff;
 }
+
+// MIDDLE SECTION
 
 .title-container {
 	display: flex;
@@ -88,6 +92,8 @@
 	opacity: 0.6;
 }
 
+// RIGHT BUTTONS
+
 .toolbar-btn {
 	display: flex;
 	align-items: center;
@@ -105,6 +111,7 @@
 	height: 14px;
 }
 
+// --overrides
 .save-btn 	{ 
 	background: transparent; 
 	box-shadow: 0 0 0 2px $accent-yellow inset; 
