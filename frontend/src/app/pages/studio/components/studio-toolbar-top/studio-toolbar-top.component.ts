@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, Signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatToolbar } from '@angular/material/toolbar';
 import { FormsModule } from '@angular/forms';
 
-import { StudioService } from '../../studio.service';
+import { ProjectMetadataService } from '../../services/project-metadata.service';
 
 @Component({
 	selector: 'app-studio-toolbar-top',
@@ -51,8 +51,12 @@ import { StudioService } from '../../studio.service';
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
 export class StudioToolbarTopComponent {
-	constructor(public studioService: StudioService) {}
+	title: Signal<string>;
+	
+	constructor(public projectMetadataService: ProjectMetadataService) {
+		this.title = this.projectMetadataService.title;
+	}
 
-	get title(): string { return this.studioService.title(); }
-	set title(value: string) { this.studioService.title.set(value); }
+	//get title(): string { return this.projectMetadataService.state.title(); }
+	//set title(value: string) { this.projectMetadataService.title.set(value); }
 }	

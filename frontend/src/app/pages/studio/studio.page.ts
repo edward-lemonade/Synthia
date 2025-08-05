@@ -4,7 +4,7 @@ import { AuthService } from '@auth0/auth0-angular';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { env } from '@env/environment';
 
-import { StudioService } from './studio.service';
+import { ProjectState } from './state/project.state';
 import { User } from '@shared_types/User';
 
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
@@ -13,7 +13,7 @@ import { StudioToolbarDetailsComponent } from './components/studio-toolbar-detai
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent],
-	providers: [StudioService],
+	providers: [ProjectState],
 	template: `
 		<app-studio-toolbar-top></app-studio-toolbar-top>
 		<app-studio-toolbar-details></app-studio-toolbar-details>
@@ -27,7 +27,7 @@ export class StudioPage implements OnInit {
 		private route: ActivatedRoute,	
 		private auth: AuthService,
 		private http: HttpClient,
-		public studioService: StudioService
+		public projectState: ProjectState
 	) {}
 
 	ngOnInit() {
@@ -35,7 +35,6 @@ export class StudioPage implements OnInit {
 			this.sessionId = params['sessionId'];
 			console.log('Studio component loaded with sessionId:', this.sessionId);
 			
-			// Get user info and initialize project
 			this.initializeProjectWithUser();
 		});
 	}
@@ -51,8 +50,8 @@ export class StudioPage implements OnInit {
 						username: user.name || user.email || 'Unknown User'
 					};
 					
-					this.studioService.initializeProject(this.sessionId);
-					this.studioService.addAuthor(currentUser);
+					//this.projectState.initializeProject(this.sessionId);
+					//this.projectState.addAuthor(currentUser);
 				} else {
 					console.error('No user found');
 				}
@@ -63,45 +62,4 @@ export class StudioPage implements OnInit {
 		});
 	}
 
-	private loadExistingProjectData() {
-		// Get access token for API calls
-		this.auth.getAccessTokenSilently({ 
-			authorizationParams: {
-				audience: env.auth0_api_aud,
-			}
-		}).subscribe({
-			next: (token) => {
-				const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-				
-				// Try to load existing project data
-				this.http.get<any>(`/api/studio_session/${this.sessionId}`, { headers })
-					.subscribe({
-						next: (projectData) => {
-							if (projectData) {
-								console.log('Loading existing project data:', projectData);
-								this.studioService.loadProject(projectData);
-								
-								// Ensure current user is still an author
-								const currentUser = this.auth.user$;
-								currentUser.subscribe(user => {
-									if (user && user.sub) {
-										const userObj: User = {
-											userId: user.sub,
-											username: user.name || user.email || 'Unknown User'
-										};
-										this.studioService.addAuthor(userObj);
-									}
-								});
-							}
-						},
-						error: (err) => {
-							console.log('No existing project data found');
-						}
-					});
-			},
-			error: (err) => {
-				console.error('Failed to get access token:', err);
-			}
-		});
-	}
 }

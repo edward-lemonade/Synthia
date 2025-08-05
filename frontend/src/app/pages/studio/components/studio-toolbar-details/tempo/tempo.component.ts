@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, WritableSignal } from '@angular/core';
+import { CommonModule, Time } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -8,9 +8,9 @@ import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { TimeSignature, TimeSigOptionsN, TimeSigOptionsD, TimeSigDefault } from '@shared_types/TimeSignature';
+import { TimeSignature, TimeSigOptionsN, TimeSigOptionsD, DefaultTimeSignature } from '@shared_types/TimeSignature';
 
-import { StudioService } from '../../../studio.service';
+import { ProjectVarsService } from '../../../services/project-vars.service';
 
 @Component({
 	selector: 'studio-toolbar-details-tempo',
@@ -20,7 +20,7 @@ import { StudioService } from '../../../studio.service';
 			<button
 				class="btn metronome" 
 				[class.selected]="metronome"
-				(click)="setMetronome(!metronome)">
+				(click)="setMetronome(!metronome)">	
 				<mat-icon>timer</mat-icon>
 			</button>
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
@@ -29,7 +29,7 @@ import { StudioService } from '../../../studio.service';
 				<input
 					type="text"
 					maxlength="3"
-					[value]="bpm.toString()"
+					[value]="bpm().toString()"
 					(input)="validateBpm($event)"
 					placeholder="bpm"
 					class="bpm-number" />
@@ -41,9 +41,9 @@ import { StudioService } from '../../../studio.service';
 				[matMenuTriggerFor]="timeSigMenu"
 				class="btn time-sig" >
 				<div class="time-sig-wrapper">
-					<span class="time-sig-N">{{ timeSig.N }}</span>
+					<span class="time-sig-N">{{ timeSignature().N }}</span>
 					<span class="time-sig-sep"> | </span> 
-					<span class="time-sig-D">{{ timeSig.D }}</span>
+					<span class="time-sig-D">{{ timeSignature().D }}</span>
 				</div>	
 			</button>
 		</mat-button-toggle-group>
@@ -54,8 +54,8 @@ import { StudioService } from '../../../studio.service';
 						<button 
 							*ngFor="let n of timeSigOptionsN" 
 							class="time-sig-option"
-							[class.selected]="timeSig.N === n"
-							(click)="$event.stopPropagation(); timeSig = {N: n, D: timeSig.D}">
+							[class.selected]="timeSignature().N === n"
+							(click)="$event.stopPropagation(); timeSignature.set({N: n, D: timeSignature().D})">
 							{{ n }}
 						</button>
 					</div>
@@ -66,8 +66,8 @@ import { StudioService } from '../../../studio.service';
 						<button 
 							*ngFor="let d of timeSigOptionsD" 
 							class="time-sig-option"
-							[class.selected]="timeSig.D === d"
-							(click)="$event.stopPropagation(); timeSig = {N: timeSig.N, D: d}">
+							[class.selected]="timeSignature().D === d"
+							(click)="$event.stopPropagation(); timeSignature.set({N: timeSignature().N, D: d})">
 							{{ d }}
 						</button>
 					</div>
@@ -79,7 +79,10 @@ import { StudioService } from '../../../studio.service';
 })
 
 export class TempoComponent {
-	constructor(public studioService: StudioService) {}
+	constructor(public projectVarsService: ProjectVarsService) {
+		this.bpm = projectVarsService.bpm;
+		this.timeSignature = projectVarsService.timeSignature;
+	}
 
 	// METRONOME
 
@@ -90,15 +93,14 @@ export class TempoComponent {
 
 	// BPM
 
-	get bpm(): number { return this.studioService.bpm(); }
-	set bpm(value: number) { this.studioService.bpm.set(value); }
+	bpm: WritableSignal<number>;
 	validateBpm(event: Event) {
 		const input = (event.target as HTMLInputElement).value;
 		if (/^\d*$/.test(input)) {
 			const parsed = parseInt(input, 10);
 			if (!isNaN(parsed)) {
 				const finalBpm = Math.min(999, Math.max(1, parsed));
-				this.bpm = finalBpm;
+				this.bpm.set(finalBpm);
 			}
 		}
 		(event.target as HTMLInputElement).value = this.bpm.toString();
@@ -106,16 +108,15 @@ export class TempoComponent {
 
 	// TIME SIGNATURE
 
-	get timeSig(): TimeSignature { return this.studioService.timeSignature(); }
-	set timeSig(value: TimeSignature) { this.studioService.timeSignature.set(value); }
+	timeSignature: WritableSignal<TimeSignature>;
+
 	timeSigOptionsN = TimeSigOptionsN;
 	timeSigOptionsD = TimeSigOptionsD;
 
 	setTimeSigN(n: number) {
-		this.timeSig = { N: n as 2|3|4|5|6|7|8|9|10|11|12|13|14|15|16, D: this.timeSig.D };
+		this.timeSignature.set({ N: n as 2|3|4|5|6|7|8|9|10|11|12|13|14|15|16, D: this.timeSignature().D });
 	}
-
 	setTimeSigD(d: number) {
-		this.timeSig = { N: this.timeSig.N, D: d as 2|4|8|16 };
+		this.timeSignature.set({ N: this.timeSignature().N, D: d as 2|4|8|16 });
 	}
 }

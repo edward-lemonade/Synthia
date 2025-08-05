@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, WritableSignal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
-import { StudioService } from '../../../studio.service';
+import { ProjectVarsService } from '../../../services/project-vars.service';
 
 @Component({
 	selector: 'studio-toolbar-details-volume',
@@ -11,7 +11,10 @@ import { StudioService } from '../../../studio.service';
 		<div class='volume'>
 			<mat-icon class='volume-icon'>volume_up</mat-icon>
 			<mat-slider min="0" max="100" step="1">
-				<input matSliderThumb [value]="masterVolume" >
+				<input matSliderThumb 
+				[value]="masterVolume()" 
+				(input)="masterVolume.set($any($event.target).valueAsNumber)"
+				>
 			</mat-slider>
 		</div>
 	`,
@@ -19,8 +22,10 @@ import { StudioService } from '../../../studio.service';
 })
 
 export class VolumeComponent {
-	constructor(public studioService: StudioService) {}
+	masterVolume: WritableSignal<number>;
 
-	get masterVolume(): number { return this.studioService.masterVolume(); } 
-	set masterVolume(value: number) { this.studioService.masterVolume.set(value); } 
+	constructor(public projectVarsService: ProjectVarsService) {
+		this.masterVolume = projectVarsService.masterVolume;
+	}
+
 }

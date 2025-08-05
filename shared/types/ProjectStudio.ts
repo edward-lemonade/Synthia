@@ -1,76 +1,45 @@
-import { Project } from "./Project";
+import { ProjectMetadata } from "./ProjectMetadata";
 
-export interface ProjectStudio extends Project { // inner project data, accessible only to authors
-	// MASTER SETTINGS
+import { TimeSignature } from "./TimeSignature";
+import { Key } from "./Key";
 
-	bpm: number | 140;
-	bpmType: "fixed" | "variable";
-	bpmPoints: { time: number; bpm: number }[]; // only supports straight lines (no acceleration)
-
-	key: string | null; 
-	keyType: "fixed" | "variable";
-	keyPoints: { time: number; key: string }[]; // only supports straight lines (no modulation)
-	centOffset: number; // microtonal offset
-
-	masterVolume: number; // 0-100
-
-	// FILES
-	files: {
-		[key: string]: {
-			filename: string;
-			mimetype: string;
-			s3path?: string;
-			data?: string; // optional
-		};
-	};
-
-	// TRACKS
-	tracks: [
-		{
-			id: string; // unique track ID
-			name: string;
-			type: "audio" | "midi";
-			volume: number; // 0-1
-			pan: number; // -1 (left) to 1 (right)
-			mute: boolean;
-			solo: boolean;
-			effects: {
-				type: string; // e.g., "reverb", "delay"
-				settings: Record<string, any>; // effect-specific settings
-			}[];
-		}
-	]
+export interface ProjectVars {
+	bpm : number;
+	key : Key;
+	centOffset : number;
+	timeSignature : TimeSignature;
+	masterVolume : number;
 }
 
+export interface AudioFile {}
+export interface AudioEffect {}
+export interface Region {}
 export interface Track {
-	id: string; // unique track ID
-	name: string;
-	type: "audio" | "midi";
-	volume: number; // 0-1
-	pan: number; // -1 (left) to 1 (right)
-	mute: boolean;
-	solo: boolean;
+	// metadata
+	index : number;
+	name : string;
+	type : "audio" | "midi";
+	files : AudioFile[];
+	color : string;
 	
-	effects: {
-		type: string; // e.g., "reverb", "delay"
-		settings: Record<string, any>; // effect-specific settings
-	}[];
-	regions: AudioRegion[] | MidiRegion[];
+	// master settings
+	volume : number;
+	pan : number;
+	mute : boolean;
+	solo : boolean;
 
-	// AUDIO
-	fileId: string | null; // original file
-	// MIDI
-	instrument: string | null; // e.g., "piano", "guitar"
+	// effects
+	effects : AudioEffect[];
+
+	// segments
+	segments : Region[];
+}
+export interface ProjectTracks {
+	tracks : Track[]
 }
 
-export interface Region {
-	id: string; // unique region ID
-	startTime: number; // in seconds
-	endTime: number; // in seconds
-}
-export interface AudioRegion extends Region {
-	fileId: string; 
-}
-export interface MidiRegion extends Region {
-	midiData: string; 
+export interface ProjectStudio { // inner project data, accessible only to authors
+	metadata: ProjectMetadata;
+	vars: ProjectVars;
+	tracks: ProjectTracks;
 }
