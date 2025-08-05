@@ -1,4 +1,7 @@
 import { Injectable, signal } from '@angular/core';
+import { Key, Keys } from '@shared/types/Key';
+import { TimeSignature, DefaultTimeSignature } from '@shared/types/TimeSignature';
+import { User } from '@shared_types/User';
 
 @Injectable()
 export class StudioService {
@@ -6,9 +9,8 @@ export class StudioService {
 	// Project metadata
 
 	projectId = signal<string>('');
-	title = signal<string>('Untitled Project');
-	authorIds = signal<string[]>([]);
-	authors = signal<string[]>([]);
+	title = signal<string>('Untitled Project'); // toolbar-top
+	authors = signal<User[]>([]);
 	createdAt = signal<Date | null>(null);
 	updatedAt = signal<Date | null>(null);
 	
@@ -19,9 +21,10 @@ export class StudioService {
 	
 	// Master settings
 
-	bpm = signal<number>(140);
-	key = signal<string | null>(null);
+	bpm = signal<number>(140); 
+	key = signal<Key>(Keys.C); // toolbar-details/keys
 	centOffset = signal<number>(0);
+	timeSignature = signal<TimeSignature>(DefaultTimeSignature);
 	
 	masterVolume = signal<number>(100); // default master volume
 
@@ -53,7 +56,6 @@ export class StudioService {
 		const now = new Date();
 		this.projectId.set(projectId ?? '');
 		this.title.set('Untitled Project');
-		this.authorIds.set([]);
 		this.authors.set([]);
 		this.createdAt.set(now);
 		this.updatedAt.set(now);
@@ -62,8 +64,9 @@ export class StudioService {
 		this.isRemixOf.set(null);
 		this.isReleased.set(false);
 		this.bpm.set(140);
-		this.key.set(null);
+		this.key.set(Keys.C);
 		this.centOffset.set(0);
+		this.timeSignature.set(DefaultTimeSignature);
 		this.masterVolume.set(100); // default master volume
 		this.files.set({});
 		this.tracks.set([]);
@@ -73,7 +76,6 @@ export class StudioService {
 	loadProject(projectData: any): void {
 		this.projectId.set(projectData._id ?? '');
 		this.title.set(projectData.title ?? 'Untitled Project');
-		this.authorIds.set(projectData.authorIds ?? []);
 		this.authors.set(projectData.authors ?? []);
 		this.createdAt.set(projectData.createdAt ? new Date(projectData.createdAt) : null);
 		this.updatedAt.set(projectData.updatedAt ? new Date(projectData.updatedAt) : null);
@@ -84,41 +86,37 @@ export class StudioService {
 		this.bpm.set(projectData.bpm ?? 140);
 		this.key.set(projectData.key ?? null);
 		this.centOffset.set(projectData.centOffset ?? 0);
+		this.timeSignature.set(projectData.timeSignature ?? {N:4, D:4});
+		this.masterVolume.set(projectData.masterVolume ?? 100);
 		this.files.set(projectData.files ?? {});
 		this.tracks.set(projectData.tracks ?? []);
 	}
 
-	// Update timestamp when any property changes
-	private updateTimestamp(): void {
-		this.updatedAt.set(new Date());
+	addAuthor(user: User): void {
+		const currentAuthorIds = this.authors().map((user: User) => user.userId);
+		if (!currentAuthorIds.includes(user.userId)) {
+			this.authors.set([...this.authors(), user]);
+		}
+	}
+	removeAuthor(userId: string): void {
+		const currentAuthors = this.authors();
+		const newAuthors = currentAuthors.filter((author: User) => author.userId !== userId);
+		this.authors.set(newAuthors);
+	}
+	isUserAuthor(userId: string): boolean {
+		const currentAuthors = this.authors();
+		return currentAuthors.some((author: User) => author.userId === userId);
 	}
 
-	// Convenience methods for common updates
-	updateTitle(newTitle: string): void {
-		this.title.set(newTitle);
-		this.updateTimestamp();
-	}
-
-	updateBpm(newBpm: number): void {
-		this.bpm.set(newBpm);
-		this.updateTimestamp();
-	}
-
-	updateKey(newKey: string | null): void {
-		this.key.set(newKey);
-		this.updateTimestamp();
-	}
 
 	addTrack(track: any): void {
 		const currentTracks = this.tracks();
 		this.tracks.set([...currentTracks, track]);
-		this.updateTimestamp();
 	}
 
 	removeTrack(trackId: string): void {
 		const currentTracks = this.tracks();
 		this.tracks.set(currentTracks.filter(track => track.id !== trackId));
-		this.updateTimestamp();
 	}
 
 	updateTrack(trackId: string, updates: Partial<any>): void {
@@ -127,6 +125,5 @@ export class StudioService {
 			track.id === trackId ? { ...track, ...updates } : track
 		);
 		this.tracks.set(updatedTracks);
-		this.updateTimestamp();
 	}
 }

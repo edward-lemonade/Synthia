@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 import { MatIcon } from '@angular/material/icon';
@@ -13,43 +14,43 @@ import { StudioService } from '../../../studio.service';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
-	imports: [CommonModule, MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
+	imports: [CommonModule, FormsModule, MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
 				<mat-icon>music_note</mat-icon>
-				<span [innerHTML]="getKeyDisplayHtml(selectedKey!)"></span>
+				<span [innerHTML]="getKeyDisplayHtml(key)"></span>
 			</button>
 		</mat-button-toggle-group>
 		<mat-menu #keyMenu="matMenu" class="key-menu">
 			<div class="key-type-toggle">
-				<button mat-button class="key-type-btn" [class.selected]="selectedKeyType === 'maj'" (click)="$event.stopPropagation(); setType('maj')">Major</button>
-				<button mat-button class="key-type-btn" [class.selected]="selectedKeyType === 'min'" (click)="$event.stopPropagation(); setType('min')">Minor</button>
+				<button mat-button class="key-type-btn" [class.selected]="key.type === 'maj'" (click)="$event.stopPropagation(); changeType('maj')">Major</button>
+				<button mat-button class="key-type-btn" [class.selected]="key.type === 'min'" (click)="$event.stopPropagation(); changeType('min')">Minor</button>
 			</div>
 			<div class="key-grid">
 				<div class="accidentals-row">
 					<span class="key-opt-space-half"></span>
-					<ng-container *ngFor="let key of KeyListAligned[selectedKeyType]['acc']; let i = index">
-						<ng-container *ngIf="key === null">
+					<ng-container *ngFor="let listedKey of KeyListAligned[key.type]['acc']; let i = index">
+						<ng-container *ngIf="listedKey === null">
 							<span class="key-opt-space"></span>
 						</ng-container>
-						<button *ngIf="key"
+						<button *ngIf="listedKey"
 							mat-button
 							class="key-option"
-							[class.selected]="selectedKey!.display === key.display && selectedKeyType === key.type"
-							(click)="setSelectedKey(key, 'acc', i); $event.stopPropagation()">
-							<span [innerHTML]="getKeyDisplayHtml(key)"></span>
+							[class.selected]="key == listedKey"
+							(click)="key = listedKey; $event.stopPropagation()">
+							<span [innerHTML]="getKeyDisplayHtml(listedKey)"></span>
 						</button>
 					</ng-container>
 				</div>
 				<div class="naturals-row">
-					<ng-container *ngFor="let key of KeyListAligned[selectedKeyType]['nat']; let i = index">
+					<ng-container *ngFor="let listedKey of KeyListAligned[key.type]['nat']; let i = index">
 						<button
 							mat-button
 							class="key-option"
-							[class.selected]="selectedKey!.display === key.display && selectedKeyType === key.type"
-							(click)="setSelectedKey(key, 'nat', i); $event.stopPropagation()">
-							{{ key.display }}
+							[class.selected]="key == listedKey"
+							(click)="key = listedKey; $event.stopPropagation()">
+							{{ listedKey.display }}
 						</button>
 					</ng-container>
 				</div>
@@ -63,10 +64,13 @@ export class KeyComponent {
 
 	KeyListAligned = KeyListAligned;
 
-	selectedKeyType: 'maj'|'min' = 'maj';
-	selectedKeyRow: 'nat'|'acc' = 'nat'
-	selectedKeyIndex = 0;
-	selectedKey: Key | null = KeyListAligned[this.selectedKeyType][this.selectedKeyRow][this.selectedKeyIndex]; // default Cmaj
+	get key(): Key { return this.studioService.key(); }
+	set key(value: Key) { this.studioService.key.set(value); }
+
+	changeType(keyType: 'maj'|'min') { 
+		const newKey = KeyListAligned[keyType][this.key.acc ? 'acc' : 'nat'][this.key.alignedIdx];
+		if (newKey) { this.studioService.key.set(newKey); }
+	}
 
 	getKeyDisplayHtml(key: Key): SafeHtml {
 		let html = key.display[0];
@@ -79,15 +83,5 @@ export class KeyComponent {
 		}
 		if (key.display[2]) { html += key.display[2]; }
 		return this.sanitizer.bypassSecurityTrustHtml(html);
-	}
-
-	setSelectedKey(key: Key, row:'nat'|'acc', i: number) {
-		this.selectedKeyRow = row;
-		this.selectedKeyIndex = i;
-		this.selectedKey = key;
-	}
-	setType(keyType: 'maj'|'min') { 
-		this.selectedKeyType = keyType;
-		this.selectedKey = KeyListAligned[this.selectedKeyType][this.selectedKeyRow][this.selectedKeyIndex];
 	}
 }

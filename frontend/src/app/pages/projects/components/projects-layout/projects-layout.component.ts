@@ -36,7 +36,7 @@ import { env } from '@env/environment';
 					</button>
 
 					<button mat-button class="sidebar-btn2" (click)="newProjectOnClick()">
-						<mat-icon>add</mat-icon>
+						<mat-icon>add</mat-icon>	
 						New Project
 					</button>
 				</mat-nav-list>
