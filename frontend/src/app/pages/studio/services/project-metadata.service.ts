@@ -1,7 +1,9 @@
-import { WritableSignal } from '@angular/core';
+import { Injectable, OnInit, WritableSignal } from '@angular/core';
 import type { ProjectMetadata } from '@shared/types/ProjectMetadata';
 import { SignalStateService } from './signal-state.service';
 import { Author } from '@shared/types/Author';
+
+import { HistoryService } from './history.service';
 
 const DEFAULTS = {
 	_id: '',
@@ -15,7 +17,7 @@ const DEFAULTS = {
 	isReleased: false,
 };
 
-
+@Injectable()
 export class ProjectMetadataService extends SignalStateService<ProjectMetadata> {
 	declare _id: WritableSignal<string>;
 	declare title: WritableSignal<string>;
@@ -27,8 +29,9 @@ export class ProjectMetadataService extends SignalStateService<ProjectMetadata> 
 	declare isRemixOf: WritableSignal<string>;
 	declare isReleased: WritableSignal<boolean>;
 
-	constructor() {
-		super(DEFAULTS);
-		console.log(this);
+	constructor(historyService: HistoryService) {
+		super(historyService, DEFAULTS);
+
+		this.initProps(false); // must be seperate from super() or else props are undefined (no explanation) 
 	}
 }

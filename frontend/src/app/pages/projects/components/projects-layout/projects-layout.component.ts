@@ -5,11 +5,9 @@ import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
-import { AuthService } from '@auth0/auth0-angular';
-import { env } from '@env/environment';
+import { AppAuthService } from '@src/app/services/app-auth.service';
 
 import axios from 'axios'
-import { firstValueFrom } from 'rxjs';
 
 @Component({
 	selector: 'app-projects-layout',
@@ -55,17 +53,12 @@ export class ProjectsLayoutComponent {
 	constructor(
 		private http: HttpClient, 
 		private router: Router, 
-		private auth: AuthService
+		private auth: AppAuthService
 	) {}
 
 	async newProjectOnClick() {
 		try {
-			const token = await firstValueFrom(this.auth.getAccessTokenSilently({
-				authorizationParams: {
-					audience: env.auth0_api_aud,
-					prompt: 'consent'
-				}
-			}));
+			const token = await this.auth.getAccessToken();
 
 			console.log('Got JWT token:', token ? 'Token received' : 'No token');
 

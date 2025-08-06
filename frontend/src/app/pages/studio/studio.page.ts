@@ -1,22 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AuthService } from '@auth0/auth0-angular';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { env } from '@env/environment';
 
 import { ProjectState } from './state/project.state';
-import { Author } from '@shared_types/Author';
+
+import { AppAuthService } from '@src/app/services/app-auth.service';
 
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
 import { StudioToolbarDetailsComponent } from './components/studio-toolbar-details/studio-toolbar-details.component';
 import { ProjectMetadataService } from './services/project-metadata.service';
 import { ProjectVarsService } from './services/project-vars.service';
 import { ProjectTracksService } from './services/project-tracks.service';
+import { HistoryService } from './services/history.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent],
-	providers: [ProjectState, ProjectMetadataService, ProjectVarsService, ProjectTracksService],
+	providers: [ProjectState, ProjectMetadataService, ProjectVarsService, ProjectTracksService, HistoryService, AppAuthService],
 	template: `
 		<app-studio-toolbar-top></app-studio-toolbar-top>
 		<app-studio-toolbar-details></app-studio-toolbar-details>
@@ -28,8 +28,7 @@ export class StudioPage implements OnInit {
 
 	constructor(
 		private route: ActivatedRoute,	
-		private auth: AuthService,
-		private http: HttpClient,
+		private auth: AppAuthService,
 		public projectState: ProjectState
 	) {}
 
@@ -43,26 +42,15 @@ export class StudioPage implements OnInit {
 	}
 
 	private initializeProjectWithUser() {
-		this.auth.user$.subscribe({
-			next: (user) => {
-				if (user && user.sub) {
-					console.log('User info:', user);
-					
-					const currentUser: Author = {
-						userId: user.sub,
-						username: user.name || user.email || 'Unknown User'
-					};
-					
-					//this.projectState.initializeProject(this.sessionId);
-					//this.projectState.addAuthor(currentUser);
-				} else {
-					console.error('No user found');
-				}
-			},
-			error: (err) => {
-				console.error('Error getting user info:', err);
-			}
-		});
+		const user = this.auth.getUser();
+		if (user) {	
+			
+			//this.projectState.initializeProject(this.sessionId);
+			//this.projectState.addAuthor(currentUser);
+
+		} else {
+			console.error("Not logged in or user not found!")
+		}
 	}
 
 }
