@@ -1,8 +1,9 @@
+import { Author } from "./Author";
+
 export interface ProjectMetadata { // common data for frequent fetches / project page
 	_id: string;
 	title: string;
-	authorIds: string[];
-	authors: string[];
+	authors: Author[];
 	createdAt: Date;
 	updatedAt: Date;
 

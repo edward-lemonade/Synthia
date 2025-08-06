@@ -8,6 +8,9 @@ import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http'
 import { AuthService } from '@auth0/auth0-angular';
 import { env } from '@env/environment';
 
+import axios from 'axios'
+import { firstValueFrom } from 'rxjs';
+
 @Component({
 	selector: 'app-projects-layout',
 	standalone: true,
@@ -55,35 +58,32 @@ export class ProjectsLayoutComponent {
 		private auth: AuthService
 	) {}
 
-	newProjectOnClick() {
-		this.auth.getAccessTokenSilently({ 
-			authorizationParams: {
-				audience: env.auth0_api_aud,
-				prompt: 'consent',
-			}
-		}).subscribe({
-			next: (token) => {
-				console.log('Got JWT token:', token ? 'Token received' : 'No token');
-				
-				const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-				
-				this.http.post<{ sessionId: string }>(
-					'/api/studio_session/create', {}, { headers }
-				).subscribe({
-					next: (res) => {
-						if (res.sessionId) {
-							console.log('Redirecting to studio with sessionId: ', res.sessionId);
-							this.router.navigate(['/studio', res.sessionId]);
-						}
-					},
-					error: (err) => {
-						console.error('Failed to create studio session: ', err);
+	async newProjectOnClick() {
+		try {
+			const token = await firstValueFrom(this.auth.getAccessTokenSilently({
+				authorizationParams: {
+					audience: env.auth0_api_aud,
+					prompt: 'consent'
+				}
+			}));
+
+			console.log('Got JWT token:', token ? 'Token received' : 'No token');
+
+			const res = await axios.post<{ sessionId: string }>(
+				'/api/studio_session/create', {},
+				{
+					headers: {
+						Authorization: `Bearer ${token}`
 					}
-				});
-			},
-			error: (err) => {
-				console.error('Failed to get access token: ', err)
+				}
+			);
+
+			if (res.data.sessionId) {
+				console.log('Redirecting to studio with sessionId:', res.data.sessionId);
+				this.router.navigate(['/studio', res.data.sessionId]);
 			}
-		})	
+		} catch (err) {
+			console.error('Error during project creation:', err);
+		}
 	}
 } 

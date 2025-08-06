@@ -1,4 +1,4 @@
-import { Component, WritableSignal } from '@angular/core';
+import { Component, OnInit, WritableSignal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
@@ -27,5 +27,4 @@ export class VolumeComponent {
 	constructor(public projectVarsService: ProjectVarsService) {
 		this.masterVolume = projectVarsService.masterVolume;
 	}
-
 }

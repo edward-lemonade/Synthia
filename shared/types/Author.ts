@@ -1,4 +1,4 @@
-export interface User {
+export interface Author {
 	userId: string;
 	username: string;
 } 

@@ -5,15 +5,18 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { env } from '@env/environment';
 
 import { ProjectState } from './state/project.state';
-import { User } from '@shared_types/User';
+import { Author } from '@shared_types/Author';
 
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
 import { StudioToolbarDetailsComponent } from './components/studio-toolbar-details/studio-toolbar-details.component';
+import { ProjectMetadataService } from './services/project-metadata.service';
+import { ProjectVarsService } from './services/project-vars.service';
+import { ProjectTracksService } from './services/project-tracks.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent],
-	providers: [ProjectState],
+	providers: [ProjectState, ProjectMetadataService, ProjectVarsService, ProjectTracksService],
 	template: `
 		<app-studio-toolbar-top></app-studio-toolbar-top>
 		<app-studio-toolbar-details></app-studio-toolbar-details>
@@ -45,7 +48,7 @@ export class StudioPage implements OnInit {
 				if (user && user.sub) {
 					console.log('User info:', user);
 					
-					const currentUser: User = {
+					const currentUser: Author = {
 						userId: user.sub,
 						username: user.name || user.email || 'Unknown User'
 					};

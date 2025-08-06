@@ -8,34 +8,8 @@ import { ProjectMetadataService } from '../services/project-metadata.service';
 import { ProjectVarsService } from '../services/project-vars.service';
 import { ProjectTracksService } from '../services/project-tracks.service';
 
-export function createDefaultProjectStudio() : ProjectStudio {
-	return {
-		metadata: {
-			_id: "placeholder",
-			title: "Untitled",
-			authorIds: [],
-			authors: [],
-			createdAt: new Date(),
-			updatedAt: new Date(),
+import axios from 'axios';
 
-			isCollaboration: false,
-			isRemix: false,
-			isRemixOf: null,
-
-			isReleased: false,
-		},
-		vars: {
-			bpm: 120,
-			key: DefaultKey,
-			centOffset: 0,
-			timeSignature:DefaultTimeSignature,
-			masterVolume: 100
-		},
-		tracks: {
-			tracks: []
-		}
-	}
-}
 
 @Injectable()
 export class ProjectState {
@@ -53,11 +27,13 @@ export class ProjectState {
 		};
 	});
 
-	init(project?: ProjectStudio) {
-		const p = project ?? createDefaultProjectStudio();
-		this.metadata.init(p.metadata);
-		this.vars.init(p.vars);
-		this.tracks.init(p.tracks);
+	async save() { // MAKE API CALL TO SAVE PROJECT TO DATABASE
+		const res = await axios.post<{}>(
+			'/api/studio/save', {},
+			{
+
+			}
+		)
 	}
 
 }

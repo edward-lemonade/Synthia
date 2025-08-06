@@ -96,14 +96,15 @@ export class TempoComponent {
 	bpm: WritableSignal<number>;
 	validateBpm(event: Event) {
 		const input = (event.target as HTMLInputElement).value;
+		
 		if (/^\d*$/.test(input)) {
-			const parsed = parseInt(input, 10);
-			if (!isNaN(parsed)) {
-				const finalBpm = Math.min(999, Math.max(1, parsed));
-				this.bpm.set(finalBpm);
-			}
+			let parsed = parseInt(input, 10);
+			if (isNaN(parsed)) {parsed = 0};
+
+			const finalBpm = Math.min(999, Math.max(1, parsed));
+			this.bpm.set(finalBpm);
 		}
-		(event.target as HTMLInputElement).value = this.bpm.toString();
+		(event.target as HTMLInputElement).value = this.bpm().toString()
 	}
 
 	// TIME SIGNATURE
