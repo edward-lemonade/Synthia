@@ -8,9 +8,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
-import { Key, KeyListAligned } from '@shared_types/Key'
+import { Key, KeyListAligned } from '@shared_types/studio'
 
-import { ProjectVarsService } from '../../../services/project-vars.service';
+import { ProjectGlobalsService } from '../../../services/project-globals.service';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
@@ -63,8 +63,8 @@ export class KeyComponent {
 	KeyListAligned = KeyListAligned;
 	key: WritableSignal<Key>;
 
-	constructor(public projectVarsService: ProjectVarsService, private sanitizer: DomSanitizer) {
-		this.key = projectVarsService.key;
+	constructor(public projectGlobalsService: ProjectGlobalsService, private sanitizer: DomSanitizer) {
+		this.key = projectGlobalsService.key;
 	}
 
 	changeType(keyType: 'maj'|'min') { 

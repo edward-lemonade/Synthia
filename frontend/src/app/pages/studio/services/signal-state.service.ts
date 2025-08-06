@@ -39,7 +39,7 @@ export class SignalStateService<T extends object> {
 
 	protected initProps(
 		recordPatches = false,
-		service?: "vars" | "tracks"
+		service?: "globals" | "tracks"
 	) {
 		for (const key of this.ALL_KEYS) {
 			Object.defineProperty(this, key, {

@@ -1,7 +1,6 @@
-import { Injectable, OnInit, WritableSignal } from '@angular/core';
-import type { ProjectVars } from '@shared/types/ProjectStudio';
-import { DefaultKey, Key } from '@shared/types/Key';
-import { DefaultTimeSignature, TimeSignature } from '@shared/types/TimeSignature';
+import { Injectable, WritableSignal } from '@angular/core';
+import type { Globals } from '@shared/types/studio';
+import { DefaultKey, Key, DefaultTimeSignature, TimeSignature } from '@shared/types/studio';
 import { SignalStateService } from './signal-state.service';
 
 import { HistoryService } from './history.service';
@@ -15,7 +14,7 @@ const DEFAULTS = {
 };
 
 @Injectable()
-export class ProjectVarsService extends SignalStateService<ProjectVars> {
+export class ProjectGlobalsService extends SignalStateService<Globals> {
 	declare bpm: WritableSignal<number>;
 	declare key: WritableSignal<Key>;
 	declare centOffset: WritableSignal<number>;
@@ -24,8 +23,8 @@ export class ProjectVarsService extends SignalStateService<ProjectVars> {
 
 	constructor(historyService: HistoryService) {
 		super(historyService, DEFAULTS);
-		historyService.registerVarsService(this);
+		historyService.registerGlobalsService(this);
 
-		this.initProps(true, "vars"); // must be seperate from super() or else props are undefined (no explanation) 
+		this.initProps(true, "globals"); // must be seperate from super() or else props are undefined (no explanation) 
 	}
 }

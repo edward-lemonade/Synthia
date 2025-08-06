@@ -6,7 +6,7 @@ import { Author } from '@shared/types/Author';
 import { HistoryService } from './history.service';
 
 const DEFAULTS = {
-	_id: '',
+	projectId: '',
 	title: 'Untitled',
 	authors: [],
 	createdAt: new Date(),
@@ -19,7 +19,7 @@ const DEFAULTS = {
 
 @Injectable()
 export class ProjectMetadataService extends SignalStateService<ProjectMetadata> {
-	declare _id: WritableSignal<string>;
+	declare projectId: WritableSignal<string>;
 	declare title: WritableSignal<string>;
 	declare authors: WritableSignal<Author[]>;
 	declare createdAt: WritableSignal<Date>;

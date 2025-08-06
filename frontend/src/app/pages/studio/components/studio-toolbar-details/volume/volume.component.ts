@@ -2,7 +2,7 @@ import { Component, OnInit, WritableSignal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
-import { ProjectVarsService } from '../../../services/project-vars.service';
+import { ProjectGlobalsService } from '../../../services/project-globals.service';
 
 @Component({
 	selector: 'studio-toolbar-details-volume',
@@ -24,7 +24,7 @@ import { ProjectVarsService } from '../../../services/project-vars.service';
 export class VolumeComponent {
 	masterVolume: WritableSignal<number>;
 
-	constructor(public projectVarsService: ProjectVarsService) {
-		this.masterVolume = projectVarsService.masterVolume;
+	constructor(public projectGlobalsService: ProjectGlobalsService) {
+		this.masterVolume = projectGlobalsService.masterVolume;
 	}
 }

@@ -1,11 +1,11 @@
-import { Author } from "./Author";
+import { Author } from "./";
 
 export interface ProjectMetadata { // common data for frequent fetches / project page
-	_id: string;
-	title: string;
-	authors: Author[];
+	projectId: string;
 	createdAt: Date;
 	updatedAt: Date;
+	title: string;
+	authors: Author[];
 
 	isCollaboration: boolean;
 	isRemix: boolean;

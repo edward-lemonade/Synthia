@@ -1,18 +1,15 @@
 import { Injectable, OnInit, WritableSignal } from '@angular/core';
-import type { ProjectTracks, Track } from '@shared/types/ProjectStudio';
+import type { Track } from '@shared/types/studio';
 import { SignalStateService } from './signal-state.service';
 
-import { ProjectState } from '../state/project.state';
 import { HistoryService } from './history.service';
 
 const DEFAULTS = {
-	tracks: []
+	tracks: [] as Track[],
 };
 
 @Injectable()
-export class ProjectTracksService extends SignalStateService<ProjectTracks> {
-	declare tracks: Track[];
-
+export class ProjectTracksService extends SignalStateService<{tracks: Track[]}> {
 	constructor(historyService: HistoryService) {
 		super(historyService, DEFAULTS);
 		historyService.registerTracksService(this);

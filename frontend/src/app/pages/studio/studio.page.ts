@@ -9,7 +9,7 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
 import { StudioToolbarDetailsComponent } from './components/studio-toolbar-details/studio-toolbar-details.component';
 import { ProjectMetadataService } from './services/project-metadata.service';
-import { ProjectVarsService } from './services/project-vars.service';
+import { ProjectVarsService } from './services/project-globals.service';
 import { ProjectTracksService } from './services/project-tracks.service';
 import { HistoryService } from './services/history.service';
 

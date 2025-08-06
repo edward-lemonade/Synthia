@@ -8,9 +8,9 @@ import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { TimeSignature, TimeSigOptionsN, TimeSigOptionsD, DefaultTimeSignature } from '@shared_types/TimeSignature';
+import { TimeSignature, TimeSigOptionsN, TimeSigOptionsD } from '@shared_types/studio/';
 
-import { ProjectVarsService } from '../../../services/project-vars.service';
+import { ProjectGlobalsService } from '../../../services/project-globals.service';
 
 @Component({
 	selector: 'studio-toolbar-details-tempo',
@@ -79,9 +79,9 @@ import { ProjectVarsService } from '../../../services/project-vars.service';
 })
 
 export class TempoComponent {
-	constructor(public projectVarsService: ProjectVarsService) {
-		this.bpm = projectVarsService.bpm;
-		this.timeSignature = projectVarsService.timeSignature;
+	constructor(public projectGlobalsService: ProjectGlobalsService) {
+		this.bpm = projectGlobalsService.bpm;
+		this.timeSignature = projectGlobalsService.timeSignature;
 	}
 
 	// METRONOME

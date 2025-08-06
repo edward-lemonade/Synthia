@@ -6,12 +6,12 @@ import { Author } from '@shared/types/Author';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 
 import { ProjectMetadataService } from '../services/project-metadata.service';
-import { ProjectVarsService } from '../services/project-vars.service';
+import { ProjectGlobalsService } from './project-globals.service';
 import { ProjectTracksService } from '../services/project-tracks.service';
 
 import { ProjectState } from '../state/project.state';
 
-type ServiceKey = 'vars' | 'tracks'; // metadata edits aren't tracked so they wont be undo/redo'd
+type ServiceKey = 'globals' | 'tracks'; // metadata edits aren't tracked so they wont be undo/redo'd
 
 export interface PatchEntry {
 	service: ServiceKey;
@@ -32,10 +32,10 @@ function invertPatchEntry(entry: PatchEntry) {
 @Injectable()
 export class HistoryService {
 	private trackedServices : {
-		vars: ProjectVarsService | null,
+		globals: ProjectGlobalsService | null,
 		tracks: ProjectTracksService | null,
-	} = {vars: null, tracks: null};
-	registerVarsService(svc: ProjectVarsService) {this.trackedServices!.vars = svc;}
+	} = {globals: null, tracks: null};
+	registerGlobalsService(svc: ProjectGlobalsService) {this.trackedServices!.globals = svc;}
 	registerTracksService(svc: ProjectTracksService) {this.trackedServices!.tracks = svc;}
 	  
 	private undoStack: PatchEntry[] = [];
