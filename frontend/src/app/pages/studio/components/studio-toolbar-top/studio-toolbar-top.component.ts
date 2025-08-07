@@ -47,7 +47,7 @@ export class StudioToolbarTopComponent {
 	title: Signal<string>;
 	
 	constructor(public projectMetadataService: ProjectMetadataService) {
-		this.title = this.projectMetadataService.title;
+		this.title = this.projectMetadataService.signals.title;
 	}
 
 	//get title(): string { return this.projectMetadataService.state.title(); }

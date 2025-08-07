@@ -9,14 +9,14 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
 import { StudioToolbarDetailsComponent } from './components/studio-toolbar-details/studio-toolbar-details.component';
 import { ProjectMetadataService } from './services/project-metadata.service';
-import { ProjectVarsService } from './services/project-globals.service';
+import { ProjectGlobalsService } from './services/project-globals.service';
 import { ProjectTracksService } from './services/project-tracks.service';
 import { HistoryService } from './services/history.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent],
-	providers: [ProjectState, ProjectMetadataService, ProjectVarsService, ProjectTracksService, HistoryService, AppAuthService],
+	providers: [ProjectState, ProjectMetadataService, ProjectGlobalsService, ProjectTracksService, HistoryService, AppAuthService],
 	template: `
 		<app-studio-toolbar-top></app-studio-toolbar-top>
 		<app-studio-toolbar-details></app-studio-toolbar-details>

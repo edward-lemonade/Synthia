@@ -64,7 +64,7 @@ export class KeyComponent {
 	key: WritableSignal<Key>;
 
 	constructor(public projectGlobalsService: ProjectGlobalsService, private sanitizer: DomSanitizer) {
-		this.key = projectGlobalsService.key;
+		this.key = projectGlobalsService.signals.key;
 	}
 
 	changeType(keyType: 'maj'|'min') { 

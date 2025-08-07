@@ -80,8 +80,8 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 
 export class TempoComponent {
 	constructor(public projectGlobalsService: ProjectGlobalsService) {
-		this.bpm = projectGlobalsService.bpm;
-		this.timeSignature = projectGlobalsService.timeSignature;
+		this.bpm = projectGlobalsService.signals.bpm;
+		this.timeSignature = projectGlobalsService.signals.timeSignature;
 	}
 
 	// METRONOME

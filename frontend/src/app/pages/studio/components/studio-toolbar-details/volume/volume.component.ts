@@ -25,6 +25,6 @@ export class VolumeComponent {
 	masterVolume: WritableSignal<number>;
 
 	constructor(public projectGlobalsService: ProjectGlobalsService) {
-		this.masterVolume = projectGlobalsService.masterVolume;
+		this.masterVolume = projectGlobalsService.signals.masterVolume;
 	}
 }

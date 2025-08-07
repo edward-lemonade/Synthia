@@ -2,5 +2,5 @@ export * from './Automation';
 export * from './Globals';
 export * from './Key';
 export * from './TimeSignature';
-export * from './Track';
+export * from './Tracks';
 

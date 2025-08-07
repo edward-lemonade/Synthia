@@ -17,7 +17,7 @@ export class ProjectState {
 	private historyService = inject(HistoryService);
 
 	constructor() {}
-	/*
+	
 	readonly state = computed<ProjectStudio | null>(() => {
 		return {
 			metadata: this.metadataService.state(),
@@ -25,7 +25,7 @@ export class ProjectState {
 			tracks: this.tracksService.state()
 		};
 	});
-	*/
+	
 	async save() { // MAKE API CALL TO SAVE PROJECT TO DATABASE
 		const entries = this.historyService.getPendingEntriesAndClear();
 		if (entries.length === 0) { return { ok: true, saved: 0 }; }
