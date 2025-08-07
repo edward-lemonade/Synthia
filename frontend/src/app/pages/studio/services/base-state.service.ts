@@ -50,7 +50,7 @@ export class BaseStateService<T extends Record<string, any>> {
 		if (!dontPatch && this.recordHistory) {
 			const currentState = this.state();
 			const [_, patches, inversePatches] = produceWithPatches(currentState, (draft: T) => {
-				console.log(currentState, draft, key, value);
+				//console.log(currentState, draft, key, value);
 				draft[key] = value;
 			});
 			this.signals[key].set(value);

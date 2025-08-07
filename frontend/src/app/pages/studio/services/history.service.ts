@@ -64,16 +64,9 @@ export class HistoryService {
 	}
 
 	public undo(): boolean {
-		console.log(this.undoStack, this.redoStack, this.pendingEntries);
-
 		if (this.undoStack.length === 0) return false;
 	
 		const entry = this.undoStack.pop()!;
-		if (entry && (!entry.inversePatches || entry.inversePatches.length === 0)) {
-			console.warn('No inverse patches available for undo entry', entry);
-			this.redoStack.push(entry);
-			return false;
-		}
 
 		if (entry.service == "globals") this.trackedServices["globals"]!.applyPatchesToState(entry.inversePatches);
 		if (entry.service == "tracks") this.trackedServices["tracks"]!.applyPatchesToState(entry.inversePatches);
@@ -84,20 +77,13 @@ export class HistoryService {
 	}
 
 	public redo(): boolean {
-		console.log(this.undoStack, this.redoStack, this.pendingEntries);
-
 		if (this.redoStack.length === 0) return false;
 	
 		const entry = this.redoStack.pop()!;
-		if (!entry.patches || entry.patches.length === 0) {
-			console.warn('No forward patches available for redo entry', entry);
-			this.undoStack.push(entry);
-			return false;
-		}
 	
-		if (entry.service == "globals") this.trackedServices["globals"]!.applyPatchesToState(entry.inversePatches);
-		if (entry.service == "tracks") this.trackedServices["tracks"]!.applyPatchesToState(entry.inversePatches);
-		
+		if (entry.service == "globals") this.trackedServices["globals"]!.applyPatchesToState(entry.patches);
+		if (entry.service == "tracks") this.trackedServices["tracks"]!.applyPatchesToState(entry.patches);
+
 		this.undoStack.push(entry);
 		this.pendingEntries.push(entry);
 		return true;
