@@ -30,7 +30,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 					type="text"
 					maxlength="3"
 					[value]="bpm().toString()"
-					(input)="validateBpm($event)"
+					(input)="setBpm($event)"
 					placeholder="bpm"
 					class="bpm-number" />
 				
@@ -55,7 +55,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 							*ngFor="let n of timeSigOptionsN" 
 							class="time-sig-option"
 							[class.selected]="timeSignature().N === n"
-							(click)="$event.stopPropagation(); timeSignature.set({N: n, D: timeSignature().D})">
+							(click)="$event.stopPropagation(); setTimeSignature({N: n, D: timeSignature().D})">
 							{{ n }}
 						</button>
 					</div>
@@ -67,7 +67,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 							*ngFor="let d of timeSigOptionsD" 
 							class="time-sig-option"
 							[class.selected]="timeSignature().D === d"
-							(click)="$event.stopPropagation(); timeSignature.set({N: timeSignature().N, D: d})">
+							(click)="$event.stopPropagation(); setTimeSignature({N: timeSignature().N, D: d})">
 							{{ d }}
 						</button>
 					</div>
@@ -79,10 +79,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 })
 
 export class TempoComponent {
-	constructor(public projectGlobalsService: ProjectGlobalsService) {
-		this.bpm = projectGlobalsService.signals.bpm;
-		this.timeSignature = projectGlobalsService.signals.timeSignature;
-	}
+	constructor(public globalsService: ProjectGlobalsService) {}
 
 	// METRONOME
 
@@ -93,8 +90,8 @@ export class TempoComponent {
 
 	// BPM
 
-	bpm: WritableSignal<number>;
-	validateBpm(event: Event) {
+	bpm() { return this.globalsService.get('bpm')(); }
+	setBpm(event: Event) {
 		const input = (event.target as HTMLInputElement).value;
 		
 		if (/^\d*$/.test(input)) {
@@ -102,22 +99,16 @@ export class TempoComponent {
 			if (isNaN(parsed)) {parsed = 0};
 
 			const finalBpm = Math.min(999, Math.max(1, parsed));
-			this.bpm.set(finalBpm);
+			this.globalsService.set("bpm", finalBpm);
 		}
 		(event.target as HTMLInputElement).value = this.bpm().toString()
 	}
 
 	// TIME SIGNATURE
 
-	timeSignature: WritableSignal<TimeSignature>;
-
 	timeSigOptionsN = TimeSigOptionsN;
 	timeSigOptionsD = TimeSigOptionsD;
 
-	setTimeSigN(n: number) {
-		this.timeSignature.set({ N: n as 2|3|4|5|6|7|8|9|10|11|12|13|14|15|16, D: this.timeSignature().D });
-	}
-	setTimeSigD(d: number) {
-		this.timeSignature.set({ N: this.timeSignature().N, D: d as 2|4|8|16 });
-	}
+	timeSignature(): TimeSignature { return this.globalsService.get('timeSignature')(); }
+	setTimeSignature(timeSignature: TimeSignature) { this.globalsService.set('timeSignature', timeSignature); }
 }

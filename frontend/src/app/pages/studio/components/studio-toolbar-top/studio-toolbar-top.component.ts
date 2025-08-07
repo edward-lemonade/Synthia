@@ -29,7 +29,8 @@ import { ProjectMetadataService } from '../../services/project-metadata.service'
 						class="title-input" 
 						placeholder="Untitled" 
 						type="text"
-						[(ngModel)]="title">
+						[value]="title().toString()"
+						(input)="setTitle($event)">
 				</div>
 			</div>
 
@@ -44,12 +45,13 @@ import { ProjectMetadataService } from '../../services/project-metadata.service'
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
 export class StudioToolbarTopComponent {
-	title: Signal<string>;
-	
-	constructor(public projectMetadataService: ProjectMetadataService) {
-		this.title = this.projectMetadataService.signals.title;
-	}
+	constructor(public projectMetadataService: ProjectMetadataService) {}
 
-	//get title(): string { return this.projectMetadataService.state.title(); }
-	//set title(value: string) { this.projectMetadataService.title.set(value); }
+	title(): string { return this.projectMetadataService.get("title")(); }
+	setTitle(event: Event) { 
+		const input = (event.target as HTMLInputElement).value.toString();
+
+		this.projectMetadataService.set("title", input);
+		(event.target as HTMLInputElement).value = this.title().toString() 
+	}
 }	

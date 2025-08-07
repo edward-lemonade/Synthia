@@ -11,7 +11,7 @@ const DEFAULTS = {
 @Injectable()
 export class ProjectTracksService extends BaseStateService<Tracks> {
 	constructor(historyService: HistoryService) {
-		super(historyService, DEFAULTS);
+		super(historyService, DEFAULTS, "tracks");
 		historyService.registerTracksService(this);
 	}
 }

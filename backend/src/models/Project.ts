@@ -53,35 +53,37 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 	},
 
 	tracks: {
-		index: 	{ type: Number },
-		name: 	{ type: String },
-		type:  	{ type: String, enum: ["audio", "midi"], default: "midi" },
-		audioFile: 	{ type: String }, // s3 url
-		color: 		{ type: String },
+		arr: {
+			index: 	{ type: Number },
+			name: 	{ type: String },
+			type:  	{ type: String, enum: ["audio", "midi"], default: "midi" },
+			audioFile: 	{ type: String }, // s3 url
+			color: 		{ type: String },
 
-		midiInstrument: { type: String },
+			midiInstrument: { type: String },
+			
+			// master settings
+			volume: { type: Number },
+			pan:	{ type: Number },
+			mute: 	{ type: Boolean },
+			solo: 	{ type: Boolean },
 		
-		// master settings
-		volume: { type: Number },
-		pan:	{ type: Number },
-		mute: 	{ type: Boolean },
-		solo: 	{ type: Boolean },
-	
-		// effects
-		effects: 	{ type: String },
-	
-		// regions
-		midiData: [{
-			pitch: Number,
-			start: Number, // in beats or seconds
-			duration: Number,
-			velocity: Number
-		}],
-		clipData: [{
-			start: Number, // in seconds
-			duration: Number,
-			audioFile: String, // s3 url
-		}]
+			// effects
+			effects: 	{ type: String },
+		
+			// regions
+			midiData: [{
+				pitch: Number,
+				start: Number, // in beats or seconds
+				duration: Number,
+				velocity: Number
+			}],
+			clipData: [{
+				start: Number, // in seconds
+				duration: Number,
+				audioFile: String, // s3 url
+			}]
+		},
 	}
 
 	// TODO: automations

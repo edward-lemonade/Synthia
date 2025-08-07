@@ -2,6 +2,7 @@ import { bootstrapApplication } from '@angular/platform-browser';
 
 import { env } from './env/environment';
 
+import { enablePatches } from "immer";
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
 
@@ -10,6 +11,8 @@ if (env.production) {
 } else {
 	console.log('Running in development mode');
 }
+
+enablePatches();
 
 bootstrapApplication(AppComponent, appConfig)
 	.catch((err) => console.error(err));

@@ -13,7 +13,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 			<mat-slider min="0" max="100" step="1">
 				<input matSliderThumb 
 				[value]="masterVolume()" 
-				(input)="masterVolume.set($any($event.target).valueAsNumber)"
+				(input)="setMasterVolume($any($event.target).valueAsNumber)"
 				>
 			</mat-slider>
 		</div>
@@ -22,9 +22,8 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 })
 
 export class VolumeComponent {
-	masterVolume: WritableSignal<number>;
+	constructor(public globalsService: ProjectGlobalsService) {}
 
-	constructor(public projectGlobalsService: ProjectGlobalsService) {
-		this.masterVolume = projectGlobalsService.signals.masterVolume;
-	}
+	masterVolume(): number { return this.globalsService.get('masterVolume')(); }
+	setMasterVolume(v: number) { this.globalsService.set('masterVolume', v); }
 }

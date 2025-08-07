@@ -6,22 +6,25 @@ import { HistoryService } from './history.service';
 type SignalMap = Record<string, WritableSignal<any>>; 
 
 export class BaseStateService<T extends Record<string, any>> {
-	private historyService: HistoryService;
+	declare historyService: HistoryService;
+	declare recordHistory: boolean; // whether to record changes in history
+	declare serviceName: string;
 
-	readonly signals: Record<keyof T, WritableSignal<any>>;
+	private readonly signals: Record<keyof T, WritableSignal<any>>;
 	readonly state: Signal<T>;
 
 	constructor(
 		historyService: HistoryService,
 		defaults: Record<keyof T, T[keyof T]>,
+		serviceName: string,
 	) {
-		this.historyService = historyService
+		this.historyService = historyService;
+		this.recordHistory = (serviceName == "globals" || serviceName == "tracks");
+		this.serviceName = serviceName;
 
 		this.signals = {} as Record<keyof T, WritableSignal<any>>;
 		for (const key in defaults) {
-			if (defaults.hasOwnProperty(key)) {
-				this.signals[key] = signal(defaults[key]);
-			}
+			this.signals[key] = signal(defaults[key]);			
 		}
 
 		this.state = computed(() => {
@@ -35,29 +38,31 @@ export class BaseStateService<T extends Record<string, any>> {
 		return this;
 	}
 
-	protected setState<Key extends keyof T>(
+	get<K extends keyof T>(key: K): Signal<T[K]> {
+		return this.signals[key];
+	}
+
+	set<Key extends keyof T>(
 		key: Key, 
 		value: T[Key],
-		makePatch = false
-	): { patches: Patch[]; inversePatches: Patch[] } | null {
-		
-		if (!makePatch) {
+		dontPatch: boolean = false,
+	) {
+		if (!dontPatch && this.recordHistory) {
+			const currentState = this.state();
+			const [_, patches, inversePatches] = produceWithPatches(currentState, (draft: T) => {
+				console.log(currentState, draft, key, value);
+				draft[key] = value;
+			});
 			this.signals[key].set(value);
-			return null;
+			if (patches && patches.length > 0) this.historyService.recordPatch(this.serviceName, patches, inversePatches)
+		} else {
+			this.signals[key].set(value);
 		}
-
-		const currentState = this.state();
-		const [_, patches, inversePatches] = produceWithPatches(currentState, (draft: T) => {
-			draft[key] = value;
-		});
-
-		this.signals[key].set(value);
-		return patches && patches.length > 0 ? {patches, inversePatches} : null;
 	}
 
 	applyState(newState: T) {
 		for (const key in newState) {
-			this.setState(key, newState[key]);
+			this.signals[key].set(newState[key]);
 		}
 	}
 
@@ -68,7 +73,7 @@ export class BaseStateService<T extends Record<string, any>> {
 		const next = applyPatches(current, patches);
 
 		for (const key in next) {
-			this.setState(key, next[key]);
+			this.signals[key].set(next[key]);
 		}
 
 		return this.state();

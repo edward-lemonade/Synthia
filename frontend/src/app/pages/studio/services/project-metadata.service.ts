@@ -20,6 +20,6 @@ const DEFAULTS = {
 @Injectable()
 export class ProjectMetadataService extends BaseStateService<ProjectMetadata> {
 	constructor(historyService: HistoryService) {
-		super(historyService, DEFAULTS);
+		super(historyService, DEFAULTS, "metadata");
 	}
 }

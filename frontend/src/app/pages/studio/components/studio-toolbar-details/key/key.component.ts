@@ -24,8 +24,8 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 		</mat-button-toggle-group>
 		<mat-menu #keyMenu="matMenu" class="key-menu">
 			<div class="key-type-toggle">
-				<button mat-button class="key-type-btn" [class.selected]="key().type === 'maj'" (click)="$event.stopPropagation(); changeType('maj')">Major</button>
-				<button mat-button class="key-type-btn" [class.selected]="key().type === 'min'" (click)="$event.stopPropagation(); changeType('min')">Minor</button>
+				<button mat-button class="key-type-btn" [class.selected]="key().type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
+				<button mat-button class="key-type-btn" [class.selected]="key().type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>
 			</div>
 			<div class="key-grid">
 				<div class="accidentals-row">
@@ -38,7 +38,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 							mat-button
 							class="key-option"
 							[class.selected]="key() == listedKey"
-							(click)="key.set(listedKey); $event.stopPropagation()">
+							(click)="setKey(listedKey); $event.stopPropagation()">
 							<span [innerHTML]="getKeyDisplayHtml(listedKey)"></span>
 						</button>
 					</ng-container>
@@ -49,7 +49,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 							mat-button
 							class="key-option"
 							[class.selected]="key() == listedKey"
-							(click)="key.set(listedKey); $event.stopPropagation()">
+							(click)="setKey(listedKey); $event.stopPropagation()">
 							{{ listedKey.display }}
 						</button>
 					</ng-container>
@@ -61,15 +61,20 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 })
 export class KeyComponent {
 	KeyListAligned = KeyListAligned;
-	key: WritableSignal<Key>;
 
-	constructor(public projectGlobalsService: ProjectGlobalsService, private sanitizer: DomSanitizer) {
-		this.key = projectGlobalsService.signals.key;
+	constructor(public globalsService: ProjectGlobalsService, private sanitizer: DomSanitizer) {}
+
+	key(): Key {
+		return this.globalsService.get('key')();
 	}
 
-	changeType(keyType: 'maj'|'min') { 
+	setKey(key: Key) {
+		this.globalsService.set('key', key);
+	}
+
+	setKeyType(keyType: 'maj'|'min') { 
 		const newKey = KeyListAligned[keyType][this.key().acc ? 'acc' : 'nat'][this.key().alignedIdx];
-		if (newKey) { this.key.set(newKey); }
+		if (newKey) { this.setKey(newKey); }
 	}
 
 	getKeyDisplayHtml(key: Key): SafeHtml {

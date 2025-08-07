@@ -16,7 +16,7 @@ const DEFAULTS = {
 @Injectable()
 export class ProjectGlobalsService extends BaseStateService<Globals> {
 	constructor(historyService: HistoryService) {
-		super(historyService, DEFAULTS);
+		super(historyService, DEFAULTS, "globals");
 		historyService.registerGlobalsService(this);
 	}
 }

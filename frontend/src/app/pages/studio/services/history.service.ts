@@ -11,10 +11,8 @@ import { ProjectTracksService } from '../services/project-tracks.service';
 
 import { ProjectState } from '../state/project.state';
 
-type ServiceKey = 'globals' | 'tracks'; // metadata edits aren't tracked so they wont be undo/redo'd
-
 export interface PatchEntry {
-	service: ServiceKey;
+	service: string;
 	patches: Patch[] | null;          // forward patches (current -> next)
 	inversePatches: Patch[] | null;   // inverse patches (next -> current)
 	timestamp: number;
@@ -46,12 +44,10 @@ export class HistoryService {
 	constructor(private auth: AppAuthService,) {}
 	
 	recordPatch(
-		service: ServiceKey, 
+		service: string, 
 		patches: Patch[], 
 		inversePatches: Patch[]
 	) {
-		if (!patches || patches.length === 0) return;
-	
 		const entry: PatchEntry = {
 			service,
 			patches: patches.slice(),
@@ -67,7 +63,9 @@ export class HistoryService {
 		this.pendingEntries.push(entry); // for incremental save
 	}
 
-	undo(): boolean {
+	public undo(): boolean {
+		console.log(this.undoStack, this.redoStack, this.pendingEntries);
+
 		if (this.undoStack.length === 0) return false;
 	
 		const entry = this.undoStack.pop()!;
@@ -77,13 +75,17 @@ export class HistoryService {
 			return false;
 		}
 
-		this.trackedServices[entry.service]!.applyPatchesToState(entry.inversePatches); // apply patch to corresponding service
+		if (entry.service == "globals") this.trackedServices["globals"]!.applyPatchesToState(entry.inversePatches);
+		if (entry.service == "tracks") this.trackedServices["tracks"]!.applyPatchesToState(entry.inversePatches);
+
 		this.redoStack.push(entry);
 		this.pendingEntries.push(invertPatchEntry(entry));
 		return true;
 	}
 
-	redo(): boolean {
+	public redo(): boolean {
+		console.log(this.undoStack, this.redoStack, this.pendingEntries);
+
 		if (this.redoStack.length === 0) return false;
 	
 		const entry = this.redoStack.pop()!;
@@ -93,7 +95,9 @@ export class HistoryService {
 			return false;
 		}
 	
-		this.trackedServices[entry.service]!.applyPatchesToState(entry.patches); // apply patch to corresponding service
+		if (entry.service == "globals") this.trackedServices["globals"]!.applyPatchesToState(entry.inversePatches);
+		if (entry.service == "tracks") this.trackedServices["tracks"]!.applyPatchesToState(entry.inversePatches);
+		
 		this.undoStack.push(entry);
 		this.pendingEntries.push(entry);
 		return true;
