@@ -4,7 +4,15 @@
 	height: calc(100vh - 64px);
 	background: $app-bg;
 }
-mat-sidenav { width: 400px; }
+mat-sidenav { 
+	width: 400px;
+	padding-left: 150px !important; 
+	padding-top: 0px !important;
+}
+mat-nav-list {
+	padding-top: 20px !important;
+
+}
 .sidebar {
 	display: flex;
 	flex-direction: column;
@@ -23,7 +31,7 @@ mat-sidenav { width: 400px; }
 	color: $app-bg;
 	transition: background 0.2s;
 
-	margin-top: 8px;
+	margin-bottom: 8px;
 	width: 200px;
 }
 .sidebar-btn[routerLinkActive].sidebar-btn-active {
@@ -52,4 +60,7 @@ mat-sidenav { width: 400px; }
 
 .projects-content {
 	background: $app-bg;
+	height: 100%;
+	overflow-y: auto;
+	margin-right: $pad-ends;
 }

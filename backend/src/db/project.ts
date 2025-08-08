@@ -4,10 +4,10 @@ import { ProjectMetadata, ProjectFront, ProjectStudio } from "@shared/types";
 // QUERIES
 
 export async function findProjectsMetadataByUser(userId: string) { // TODO HANDLE MULTIPLE RETURNS
-	const metadataDoc = await ProjectMetadataModel.findOne({"authors.userId": userId});
-	if (!metadataDoc) return [null, null];
-	const metadataObj = metadataDoc as ProjectMetadata;
-	return [metadataDoc, metadataObj];
+	const metadataDocs = await ProjectMetadataModel.find({"authors.userId": userId});
+	if (!metadataDocs) return [null, null];
+	const metadataObjs = metadataDocs.map(doc => doc as ProjectMetadata);
+	return [metadataDocs, metadataObjs];
 }
 
 export async function findProjectMetadataById(projectId: string) {
@@ -44,7 +44,7 @@ export async function newProject(metadata: ProjectMetadata, studio: ProjectStudi
 	let savedMetadata
 	try {
 		savedMetadata = await projectMetadata.save()
-	} catch (error) { console.log("Error occurred while saving metadata to database: ", error) }
+	} catch (error) { console.error("Error occurred while saving metadata to database: ", error) }
 
 	const projectStudio = new ProjectStudioModel({
 		projectId: metadata.projectId,
@@ -54,7 +54,7 @@ export async function newProject(metadata: ProjectMetadata, studio: ProjectStudi
 
 	try {
 		projectStudio.save()
-	} catch (error) { console.log("Error occurred while saving metadata to database: ", error) }
+	} catch (error) { console.error("Error occurred while saving metadata to database: ", error) }
 
 	console.log("Successfully saved new project", savedMetadata!._id)
 }

@@ -1,4 +1,5 @@
 @use "theme" as *;
+@use '@angular/material' as mat;
 
 // Styles using variables
 html, body {
@@ -13,4 +14,9 @@ body {
 .app-content-bg {
 	background: $app-bg;
 	min-height: 100vh;
+}
+
+
+* :not(.material-icons):not(.material-symbols-outlined){
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from 'uuid';
 import { newStudioSessionDb } from "../db/studio_session";
-import { findProjectMetadataById, findProjectStudioById, newProject } from "@src/db/project";
+import { findProjectMetadataById, findProjectsMetadataByUser, findProjectStudioById, newProject } from "@src/db/project";
 
 import { Document } from "mongoose";
 
@@ -44,7 +44,14 @@ export async function saveNewProject(req: Request, res: Response) {
 
 	try {
 		newProject(projectMetadata, projectStudio);
+		res.json({ success: true })
 	} catch (error) {
 		return res.status(500).json({ error: "Failed to create new project" });
 	}
+}
+
+export async function listMine(req: Request, res: Response) {
+	const userId = req.body.userId;
+	const [_, metadatas] = await findProjectsMetadataByUser(userId);
+	res.json({ projects: metadatas })
 }
