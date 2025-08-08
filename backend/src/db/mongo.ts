@@ -1,11 +1,10 @@
-import mongoose from "mongoose";
-import dotenv from 'dotenv';
+import { MONGO_STRING } from "@src/env";
 
-dotenv.config({ path: './.env' }); 
+import mongoose from "mongoose";
 
 export async function connectMongo() {
 	try {
-		mongoose.connect(process.env.MONGO_STRING as string);
+		mongoose.connect(MONGO_STRING as string);
 		console.log('MongoDB connected');
 	} catch (err) {
 		console.error('MongoDB connection failed:', err);

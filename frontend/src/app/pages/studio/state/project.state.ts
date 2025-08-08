@@ -6,8 +6,10 @@ import { ProjectMetadataService } from '../services/project-metadata.service';
 import { ProjectGlobalsService } from '../services/project-globals.service';
 import { ProjectTracksService } from '../services/project-tracks.service';
 import { HistoryService, PatchEntry } from '../services/history.service';
+import { AppAuthService } from '@src/app/services/app-auth.service';
 
 import axios from 'axios';
+import { ActivatedRoute } from '@angular/router';
 
 @Injectable()
 export class ProjectState {
@@ -16,7 +18,18 @@ export class ProjectState {
 	private tracksService = inject(ProjectTracksService);
 	private historyService = inject(HistoryService);
 
-	constructor() {}
+	declare projectId : string;
+	declare isNew : boolean;
+
+	constructor(
+		private auth: AppAuthService,
+		private route: ActivatedRoute,
+	) {
+		this.route.queryParams.subscribe(params => {
+			this.isNew = params["isNew"];
+			this.projectId = params["projectId"];
+		})
+	}
 	
 	readonly state = computed<ProjectStudio | null>(() => {
 		return {
@@ -26,16 +39,60 @@ export class ProjectState {
 		};
 	});
 	
-	async save() { // MAKE API CALL TO SAVE PROJECT TO DATABASE
-		const entries = this.historyService.getPendingEntriesAndClear();
-		if (entries.length === 0) { return { ok: true, saved: 0 }; }
+	async save() { 
+		if (this.isNew) { // new project
+			try {
+				const token = await this.auth.getAccessToken();
+				console.log('Got JWT token:', token ? 'Token received' : 'No token');
 
-		try {
-			const res = await axios.post('/api/studio/save', { entries });
-			return res.data;
-		} catch (err) {
-			this.historyService.fillPendingEntries(entries)
-			throw err;
+				const res = await axios.post<{ success: boolean }>(
+					'/api/projects/save_new', 
+					{ 
+						state: this.state(), 
+					},
+					{
+						headers: {
+							Authorization: `Bearer ${token}`
+						}
+					}
+				);
+				return res.data.success;
+			} catch (err) {
+				throw err;
+			}
+		} else { // save existing project
+			const patchEntries: PatchEntry[] = this.historyService.getPendingEntriesAndClear();
+			if (patchEntries.length === 0) { return { ok: true, saved: 0 }; }
+
+			const patches = patchEntries.flatMap(entry => {
+				if (!entry.patches) return [];
+				return entry.patches.map(patch => ({
+					...patch,
+					path: [entry.service, ...patch.path],
+				}));
+			});
+
+			try {
+				const token = await this.auth.getAccessToken();
+				console.log('Got JWT token:', token ? 'Token received' : 'No token');
+
+				const res = await axios.post<{ success: boolean }>(
+					'/api/projects/save_existing', 
+					{ 
+						projectId: this.projectId, 
+						patches: patches, 
+					},
+					{
+						headers: {
+							Authorization: `Bearer ${token}`
+						}
+					}
+				);
+				return res.data.success;
+			} catch (err) {
+				this.historyService.fillPendingEntries(patchEntries)
+				throw err;
+			}
 		}
 	}
 

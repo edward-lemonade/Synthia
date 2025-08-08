@@ -8,7 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
-import { Key, KeyListAligned } from '@shared_types/studio'
+import { Key, KeyListAligned, KEY_INFO } from '@shared_types/studio'
 
 import { ProjectGlobalsService } from '../../../services/project-globals.service';
 
@@ -24,13 +24,13 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 		</mat-button-toggle-group>
 		<mat-menu #keyMenu="matMenu" class="key-menu">
 			<div class="key-type-toggle">
-				<button mat-button class="key-type-btn" [class.selected]="key().type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
-				<button mat-button class="key-type-btn" [class.selected]="key().type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>
+				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
+				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>
 			</div>
 			<div class="key-grid">
 				<div class="accidentals-row">
 					<span class="key-opt-space-half"></span>
-					<ng-container *ngFor="let listedKey of KeyListAligned[key().type]['acc']; let i = index">
+					<ng-container *ngFor="let listedKey of KeyListAligned[KEY_INFO[key()].type]['acc']; let i = index">
 						<ng-container *ngIf="listedKey === null">
 							<span class="key-opt-space"></span>
 						</ng-container>
@@ -44,13 +44,13 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 					</ng-container>
 				</div>
 				<div class="naturals-row">
-					<ng-container *ngFor="let listedKey of KeyListAligned[key().type]['nat']; let i = index">
+					<ng-container *ngFor="let listedKey of KeyListAligned[KEY_INFO[key()].type]['nat']; let i = index">
 						<button
 							mat-button
 							class="key-option"
 							[class.selected]="key() == listedKey"
 							(click)="setKey(listedKey); $event.stopPropagation()">
-							{{ listedKey.display }}
+							{{ KEY_INFO[listedKey].display }}
 						</button>
 					</ng-container>
 				</div>
@@ -61,6 +61,7 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 })
 export class KeyComponent {
 	KeyListAligned = KeyListAligned;
+	KEY_INFO = KEY_INFO
 
 	constructor(public globalsService: ProjectGlobalsService, private sanitizer: DomSanitizer) {}
 
@@ -73,20 +74,22 @@ export class KeyComponent {
 	}
 
 	setKeyType(keyType: 'maj'|'min') { 
-		const newKey = KeyListAligned[keyType][this.key().acc ? 'acc' : 'nat'][this.key().alignedIdx];
+		const info = KEY_INFO[this.key()];
+		const newKey = KeyListAligned[keyType][info.acc ? 'acc' : 'nat'][info.alignedIdx];
 		if (newKey) { this.setKey(newKey); }
 	}
 
 	getKeyDisplayHtml(key: Key): SafeHtml {
-		let html = key.display[0];
-		if (key.display[1])	{ 
-			if (key.display[1] === 'm') {
-				html += key.display[1];
+		const info = KEY_INFO[key]
+		let html = info.display[0];
+		if (info.display[1])	{ 
+			if (info.display[1] === 'm') {
+				html += info.display[1];
 			} else {
-				html += `<sup style="vertical-align: super; line-height: 0;">${key.display[1]}</sup>`; 
+				html += `<sup style="vertical-align: super; line-height: 0;">${info.display[1]}</sup>`; 
 			}
 		}
-		if (key.display[2]) { html += key.display[2]; }
+		if (info.display[2]) { html += info.display[2]; }
 		return this.sanitizer.bypassSecurityTrustHtml(html);
 	}
 }

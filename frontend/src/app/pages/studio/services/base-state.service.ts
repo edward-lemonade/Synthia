@@ -5,26 +5,24 @@ import { HistoryService } from './history.service';
 
 type SignalMap = Record<string, WritableSignal<any>>; 
 
-export class BaseStateService<T extends Record<string, any>> {
-	declare historyService: HistoryService;
+export abstract class BaseStateService<T extends Record<string, any>> {
 	declare recordHistory: boolean; // whether to record changes in history
-	declare serviceName: string;
 
-	private readonly signals: Record<keyof T, WritableSignal<any>>;
-	readonly state: Signal<T>;
+	declare signals: Record<keyof T, WritableSignal<any>>;
+	declare state: Signal<T>;
 
 	constructor(
-		historyService: HistoryService,
-		defaults: Record<keyof T, T[keyof T]>,
-		serviceName: string,
+		private historyService: HistoryService,
+		private serviceName: string,
 	) {
-		this.historyService = historyService;
 		this.recordHistory = (serviceName == "globals" || serviceName == "tracks");
-		this.serviceName = serviceName;
+		return this;
+	}
 
+	protected init(state: T) {
 		this.signals = {} as Record<keyof T, WritableSignal<any>>;
-		for (const key in defaults) {
-			this.signals[key] = signal(defaults[key]);			
+		for (const key in state) {
+			this.signals[key] = signal(state[key]);			
 		}
 
 		this.state = computed(() => {
@@ -34,8 +32,6 @@ export class BaseStateService<T extends Record<string, any>> {
 			}
 			return state as T;
 		});
-
-		return this;
 	}
 
 	get<K extends keyof T>(key: K): Signal<T[K]> {

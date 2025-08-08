@@ -1,18 +1,16 @@
 import { Component } from '@angular/core';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
-import { AppAuthService } from '@src/app/services/app-auth.service';
 
-import axios from 'axios'
+import { ProjectsService } from '../../projects.service';
 
 @Component({
 	selector: 'app-projects-layout',
 	standalone: true,
-	imports: [RouterModule, MatSidenavModule, MatListModule, MatButtonModule, MatIconModule, HttpClientModule],
+	imports: [RouterModule, MatSidenavModule, MatListModule, MatButtonModule, MatIconModule],
 	template: `
 		<mat-sidenav-container class="sidenav-container">
 			<mat-sidenav #sidenav mode="side" opened class="sidebar"
@@ -50,33 +48,13 @@ import axios from 'axios'
 	styleUrls: ['./projects-layout.component.scss']
 })
 export class ProjectsLayoutComponent {
-	constructor(
-		private http: HttpClient, 
-		private router: Router, 
-		private auth: AppAuthService
-	) {}
+	private projectsService: ProjectsService;
+
+	constructor(projectsService: ProjectsService) {
+		this.projectsService = projectsService;
+	}
 
 	async newProjectOnClick() {
-		try {
-			const token = await this.auth.getAccessToken();
-
-			console.log('Got JWT token:', token ? 'Token received' : 'No token');
-
-			const res = await axios.post<{ sessionId: string }>(
-				'/api/studio_session/create', {},
-				{
-					headers: {
-						Authorization: `Bearer ${token}`
-					}
-				}
-			);
-
-			if (res.data.sessionId) {
-				console.log('Redirecting to studio with sessionId:', res.data.sessionId);
-				this.router.navigate(['/studio', res.data.sessionId]);
-			}
-		} catch (err) {
-			console.error('Error during project creation:', err);
-		}
+		this.projectsService.newProject();
 	}
 } 

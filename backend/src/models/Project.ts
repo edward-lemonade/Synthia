@@ -25,7 +25,7 @@ const ProjectFrontSchema = new mongoose.Schema({ // interface ProjectMetadata
 	projectId: 	{ type: String },
 	projectMetadataId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectMetadata' },
 	
-	collection: 	{ type: String }, // EP/album
+	release: 	{ type: String }, // EP/album
 	
 	description: 	{ type: String },
 	access: 		{ type: String, enum: ["public", "unlisted", "private"], default: "public" }, // "public" | "unlisted" | "private"
@@ -41,10 +41,10 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 	projectId: 	{ type: String },
 	projectMetadataId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectMetadata' },
 	
-	vars: {
+	globals: {
 		masterVolume: 	{ type: Number },
 		bpm: 			{ type: Number },
-		key: 			{ type: String }, // Key enum
+		key: 			{ type: Number }, // Key enum
 		centOffset: 	{ type: Number },
 		timeSignature: { 
 			N: { type: Number },

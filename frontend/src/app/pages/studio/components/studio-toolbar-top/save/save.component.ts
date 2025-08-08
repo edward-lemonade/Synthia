@@ -17,11 +17,10 @@ import { ProjectState } from '../../../state/project.state';
 	styleUrl: '../studio-toolbar-top.component.scss'
 })
 export class SaveComponent {
-	constructor(public projectState: ProjectState) {
-		this.projectState = projectState;
-	}
+	constructor(public projectState: ProjectState) {}
 
 	onClick() {
 		console.log(this.projectState.state());
+		this.projectState.save();
 	}
 }
