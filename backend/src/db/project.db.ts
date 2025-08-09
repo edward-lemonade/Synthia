@@ -21,20 +21,22 @@ export async function findProjectStudioByMetadata(metadataObj: ProjectMetadata) 
 	const projectId = metadataObj.projectId;
 	const studioDoc = await ProjectStudioModel.findOne({projectId: projectId});
 	if (!studioDoc) return [null, null];
-	return [studioDoc, projectStudioSchemaToObj(metadataObj, studioDoc)];
+
+	return [studioDoc, projectMetadataAndStudioDocsToState(metadataObj, studioDoc)];
 }
 
-export async function findProjectStudioById(projectId: string) {
+export async function findProjectStudioById(projectId: string): Promise<[any, any, ProjectStudio|null]> {
 	const studioDoc = await ProjectStudioModel.findOne({projectId: projectId});
-	if (!studioDoc) return [null, null];
+	if (!studioDoc) return [null, null, null];
 
 	const metadataId = studioDoc.projectMetadataId;
 	const metadataDoc = await ProjectMetadataModel.findById(metadataId);
-	if (!metadataDoc) return [null, null];
-	return [studioDoc, projectStudioSchemaToObj(metadataDoc, studioDoc)];
+	if (!metadataDoc) return [null, null, null];
+
+	return [studioDoc, metadataDoc, projectMetadataAndStudioDocsToState(metadataDoc, studioDoc)];
 }
 
-// NEWS
+// CREATE
 
 export async function newProject(metadata: ProjectMetadata, studio: ProjectStudio) {
 	const projectMetadata = new ProjectMetadataModel(
@@ -59,13 +61,44 @@ export async function newProject(metadata: ProjectMetadata, studio: ProjectStudi
 	console.log("Successfully saved new project", savedMetadata!._id)
 }
 
+// EDIT
+
+export async function renameProjectMetadataById(projectId: string, newName: string) {
+	const updatedDoc = await ProjectMetadataModel.findByIdAndUpdate(
+		projectId, 
+		{ title: newName },
+		{ new: true } 
+	);
+	return updatedDoc;
+}
+
+// DELETE
+
+export async function deleteProjectStudioAndMetadataById(projectId: string) {
+	const res1 = await ProjectStudioModel.deleteOne({ projectId: projectId });
+	const res2 = await ProjectMetadataModel.deleteOne({ projectId: projectId });
+	return [res1, res2];
+}
+
 // CONVERSIONS
 
-function projectStudioSchemaToObj(projectMetadata: any, projectStudio: any) {
-	delete projectStudio?.projectId;
-	delete projectStudio?.projectMetadataId;
+export function projectMetadataAndStudioDocsToState(projectMetadataDoc: any, projectStudioDoc: any) {
+	const projectMetadata = projectMetadataDoc.toObject() as ProjectMetadata;
 	return {
-		metadata: projectMetadata as ProjectMetadata,
-		...projectStudio
+		metadata: projectMetadata,
+		globals: projectStudioDoc.globals,
+		tracks: projectStudioDoc.tracks,
 	} as any as ProjectStudio;
+}
+
+export function stateToProjectMetadataAndStudioDocs(state: any, metadataId: string) {
+	const projectMetadata = state.metadata;
+	const projectStudio = {
+		projectId: state.metadata.projectId,
+		projectMetadataId: metadataId,
+		globals: state.globals,
+		tracks: state.tracks,
+	}
+
+	return [projectMetadata, projectStudio]
 }

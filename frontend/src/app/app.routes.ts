@@ -13,6 +13,6 @@ export const routes: Routes = [
 		{path: '', component: HomePage, canActivate: [UnAuthGuard]},
 		{path: 'projects', component: ProjectsPage, canActivate: [AuthGuard]},
 	]},
-	{path: 'studio/:sessionId', component: StudioPage, canActivate: [AuthGuard]},
+	{path: 'studio/:projectId', component: StudioPage, canActivate: [AuthGuard]},
 	{path: '**', redirectTo: ''},
 ];

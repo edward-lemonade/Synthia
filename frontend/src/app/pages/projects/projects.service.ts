@@ -41,44 +41,69 @@ export class ProjectsService {
 	public async newProject() {
 		try {
 			const token = await this.auth.getAccessToken();
+			if (!token) { console.error('No valid token'); return }
 
-			const res = await axios.post<{ sessionId: string }>(
-				'/api/studio/create_session', 
-				{},
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
-
-			if (res.data.sessionId) {
-				this.router.navigate(['/studio', res.data.sessionId], {queryParams: {
-					projectId: uuidv4(),
-					isNew: true,
-				}});
-			} 
-			console.error('No session!?');
+			const projectId = uuidv4();
+			this.router.navigate(['/studio', projectId], {queryParams: {
+				isNew: true,
+			}});
 		} catch (err) {
 			console.error('Error during project creation:', err);
 		}
 	}
 
-	public async openProject() {
+	public async openProject(project: ProjectMetadata) {
 		try {
 			const token = await this.auth.getAccessToken();
+			if (!token) { console.error('No valid token'); return }
 
-			const res = await axios.post<{ sessionId: string }>(
-				'/api/studio/create_session', 
-				{},
+			this.router.navigate(['/studio', project.projectId], {queryParams: {
+				isNew: false,
+			}});
+		} catch (err) {
+			console.error('Error during project creation:', err);
+		}
+	}
+
+	public async deleteProject(index: number, project: ProjectMetadata) {
+		this.projectsList.update(projectsList => projectsList.filter((_,i) => i !== index))
+		try {
+			const token = await this.auth.getAccessToken();
+			if (!token) { console.error('No valid token'); return }
+
+			const res = await axios.post<{ success: boolean }>(
+				'/api/projects/delete_studio', 
+				{ projectId: project.projectId },
 				{ headers: {Authorization: `Bearer ${token}`}}
 			);
 
-			if (res.data.sessionId) {
-				this.router.navigate(['/studio', res.data.sessionId], {queryParams: {
-					projectId: uuidv4(),
-					isNew: true,
-				}});
-			} 
-			console.error('No session!?');
+			return res.data.success;
 		} catch (err) {
 			console.error('Error during project creation:', err);
+			return false;
+		}
+	}
+
+	public async renameProject(index: number, project: ProjectMetadata, newName: string) {
+		this.projectsList.update(projectsList => {
+			projectsList[index] = { ...projectsList[index], title: newName };
+			return projectsList;
+		});			
+		
+		try {
+			const token = await this.auth.getAccessToken();
+			if (!token) { console.error('No valid token'); return }
+
+			const res = await axios.post<{ success: boolean }>(
+				'/api/projects/rename', 
+				{ projectId: project, newName: newName },
+				{ headers: {Authorization: `Bearer ${token}`}}
+			);
+
+			return res.data.success;
+		} catch (err) {
+			console.error('Error during project creation:', err);
+			return false;
 		}
 	}
 }

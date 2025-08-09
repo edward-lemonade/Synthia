@@ -9,6 +9,8 @@ import { PublishComponent } from './publish/publish.component';
 import { ShareComponent } from './share/share.component';
 
 import { ProjectMetadataService } from '../../services/project-metadata.service';
+import { ProjectState } from '../../state/project.state';
+import { HistoryService } from '../../services/history.service';
 
 @Component({
 	selector: 'app-studio-toolbar-top',
@@ -35,6 +37,7 @@ import { ProjectMetadataService } from '../../services/project-metadata.service'
 			</div>
 
 			<div class="toolbar-section right-section">
+				<p class="saved">{{ isPending() ? "Unsaved changes" : "Saved!"}} </p>
 				<studio-toolbar-top-save/>
 				<studio-toolbar-top-export/>
 				<studio-toolbar-top-publish/>
@@ -45,7 +48,11 @@ import { ProjectMetadataService } from '../../services/project-metadata.service'
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
 export class StudioToolbarTopComponent {
-	constructor(public projectMetadataService: ProjectMetadataService) {}
+	constructor(
+		private projectMetadataService: ProjectMetadataService,
+		private projectState: ProjectState,
+		private historyService: HistoryService,
+	) {}
 
 	title(): string { return this.projectMetadataService.get("title")(); }
 	setTitle(event: Event) { 
@@ -54,4 +61,6 @@ export class StudioToolbarTopComponent {
 		this.projectMetadataService.set("title", input);
 		(event.target as HTMLInputElement).value = this.title().toString() 
 	}
+
+	isPending(): boolean { return this.historyService.isPending() }
 }	

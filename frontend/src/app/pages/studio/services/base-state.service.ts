@@ -3,10 +3,9 @@ import { applyPatches, Patch, produceWithPatches } from 'immer';
 
 import { HistoryService } from './history.service';
 
-type SignalMap = Record<string, WritableSignal<any>>; 
 
 export abstract class BaseStateService<T extends Record<string, any>> {
-	declare recordHistory: boolean; // whether to record changes in history
+	declare allowUndoRedo: boolean; // whether to record changes in history
 
 	declare signals: Record<keyof T, WritableSignal<any>>;
 	declare state: Signal<T>;
@@ -15,7 +14,7 @@ export abstract class BaseStateService<T extends Record<string, any>> {
 		private historyService: HistoryService,
 		private serviceName: string,
 	) {
-		this.recordHistory = (serviceName == "globals" || serviceName == "tracks");
+		this.allowUndoRedo = (serviceName == "globals" || serviceName == "tracks"); // don't allow undo/redo metadata changes
 		return this;
 	}
 
@@ -43,14 +42,14 @@ export abstract class BaseStateService<T extends Record<string, any>> {
 		value: T[Key],
 		dontPatch: boolean = false,
 	) {
-		if (!dontPatch && this.recordHistory) {
+		if (!dontPatch) {
 			const currentState = this.state();
 			const [_, patches, inversePatches] = produceWithPatches(currentState, (draft: T) => {
 				//console.log(currentState, draft, key, value);
 				draft[key] = value;
 			});
 			this.signals[key].set(value);
-			if (patches && patches.length > 0) this.historyService.recordPatch(this.serviceName, patches, inversePatches)
+			if (patches && patches.length > 0) this.historyService.recordPatch(this.serviceName, patches, inversePatches, this.allowUndoRedo)
 		} else {
 			this.signals[key].set(value);
 		}

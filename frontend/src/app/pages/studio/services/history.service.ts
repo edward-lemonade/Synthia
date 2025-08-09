@@ -1,4 +1,4 @@
-import { Injectable, inject, computed } from '@angular/core';
+import { Injectable, inject, computed, signal } from '@angular/core';
 import type { Patch } from 'immer';
 
 import { Author } from '@shared/types/Author';
@@ -8,8 +8,6 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 import { ProjectMetadataService } from '../services/project-metadata.service';
 import { ProjectGlobalsService } from './project-globals.service';
 import { ProjectTracksService } from '../services/project-tracks.service';
-
-import { ProjectState } from '../state/project.state';
 
 export interface PatchEntry {
 	service: string;
@@ -27,12 +25,15 @@ function invertPatchEntry(entry: PatchEntry) {
 	};
 }
 
+
 @Injectable()
 export class HistoryService {
 	private trackedServices : {
-		globals: ProjectGlobalsService | null,
-		tracks: ProjectTracksService | null,
-	} = {globals: null, tracks: null};
+		"metadata": ProjectMetadataService | null,
+		"globals": ProjectGlobalsService | null,
+		"tracks": ProjectTracksService | null,
+	} = {metadata: null, globals: null, tracks: null};
+	registerMetadataService(svc: ProjectMetadataService) {this.trackedServices!.metadata = svc;}
 	registerGlobalsService(svc: ProjectGlobalsService) {this.trackedServices!.globals = svc;}
 	registerTracksService(svc: ProjectTracksService) {this.trackedServices!.tracks = svc;}
 	  
@@ -41,12 +42,15 @@ export class HistoryService {
 	private pendingEntries: PatchEntry[] = []; // edits yet to be saved in backend
 	private maxHistory = 200; // for undoStack and redoStack
 
+	public isPending = signal<boolean>(this.pendingEntries.length != 0);
+
 	constructor(private auth: AppAuthService,) {}
 	
 	recordPatch(
 		service: string, 
 		patches: Patch[], 
-		inversePatches: Patch[]
+		inversePatches: Patch[],
+		allowUndoRedo: boolean,
 	) {
 		const entry: PatchEntry = {
 			service,
@@ -56,11 +60,14 @@ export class HistoryService {
 			author: this.auth.getAuthor()!
 		};
 	
-		this.undoStack.push(entry);
-		this.redoStack.length = 0;
-		if (this.undoStack.length > this.maxHistory) { this.undoStack.shift(); }
+		if (allowUndoRedo) {
+			this.undoStack.push(entry);
+			this.redoStack.length = 0;
+			if (this.undoStack.length > this.maxHistory) { this.undoStack.shift(); }
+		}
 	
 		this.pendingEntries.push(entry); // for incremental save
+		this.isPending.set(this.pendingEntries.length != 0);
 	}
 
 	public undo(): boolean {
@@ -68,11 +75,11 @@ export class HistoryService {
 	
 		const entry = this.undoStack.pop()!;
 
-		if (entry.service == "globals") this.trackedServices["globals"]!.applyPatchesToState(entry.inversePatches);
-		if (entry.service == "tracks") this.trackedServices["tracks"]!.applyPatchesToState(entry.inversePatches);
+		this.trackedServices[entry.service as keyof typeof this.trackedServices]!.applyPatchesToState(entry.inversePatches);
 
 		this.redoStack.push(entry);
 		this.pendingEntries.push(invertPatchEntry(entry));
+		this.isPending.set(this.pendingEntries.length != 0);
 		return true;
 	}
 
@@ -81,22 +88,24 @@ export class HistoryService {
 	
 		const entry = this.redoStack.pop()!;
 	
-		if (entry.service == "globals") this.trackedServices["globals"]!.applyPatchesToState(entry.patches);
-		if (entry.service == "tracks") this.trackedServices["tracks"]!.applyPatchesToState(entry.patches);
+		this.trackedServices[entry.service as keyof typeof this.trackedServices]!.applyPatchesToState(entry.inversePatches);
 
 		this.undoStack.push(entry);
 		this.pendingEntries.push(entry);
+		this.isPending.set(this.pendingEntries.length != 0);
 		return true;
 	}
 
 	getPendingEntriesAndClear(): PatchEntry[] {
 		const out = this.pendingEntries.slice();
 		this.pendingEntries.length = 0;
+		this.isPending.set(false);
 		return out;
 	}
 
 	fillPendingEntries(entries: PatchEntry[]) { // for restoring if save fails
 		this.pendingEntries = entries.concat(this.pendingEntries);
+		this.isPending.set(this.pendingEntries.length != 0);
 	}
 
 	// --- optional helpers for debugging / UI ---
@@ -107,5 +116,6 @@ export class HistoryService {
 		this.undoStack.length = 0;
 		this.redoStack.length = 0;
 		this.pendingEntries.length = 0;
+		this.isPending.set(false);
 	}
 }
