@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import type { ProjectMetadata } from '@shared/types/ProjectMetadata';
 import { BaseStateService } from './base-state.service';
 
-import { HistoryService } from './history.service';
+import { HistoryService } from './../../services/history.service';
 
 
 @Injectable()

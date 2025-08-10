@@ -1,0 +1,108 @@
+@use "theme" as *;	
+@use "../../studio-vars" as *;
+
+:host {
+  	display: flex;
+	flex-direction: column;
+	flex: 1;         /* Take up remaining parent space */
+  	min-height: 0;
+}
+
+.container {
+	height: 100%; 
+
+	padding-left: 16px;
+	padding-right: 16px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+
+	box-sizing: border-box;
+}
+
+.headers {
+	background: $appbar-bg;
+	color: $appbar-text;
+	position: sticky;
+	top: 0;
+	width: 100%;
+	height: 40px;
+
+	display: flex;
+	flex-direction: row;
+
+	padding: 0px !important;
+
+	border-bottom: $border-width solid $border-color;
+
+	.headers-tracklist-container {
+		width: $tracklist-width;
+
+		display: flex;
+		justify-content: left;
+		align-items: center;
+	}
+	.headers-timeline-container {
+		flex: 1;
+		
+		border-left: $border-width solid $border-color;
+		overflow-x: hidden;
+		overflow-y: hidden;
+	}
+}
+
+.body {
+	background: $appbar-bg;
+	color: $appbar-text;
+	//top: calc(100vh - $toolbar-top-height - $toolbar-details-height);
+	
+	flex: 1;
+	width: 100%;
+
+	display: flex;
+	flex-direction: row;
+
+	padding: 0px !important;
+
+	border-bottom: $border-width solid $border-color;
+
+	.body-inner {
+		height: 100%; 
+	}
+	.body-tracklist {
+		width: $tracklist-width;
+
+		display: flex;
+		justify-content: left;
+		align-items: center;
+
+		box-sizing: border-box;
+		overflow-x: hidden;
+		overflow-y: hidden;
+	}
+	.body-timeline {
+		flex: 1;
+
+		border-left: $border-width solid $border-color;
+		overflow: auto;
+
+		&::-webkit-scrollbar {
+			width: 8px; // Width of the scrollbar
+			height: 8px; 
+		}
+		&::-webkit-scrollbar-track {
+			background: $app-bg-l; // Track background
+			border-radius: 10px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background: $app-bg-ll; // Thumb color
+			border-radius: 10px;
+			
+			&:hover {
+			background: $near-white; // Hover color
+			}
+		}
+		&::-webkit-scrollbar-corner {
+			background: transparent; // Corner where scrollbars meet
+		}
+	}
+}

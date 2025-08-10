@@ -2,9 +2,9 @@ import { Injectable, Signal, inject, signal, computed } from '@angular/core';
 
 import { ProjectStudio } from '@shared_types/ProjectStudio'
 
-import { ProjectMetadataService } from '../services/project-metadata.service';
-import { ProjectGlobalsService } from '../services/project-globals.service';
-import { ProjectTracksService } from '../services/project-tracks.service';
+import { ProjectMetadataService } from '../state/subservices/project-metadata.service';
+import { ProjectGlobalsService } from '../state/subservices/project-globals.service';
+import { ProjectTracksService } from '../state/subservices/project-tracks.service';
 import { HistoryService, PatchEntry } from '../services/history.service';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 

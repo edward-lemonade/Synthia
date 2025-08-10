@@ -1,9 +1,10 @@
 @use "theme" as *;
+@use "../../studio-vars" as *;
 
 .toolbar {
 	background: $appbar-bg-l;
 	color: $appbar-text;
-	height: 60px;
+	height: $toolbar-details-height;
 	position: sticky;
 	top: 0;
 	z-index: 1000;
@@ -13,4 +14,6 @@
 	padding-right: 8px;
 	align-items: center;
 	gap: 20px;
+
+	border-bottom: $border-width solid $border-color;
 }

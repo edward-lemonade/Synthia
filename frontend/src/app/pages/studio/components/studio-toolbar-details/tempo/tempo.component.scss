@@ -1,4 +1,5 @@
 @use "theme" as *;
+@use "./../../../studio-vars" as *;
 
 .btn-group {
 	display: flex;
@@ -128,14 +129,14 @@ input[type=number] {
 
 /* TIME SIG MENU */
 
-::ng-deep .mat-mdc-menu-content {
-	padding: 4px !important;
-	background: $appbar-accent-1 !important;
-}
-
-::ng-deep .mat-mdc-menu-panel {
+::ng-deep .time-sig-menu {
 	max-height: none !important;
 	overflow: visible !important;
+
+	padding: 8px !important;
+	background: $appbar-bg-l !important;
+	border: $border-width solid $border-color !important;
+	border-radius: 0px !important;
 }
 
 .time-sig-menu-content {

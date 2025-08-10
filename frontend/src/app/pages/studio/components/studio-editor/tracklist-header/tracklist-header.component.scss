@@ -1,0 +1,44 @@
+@use "theme" as *;
+@use "./../../../studio-vars" as *;
+
+.add-track-btn {
+	display: flex;
+	align-items: center;
+	justify-content: left;
+
+	height: 30px !important;
+	width: 100px !important;
+	max-width: 100px !important;
+
+	background: $appbar-accent-1;
+	color: $appbar-text;
+	border-radius: 20px;
+	border: none;
+
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+.add-track-btn:hover {
+	background: $appbar-accent-2;
+}
+
+::ng-deep .add-track-menu {
+	background: $appbar-bg;
+	border: $border-width solid $border-color !important;
+	border-radius: 0px !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+}
+.add-track-menu-btn {
+	cursor: pointer;
+	transition: all 0.2s ease;
+	background: rgba(0,0,0,0);
+
+	font-weight: 500;
+}
+.add-track-menu-btn:hover {
+	background: $appbar-bg-l;
+}

@@ -8,20 +8,32 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
 import { StudioToolbarDetailsComponent } from './components/studio-toolbar-details/studio-toolbar-details.component';
-import { ProjectMetadataService } from './services/project-metadata.service';
-import { ProjectGlobalsService } from './services/project-globals.service';
-import { ProjectTracksService } from './services/project-tracks.service';
+import { ProjectMetadataService } from './state/subservices/project-metadata.service';
+import { ProjectGlobalsService } from './state/subservices/project-globals.service';
+import { ProjectTracksService } from './state/subservices/project-tracks.service';
 import { HistoryService } from './services/history.service';
+import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
 
 @Component({
 	selector: 'app-studio',
-	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent],
+	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
 	providers: [ProjectState, ProjectMetadataService, ProjectGlobalsService, ProjectTracksService, HistoryService, AppAuthService],
 	template: `
-		<app-studio-toolbar-top></app-studio-toolbar-top>
-		<app-studio-toolbar-details></app-studio-toolbar-details>
+		<div class="page-container">
+			<app-studio-toolbar-top></app-studio-toolbar-top>
+			<app-studio-toolbar-details></app-studio-toolbar-details>
+			<app-studio-editor></app-studio-editor>
+		</div>
 	`,
-	styles: ``
+	styles: `
+		.page-container {
+			display: flex;
+			flex-direction: column;
+			position: absolute;
+			height: 100%;
+			width: 100%;
+		}
+	`
 })
 export class StudioPage implements OnInit {
 	sessionId: string = '';

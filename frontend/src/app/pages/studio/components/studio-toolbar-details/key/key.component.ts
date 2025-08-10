@@ -10,19 +10,18 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { Key, KeyListAligned, KEY_INFO } from '@shared_types/studio'
 
-import { ProjectGlobalsService } from '../../../services/project-globals.service';
+import { ProjectGlobalsService } from '../../../state/subservices/project-globals.service';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
 	imports: [CommonModule, FormsModule, MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
 	template: `
-		<mat-button-toggle-group class='btn-group'>
-			<button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
-				<mat-icon>music_note</mat-icon>
-				<span [innerHTML]="getKeyDisplayHtml(key())"></span>
-			</button>
-		</mat-button-toggle-group>
-		<mat-menu #keyMenu="matMenu" class="key-menu">
+		<button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
+			<mat-icon>music_note</mat-icon>
+			<span [innerHTML]="getKeyDisplayHtml(key())"></span>
+		</button>
+	
+		<mat-menu #keyMenu="matMenu" [class]="'key-menu'">
 			<div class="key-type-toggle">
 				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
 				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>

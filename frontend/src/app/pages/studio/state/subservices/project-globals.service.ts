@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import type { Globals } from '@shared/types/studio';
 import { BaseStateService } from './base-state.service';
 
-import { HistoryService } from './history.service';
+import { HistoryService } from './../../services/history.service';
 
 
 @Injectable()

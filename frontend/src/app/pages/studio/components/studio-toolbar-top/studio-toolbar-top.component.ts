@@ -8,7 +8,7 @@ import { ExportComponent } from './export/export.component';
 import { PublishComponent } from './publish/publish.component';
 import { ShareComponent } from './share/share.component';
 
-import { ProjectMetadataService } from '../../services/project-metadata.service';
+import { ProjectMetadataService } from '../../state/subservices/project-metadata.service';
 import { ProjectState } from '../../state/project.state';
 import { HistoryService } from '../../services/history.service';
 

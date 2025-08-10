@@ -5,9 +5,9 @@ import { Author } from '@shared/types/Author';
 
 import { AppAuthService } from '@src/app/services/app-auth.service';
 
-import { ProjectMetadataService } from '../services/project-metadata.service';
-import { ProjectGlobalsService } from './project-globals.service';
-import { ProjectTracksService } from '../services/project-tracks.service';
+import { ProjectMetadataService } from '../state/subservices/project-metadata.service';
+import { ProjectGlobalsService } from '../state/subservices/project-globals.service';
+import { ProjectTracksService } from '../state/subservices/project-tracks.service';
 
 export interface PatchEntry {
 	service: string;
@@ -106,16 +106,5 @@ export class HistoryService {
 	fillPendingEntries(entries: PatchEntry[]) { // for restoring if save fails
 		this.pendingEntries = entries.concat(this.pendingEntries);
 		this.isPending.set(this.pendingEntries.length != 0);
-	}
-
-	// --- optional helpers for debugging / UI ---
-	peekUndoStack(): ReadonlyArray<PatchEntry> { return this.undoStack.slice(); }
-	peekRedoStack(): ReadonlyArray<PatchEntry> { return this.redoStack.slice(); }
-	peekPendingEntries(): ReadonlyArray<PatchEntry> { return this.pendingEntries.slice(); }
-	clearHistoryAndPending() {
-		this.undoStack.length = 0;
-		this.redoStack.length = 0;
-		this.pendingEntries.length = 0;
-		this.isPending.set(false);
 	}
 }

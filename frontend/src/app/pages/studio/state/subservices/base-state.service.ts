@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, Signal, WritableSignal } from '@angular/core';
 import { applyPatches, Patch, produceWithPatches } from 'immer';
 
-import { HistoryService } from './history.service';
+import { HistoryService } from './../../services/history.service';
 
 
 export abstract class BaseStateService<T extends Record<string, any>> {
@@ -45,7 +45,6 @@ export abstract class BaseStateService<T extends Record<string, any>> {
 		if (!dontPatch) {
 			const currentState = this.state();
 			const [_, patches, inversePatches] = produceWithPatches(currentState, (draft: T) => {
-				//console.log(currentState, draft, key, value);
 				draft[key] = value;
 			});
 			this.signals[key].set(value);

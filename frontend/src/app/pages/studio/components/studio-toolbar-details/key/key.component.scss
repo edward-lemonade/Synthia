@@ -1,28 +1,22 @@
 @use "theme" as *;
+@use "./../../../studio-vars" as *;
 
-::ng-deep .mat-mdc-menu-content {
+::ng-deep .key-menu {
 	padding: 8px !important;
-	background: $appbar-accent-1 !important;
+	background: $appbar-bg-l !important;
+	border: $border-width solid $border-color !important;
+	border-radius: 0px !important;
 }
-
-.btn-group {
-	display: flex;
-	overflow: hidden;
-	background: $appbar-accent-2;
-	height: 40px;
-	border-radius: 20px;
-	border: none;
-}
-
 .key-menu-btn {
 	display: flex;
 	align-items: center;
 	justify-content: left;
 
+	height: 40px;
 	width: 70px !important;
 	max-width: 70px !important;
 
-	background: transparent;
+	background: $appbar-accent-2;
 	color: $appbar-text;
 	border-radius: 20px;
 	border: none;

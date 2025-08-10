@@ -10,7 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 
 import { TimeSignature, TimeSigOptionsN, TimeSigOptionsD } from '@shared_types/studio/';
 
-import { ProjectGlobalsService } from '../../../services/project-globals.service';
+import { ProjectGlobalsService } from '../../../state/subservices/project-globals.service';
 
 @Component({
 	selector: 'studio-toolbar-details-tempo',
@@ -47,7 +47,8 @@ import { ProjectGlobalsService } from '../../../services/project-globals.service
 				</div>	
 			</button>
 		</mat-button-toggle-group>
-		<mat-menu #timeSigMenu="matMenu" class="time-sig-menu">
+
+		<mat-menu #timeSigMenu="matMenu" [class]="'time-sig-menu'">
 			<div class="time-sig-menu-content">
 				<div class="time-sig-column">
 					<div class="time-sig-grid">

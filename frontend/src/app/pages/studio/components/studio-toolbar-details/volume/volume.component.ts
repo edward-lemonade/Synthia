@@ -2,7 +2,7 @@ import { Component, OnInit, WritableSignal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
-import { ProjectGlobalsService } from '../../../services/project-globals.service';
+import { ProjectGlobalsService } from '../../../state/subservices/project-globals.service';
 
 @Component({
 	selector: 'studio-toolbar-details-volume',
