@@ -5,11 +5,12 @@ import { TimelineHeaderComponent } from "./timeline-header/timeline-header.compo
 import { TracklistComponent } from "./tracklist/tracklist.component";
 import { TimelineComponent } from "./timeline/timeline.component";
 import { ProjectState } from '../../state/project.state';
+import { TimelineService } from '../../services/timeline.service';
 
 @Component({
 	selector: 'app-studio-editor',
 	imports: [MatToolbar, TracklistHeaderComponent, TimelineHeaderComponent, TracklistComponent, TimelineComponent],
-	providers: [ProjectState],
+	providers: [ProjectState, TimelineService],
 	template: `
 		<mat-toolbar class="headers">
 			<div class="container headers-tracklist-container">
@@ -17,7 +18,8 @@ import { ProjectState } from '../../state/project.state';
 					<studio-editor-tracklist-header/>
 				</div>
 			</div>
-			<div class="container headers-timeline-container">
+			<div 
+				class="container headers-timeline-container">
 				<div #topRight>
 					<studio-editor-timeline-header/>
 				</div>
@@ -30,7 +32,10 @@ import { ProjectState } from '../../state/project.state';
 					<studio-editor-tracklist/>
 				</div>
 			</div>
-			<div #lowerRight class="container body-timeline" (scroll)="onScroll()">
+			<div #lowerRight 
+				class="container body-timeline" 
+				(scroll)="onScroll()"
+				>
 				<div #lowerRight>
 					<studio-editor-timeline/>
 				</div>
@@ -47,6 +52,10 @@ export class StudioEditorComponent implements AfterViewInit {
 
 	private isScrolling = false;
 
+	constructor (
+		public timelineService: TimelineService
+	) {}
+
 	ngAfterViewInit(): void {
 		setTimeout(() => {
 			if (
@@ -54,7 +63,6 @@ export class StudioEditorComponent implements AfterViewInit {
 				this.topRight?.nativeElement && 
 				this.lowerLeft?.nativeElement
 			) {
-				console.log("bruh");
 				[this.topLeft.nativeElement, this.topRight.nativeElement, this.lowerLeft.nativeElement].forEach(element => {
 					element.addEventListener('scroll', (e) => {
 						e.preventDefault();
@@ -66,12 +74,13 @@ export class StudioEditorComponent implements AfterViewInit {
 	}
 
 	onScroll(): void {
-		console.log("scroll")
 		if (this.isScrolling || !this.lowerRight?.nativeElement) return;
 		
 		this.isScrolling = true;
 		const scrollLeft = this.lowerRight.nativeElement.scrollLeft;
 		const scrollTop = this.lowerRight.nativeElement.scrollTop;
+
+		this.timelineService.setWindowPosX(scrollLeft);
 		
 		// Sync horizontal with top-right
 		if (this.topRight?.nativeElement) {

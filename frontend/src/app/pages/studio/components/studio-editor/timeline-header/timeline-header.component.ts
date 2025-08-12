@@ -31,8 +31,9 @@ export class TimelineHeaderComponent implements OnInit {
 		this.canvas = this.canvasRef.nativeElement;
 	}
 
-	getWindowPosition(): number { return this.timelineService.windowPosition(); }
+	getWindowPosX(): number { return this.timelineService.windowPosX(); }
 	getZoom(): number { return this.timelineService.zoomFactor(); }
+	getTotalWidth() : number { return this.timelineService.totalWidth(); }
 	adjustZoom(direction: number) { this.timelineService.adjustZoom(direction); }
 	onWheel(event: WheelEvent) {
 		if (event.ctrlKey) {
@@ -54,14 +55,14 @@ export class TimelineHeaderComponent implements OnInit {
 		const container = this.containerRef.nativeElement
 
 		const timeSigN = this.globalsState.get("timeSignature")().N;
-		const scrollLeft = this.getWindowPosition() || 0
+		const scrollLeft = this.getWindowPosX() || 0
 		const viewportWidth = container.clientWidth
 		const zoom = this.getZoom()
 		const bufferWidth = viewportWidth * 0.5 // 50% buffer on each side
 		const visibleStartX = Math.max(0, scrollLeft - bufferWidth)
-		const visibleEndX = scrollLeft + viewportWidth + bufferWidth
+		const visibleEndX = Math.min(this.getTotalWidth(), scrollLeft + viewportWidth + bufferWidth)
 		
-		canvas.width = Math.max(3000 * zoom, container.clientWidth)
+		canvas.width = Math.max(this.getTotalWidth())
 		canvas.height = 30
 		ctx.clearRect(visibleStartX, 0, visibleEndX - visibleStartX, canvas.height)
 

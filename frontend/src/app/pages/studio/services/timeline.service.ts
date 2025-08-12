@@ -3,7 +3,7 @@ import { ProjectState } from '../state/project.state';
 import { GlobalsState } from '../state/subservices/globals.state';
 
 @Injectable()
-export class TimelineService implements OnInit {
+export class TimelineService {
 	BASE_PIXELS_PER_MEASURE = 100;
 
 	@ViewChild("body-timeline", {static: true}) timelineRef!: ElementRef<HTMLDivElement>;
@@ -14,18 +14,23 @@ export class TimelineService implements OnInit {
 		private globalsState: GlobalsState,
 	) {}
 
-	ngOnInit(): void {
-		this.timelineDiv = this.timelineRef.nativeElement;
-		this.windowPosition.set(this.timelineDiv.scrollLeft);
-		this.timelineDiv.addEventListener('scroll', () => {
-			this.windowPosition.set(this.timelineDiv.scrollLeft);
-		})
-	}
+	lastMeasure = signal(60);
+	windowPosX = signal(0)
 
 	zoomFactor = signal(1);
 	pixelsPerMeasure = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor());
+	totalWidth = computed(() => {
+		console.log(this.pixelsPerMeasure() * this.lastMeasure());
+		return this.pixelsPerMeasure() * this.lastMeasure()
+	});
 
-	windowPosition = signal(0)
+	setLastMeasure(m : number) {
+		this.lastMeasure.set(m);
+	}
+
+	setWindowPosX(position : number) {
+		this.windowPosX.set(position);
+	}
 
 	setZoom(factor: number) {
 		this.zoomFactor.set(Math.max(0.1, factor));
@@ -45,4 +50,5 @@ export class TimelineService implements OnInit {
 		const newZoomFactor = newMeasureLength / this.BASE_PIXELS_PER_MEASURE;
 		this.setZoom(newZoomFactor);
 	}
+
 }

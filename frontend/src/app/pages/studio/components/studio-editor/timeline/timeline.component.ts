@@ -8,12 +8,16 @@ import { ProjectState } from '../../../state/project.state';
 	imports: [CommonModule],
 	providers: [ProjectState],
 	template: `
-		<div class="timeline">
+		<div 
+			class="timeline"
+			[style.width.px]="timelineService.totalWidth()">
 			<p> BRUH </p>
 		</div>
 	`,
 	styleUrl: './timeline.component.scss'
 })
 export class TimelineComponent {
-	
+	constructor(
+		public timelineService: TimelineService
+	) {}
 }
