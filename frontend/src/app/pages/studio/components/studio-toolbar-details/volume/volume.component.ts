@@ -2,7 +2,7 @@ import { Component, OnInit, WritableSignal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
-import { ProjectGlobalsService } from '../../../state/subservices/project-globals.service';
+import { GlobalsState } from '../../../state/subservices/globals.state';
 
 @Component({
 	selector: 'studio-toolbar-details-volume',
@@ -22,8 +22,8 @@ import { ProjectGlobalsService } from '../../../state/subservices/project-global
 })
 
 export class VolumeComponent {
-	constructor(public globalsService: ProjectGlobalsService) {}
+	constructor(public globalsState: GlobalsState) {}
 
-	masterVolume(): number { return this.globalsService.get('masterVolume')(); }
-	setMasterVolume(v: number) { this.globalsService.set('masterVolume', v); }
+	masterVolume(): number { return this.globalsState.get('masterVolume')(); }
+	setMasterVolume(v: number) { this.globalsState.set('masterVolume', v); }
 }

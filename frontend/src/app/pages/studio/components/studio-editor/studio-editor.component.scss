@@ -10,12 +10,6 @@
 
 .container {
 	height: 100%; 
-
-	padding-left: 16px;
-	padding-right: 16px;
-	padding-top: 0px;
-	padding-bottom: 0px;
-
 	box-sizing: border-box;
 }
 
@@ -35,6 +29,11 @@
 	border-bottom: $border-width solid $border-color;
 
 	.headers-tracklist-container {
+		padding-left: 16px;
+		padding-right: 16px;
+		padding-top: 0px;
+		padding-bottom: 0px;
+
 		width: $tracklist-width;
 
 		display: flex;
@@ -98,7 +97,7 @@
 			border-radius: 10px;
 			
 			&:hover {
-			background: $near-white; // Hover color
+				background: $near-white; // Hover color
 			}
 		}
 		&::-webkit-scrollbar-corner {

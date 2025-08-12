@@ -1,13 +1,15 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { MatToolbar } from "@angular/material/toolbar";
-import { StudioEditorHeaderTracklistComponent } from "./tracklist-header/tracklist-header.component";
-import { StudioEditorHeaderTimelineComponent } from "./timeline-header/timeline-header.component";
+import { TracklistHeaderComponent } from "./tracklist-header/tracklist-header.component";
+import { TimelineHeaderComponent } from "./timeline-header/timeline-header.component";
 import { TracklistComponent } from "./tracklist/tracklist.component";
 import { TimelineComponent } from "./timeline/timeline.component";
+import { ProjectState } from '../../state/project.state';
 
 @Component({
 	selector: 'app-studio-editor',
-	imports: [MatToolbar, StudioEditorHeaderTracklistComponent, StudioEditorHeaderTimelineComponent, TracklistComponent, TimelineComponent],
+	imports: [MatToolbar, TracklistHeaderComponent, TimelineHeaderComponent, TracklistComponent, TimelineComponent],
+	providers: [ProjectState],
 	template: `
 		<mat-toolbar class="headers">
 			<div class="container headers-tracklist-container">

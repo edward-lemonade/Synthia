@@ -1,10 +1,10 @@
 import { Injectable, signal, computed, Signal, WritableSignal } from '@angular/core';
 import { applyPatches, Patch, produceWithPatches } from 'immer';
 
-import { HistoryService } from './../../services/history.service';
+import { HistoryService } from '../../services/history.service';
 
 
-export abstract class BaseStateService<T extends Record<string, any>> {
+export abstract class BaseState<T extends Record<string, any>> {
 	declare allowUndoRedo: boolean; // whether to record changes in history
 
 	declare signals: Record<keyof T, WritableSignal<any>>;

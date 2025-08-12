@@ -2,9 +2,9 @@ import { Injectable, Signal, inject, signal, computed } from '@angular/core';
 
 import { ProjectStudio } from '@shared_types/ProjectStudio'
 
-import { ProjectMetadataService } from '../state/subservices/project-metadata.service';
-import { ProjectGlobalsService } from '../state/subservices/project-globals.service';
-import { ProjectTracksService } from '../state/subservices/project-tracks.service';
+import { MetadataState } from './subservices/metadata.state';
+import { GlobalsState } from './subservices/globals.state';
+import { TracksState } from './subservices/tracks.state';
 import { HistoryService, PatchEntry } from '../services/history.service';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 
@@ -41,9 +41,9 @@ const DEFAULT_STATE = {
 
 @Injectable()
 export class ProjectState {
-	private metadataService = inject(ProjectMetadataService);
-	private globalsService = inject(ProjectGlobalsService);
-	private tracksService = inject(ProjectTracksService);
+	private metadataState = inject(MetadataState);
+	private globalsState = inject(GlobalsState);
+	private tracksState = inject(TracksState);
 	private historyService = inject(HistoryService);
 
 	declare projectId : string | null;
@@ -51,9 +51,9 @@ export class ProjectState {
 
 	readonly state = computed<ProjectStudio | null>(() => {
 		return {
-			metadata: this.metadataService.state(),
-			globals: this.globalsService.state(),
-			tracks: this.tracksService.state()
+			metadata: this.metadataState.state(),
+			globals: this.globalsState.state(),
+			tracks: this.tracksState.state()
 		};
 	});
 
@@ -89,15 +89,15 @@ export class ProjectState {
 			state.metadata.projectId = projectId,
 			state.metadata.authors = [author],
 
-			this.metadataService.init(state.metadata);
-			this.globalsService.init(state.globals);
-			this.tracksService.init(state.tracks);
+			this.metadataState.init(state.metadata);
+			this.globalsState.init(state.globals);
+			this.tracksState.init(state.tracks);
 		} else {
 			const state = await this.load(projectId);
 	
-			this.metadataService.init(state.metadata);
-			this.globalsService.init(state.globals);
-			this.tracksService.init(state.tracks);
+			this.metadataState.init(state.metadata);
+			this.globalsState.init(state.globals);
+			this.tracksState.init(state.tracks);
 		}
 	}
 	

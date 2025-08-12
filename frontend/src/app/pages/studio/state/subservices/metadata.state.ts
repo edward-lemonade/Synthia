@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import type { ProjectMetadata } from '@shared/types/ProjectMetadata';
-import { BaseStateService } from './base-state.service';
+import { BaseState } from './base.state';
 
-import { HistoryService } from './../../services/history.service';
+import { HistoryService } from '../../services/history.service';
 
 
 @Injectable()
-export class ProjectMetadataService extends BaseStateService<ProjectMetadata> {
+export class MetadataState extends BaseState<ProjectMetadata> {
 	constructor(
 		historyService: HistoryService, 
 	) {

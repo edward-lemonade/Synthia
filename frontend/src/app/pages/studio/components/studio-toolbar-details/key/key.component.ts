@@ -10,7 +10,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { Key, KeyListAligned, KEY_INFO } from '@shared_types/studio'
 
-import { ProjectGlobalsService } from '../../../state/subservices/project-globals.service';
+import { GlobalsState } from '../../../state/subservices/globals.state';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
@@ -62,14 +62,14 @@ export class KeyComponent {
 	KeyListAligned = KeyListAligned;
 	KEY_INFO = KEY_INFO
 
-	constructor(public globalsService: ProjectGlobalsService, private sanitizer: DomSanitizer) {}
+	constructor(public globalsState: GlobalsState, private sanitizer: DomSanitizer) {}
 
 	key(): Key {
-		return this.globalsService.get('key')();
+		return this.globalsState.get('key')();
 	}
 
 	setKey(key: Key) {
-		this.globalsService.set('key', key);
+		this.globalsState.set('key', key);
 	}
 
 	setKeyType(keyType: 'maj'|'min') { 

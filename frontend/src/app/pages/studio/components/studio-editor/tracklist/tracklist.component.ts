@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
 	selector: 'studio-editor-tracklist',
 	imports: [],
 	template: `
-		<div #lowerLeftContent>
+		<div class="tracklist">
 			tracklist works!
 		</div>
 	`,

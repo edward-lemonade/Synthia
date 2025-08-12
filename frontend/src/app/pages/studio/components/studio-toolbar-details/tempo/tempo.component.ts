@@ -10,7 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 
 import { TimeSignature, TimeSigOptionsN, TimeSigOptionsD } from '@shared_types/studio/';
 
-import { ProjectGlobalsService } from '../../../state/subservices/project-globals.service';
+import { GlobalsState } from '../../../state/subservices/globals.state';
 
 @Component({
 	selector: 'studio-toolbar-details-tempo',
@@ -80,7 +80,7 @@ import { ProjectGlobalsService } from '../../../state/subservices/project-global
 })
 
 export class TempoComponent {
-	constructor(public globalsService: ProjectGlobalsService) {}
+	constructor(public globalsState: GlobalsState) {}
 
 	// METRONOME
 
@@ -91,7 +91,7 @@ export class TempoComponent {
 
 	// BPM
 
-	bpm() { return this.globalsService.get('bpm')(); }
+	bpm() { return this.globalsState.get('bpm')(); }
 	setBpm(event: Event) {
 		const input = (event.target as HTMLInputElement).value;
 		
@@ -100,7 +100,7 @@ export class TempoComponent {
 			if (isNaN(parsed)) {parsed = 0};
 
 			const finalBpm = Math.min(999, Math.max(1, parsed));
-			this.globalsService.set("bpm", finalBpm);
+			this.globalsState.set("bpm", finalBpm);
 		}
 		(event.target as HTMLInputElement).value = this.bpm().toString()
 	}
@@ -110,6 +110,6 @@ export class TempoComponent {
 	timeSigOptionsN = TimeSigOptionsN;
 	timeSigOptionsD = TimeSigOptionsD;
 
-	timeSignature(): TimeSignature { return this.globalsService.get('timeSignature')(); }
-	setTimeSignature(timeSignature: TimeSignature) { this.globalsService.set('timeSignature', timeSignature); }
+	timeSignature(): TimeSignature { return this.globalsState.get('timeSignature')(); }
+	setTimeSignature(timeSignature: TimeSignature) { this.globalsState.set('timeSignature', timeSignature); }
 }

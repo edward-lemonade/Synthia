@@ -31,6 +31,6 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 	`,
 	styleUrl: './tracklist-header.component.scss'
 })
-export class StudioEditorHeaderTracklistComponent {
+export class TracklistHeaderComponent {
 
 }

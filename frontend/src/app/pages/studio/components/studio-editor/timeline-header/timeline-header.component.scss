@@ -1,2 +1,7 @@
 @use "theme" as *;	
-@use "../../studio-vars" as *;
+@use "../../../studio-vars" as *;
+
+.container{
+	display: flex;
+	flex-direction: row;
+}

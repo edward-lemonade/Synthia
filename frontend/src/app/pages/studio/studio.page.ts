@@ -8,16 +8,17 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
 import { StudioToolbarDetailsComponent } from './components/studio-toolbar-details/studio-toolbar-details.component';
-import { ProjectMetadataService } from './state/subservices/project-metadata.service';
-import { ProjectGlobalsService } from './state/subservices/project-globals.service';
-import { ProjectTracksService } from './state/subservices/project-tracks.service';
+import { MetadataState } from './state/subservices/metadata.state';
+import { GlobalsState } from './state/subservices/globals.state';
+import { TracksState } from './state/subservices/tracks.state';
 import { HistoryService } from './services/history.service';
 import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
+import { TimelineService } from './services/timeline.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [ProjectState, ProjectMetadataService, ProjectGlobalsService, ProjectTracksService, HistoryService, AppAuthService],
+	providers: [ProjectState, MetadataState, GlobalsState, TracksState, HistoryService, AppAuthService, TimelineService],
 	template: `
 		<div class="page-container">
 			<app-studio-toolbar-top></app-studio-toolbar-top>

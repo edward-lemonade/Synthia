@@ -8,7 +8,7 @@ import { ExportComponent } from './export/export.component';
 import { PublishComponent } from './publish/publish.component';
 import { ShareComponent } from './share/share.component';
 
-import { ProjectMetadataService } from '../../state/subservices/project-metadata.service';
+import { MetadataState } from '../../state/subservices/metadata.state';
 import { ProjectState } from '../../state/project.state';
 import { HistoryService } from '../../services/history.service';
 
@@ -49,16 +49,16 @@ import { HistoryService } from '../../services/history.service';
 })
 export class StudioToolbarTopComponent {
 	constructor(
-		private projectMetadataService: ProjectMetadataService,
+		private metadataState: MetadataState,
 		private projectState: ProjectState,
 		private historyService: HistoryService,
 	) {}
 
-	title(): string { return this.projectMetadataService.get("title")(); }
+	title(): string { return this.metadataState.get("title")(); }
 	setTitle(event: Event) { 
 		const input = (event.target as HTMLInputElement).value.toString();
 
-		this.projectMetadataService.set("title", input);
+		this.metadataState.set("title", input);
 		(event.target as HTMLInputElement).value = this.title().toString() 
 	}
 

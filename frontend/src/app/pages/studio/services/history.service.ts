@@ -5,9 +5,9 @@ import { Author } from '@shared/types/Author';
 
 import { AppAuthService } from '@src/app/services/app-auth.service';
 
-import { ProjectMetadataService } from '../state/subservices/project-metadata.service';
-import { ProjectGlobalsService } from '../state/subservices/project-globals.service';
-import { ProjectTracksService } from '../state/subservices/project-tracks.service';
+import { MetadataState } from '../state/subservices/metadata.state';
+import { GlobalsState } from '../state/subservices/globals.state';
+import { TracksState } from '../state/subservices/tracks.state';
 
 export interface PatchEntry {
 	service: string;
@@ -29,13 +29,13 @@ function invertPatchEntry(entry: PatchEntry) {
 @Injectable()
 export class HistoryService {
 	private trackedServices : {
-		"metadata": ProjectMetadataService | null,
-		"globals": ProjectGlobalsService | null,
-		"tracks": ProjectTracksService | null,
+		"metadata": MetadataState | null,
+		"globals": GlobalsState | null,
+		"tracks": TracksState | null,
 	} = {metadata: null, globals: null, tracks: null};
-	registerMetadataService(svc: ProjectMetadataService) {this.trackedServices!.metadata = svc;}
-	registerGlobalsService(svc: ProjectGlobalsService) {this.trackedServices!.globals = svc;}
-	registerTracksService(svc: ProjectTracksService) {this.trackedServices!.tracks = svc;}
+	registerMetadataService(svc: MetadataState) {this.trackedServices!.metadata = svc;}
+	registerGlobalsService(svc: GlobalsState) {this.trackedServices!.globals = svc;}
+	registerTracksService(svc: TracksState) {this.trackedServices!.tracks = svc;}
 	  
 	private undoStack: PatchEntry[] = [];
 	private redoStack: PatchEntry[] = [];
