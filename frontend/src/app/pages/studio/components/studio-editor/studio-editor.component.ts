@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Injector, ViewChild, effect, runInInjectionContext } from '@angular/core';
 import { MatToolbar } from "@angular/material/toolbar";
 import { TracklistHeaderComponent } from "./tracklist-header/tracklist-header.component";
 import { TimelineHeaderComponent } from "./timeline-header/timeline-header.component";
@@ -13,47 +13,28 @@ import { TimelineService } from '../../services/timeline.service';
 	providers: [ProjectState, TimelineService],
 	template: `
 		<mat-toolbar class="headers">
-			<div class="container headers-tracklist-container">
-				<div #topLeft>
-					<studio-editor-tracklist-header/>
-				</div>
-			</div>
-			<div 
-				class="container headers-timeline-container">
-				<div #topRight>
-					<studio-editor-timeline-header/>
-				</div>
-			</div>
+			<studio-editor-tracklist-header class="container headers-tracklist-container" #topLeft/>
+			<studio-editor-timeline-header class="container headers-timeline-container" #topRight/>
 		</mat-toolbar>
 
 		<div class="body">
-			<div class="container body-tracklist">
-				<div #lowerLeft>
-					<studio-editor-tracklist/>
-				</div>
-			</div>
-			<div #lowerRight 
-				class="container body-timeline" 
-				(scroll)="onScroll()"
-				>
-				<div #lowerRight>
-					<studio-editor-timeline/>
-				</div>
-			</div>
+			<studio-editor-tracklist class="container body-tracklist" #lowerLeft/>
+			<studio-editor-timeline class="container body-timeline" #lowerRight (scroll)="onScroll()"/>
 		</div>
 	`,
 	styleUrl: './studio-editor.component.scss'
 })
 export class StudioEditorComponent implements AfterViewInit {
-	@ViewChild('topLeft', { static: false }) topLeft!: ElementRef<HTMLDivElement>;
-	@ViewChild('topRight', { static: false }) topRight!: ElementRef<HTMLDivElement>;
-	@ViewChild('lowerLeft', { static: false }) lowerLeft!: ElementRef<HTMLDivElement>;
-	@ViewChild('lowerRight', { static: false }) lowerRight!: ElementRef<HTMLDivElement>;
+	@ViewChild('topLeft', { static: true, read: ElementRef }) topLeft!: ElementRef<HTMLDivElement>;
+	@ViewChild('topRight', { static: true, read: ElementRef }) topRight!: ElementRef<HTMLDivElement>;
+	@ViewChild('lowerLeft', { static: true, read: ElementRef }) lowerLeft!: ElementRef<HTMLDivElement>;
+	@ViewChild('lowerRight', { static: true, read: ElementRef }) lowerRight!: ElementRef<HTMLDivElement>;
 
-	private isScrolling = false;
+	private isProgrammaticScroll = false;
 
 	constructor (
-		public timelineService: TimelineService
+		private injector: Injector,
+		public timelineService: TimelineService,
 	) {}
 
 	ngAfterViewInit(): void {
@@ -71,18 +52,34 @@ export class StudioEditorComponent implements AfterViewInit {
 				});
 			}
 		}, 100);
+
+		runInInjectionContext(this.injector, () => {
+			effect(() => {
+				const pos = this.timelineService.windowPosX();
+				//console.log(pos);
+				if (this.lowerRight?.nativeElement && this.lowerRight.nativeElement.scrollLeft !== pos) {
+					this.isProgrammaticScroll = true;
+					this.lowerRight.nativeElement.scrollLeft = pos;
+				}
+			});
+		});
 	}
 
 	onScroll(): void {
-		if (this.isScrolling || !this.lowerRight?.nativeElement) return;
+		if (!this.lowerRight?.nativeElement) return;
 		
-		this.isScrolling = true;
+		if (this.isProgrammaticScroll) {
+			this.isProgrammaticScroll = false; // reset flag
+			return; 
+		}
+
 		const scrollLeft = this.lowerRight.nativeElement.scrollLeft;
 		const scrollTop = this.lowerRight.nativeElement.scrollTop;
 
-		this.timelineService.setWindowPosX(scrollLeft);
+		this.timelineService.windowPosX.set(scrollLeft);
 		
 		// Sync horizontal with top-right
+		/*
 		if (this.topRight?.nativeElement) {
 			this.topRight.nativeElement.style.transform = `translateX(-${scrollLeft}px)`;
 		}
@@ -90,8 +87,7 @@ export class StudioEditorComponent implements AfterViewInit {
 		// Sync vertical with lower-left  
 		if (this.lowerLeft?.nativeElement) {
 			this.lowerLeft.nativeElement.style.transform = `translateY(-${scrollTop}px)`;
-		}
-		
-		this.isScrolling = false;
+		}*/
 	}
+
 }

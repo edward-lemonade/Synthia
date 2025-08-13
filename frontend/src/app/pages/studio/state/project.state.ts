@@ -62,7 +62,6 @@ export class ProjectState {
 		private route: ActivatedRoute,
 		private router: Router,
 	) {
-		console.log("constructor")
 
 		combineLatest([
 			this.route.paramMap,
