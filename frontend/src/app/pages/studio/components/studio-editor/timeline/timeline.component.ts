@@ -1,5 +1,5 @@
 import { Component, effect, signal } from '@angular/core';
-import { TimelineService } from '../../../services/timeline.service';
+import { ZoomScrollService } from '../../../services/zoom-scroll.service';
 import { CommonModule } from '@angular/common';
 import { ProjectState } from '../../../state/project.state';
 
@@ -18,6 +18,6 @@ import { ProjectState } from '../../../state/project.state';
 })
 export class TimelineComponent {
 	constructor(
-		public timelineService: TimelineService
+		public timelineService: ZoomScrollService
 	) {}
 }

@@ -13,12 +13,12 @@ import { GlobalsState } from './state/subservices/globals.state';
 import { TracksState } from './state/subservices/tracks.state';
 import { HistoryService } from './services/history.service';
 import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
-import { TimelineService } from './services/timeline.service';
+import { ZoomScrollService } from './services/zoom-scroll.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [ProjectState, MetadataState, GlobalsState, TracksState, HistoryService, AppAuthService, TimelineService],
+	providers: [ProjectState, MetadataState, GlobalsState, TracksState, HistoryService, AppAuthService, ZoomScrollService],
 	template: `
 		<div class="page-container">
 			<app-studio-toolbar-top></app-studio-toolbar-top>

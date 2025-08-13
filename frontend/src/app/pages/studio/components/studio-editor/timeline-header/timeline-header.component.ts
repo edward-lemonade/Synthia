@@ -1,18 +1,29 @@
 import { AfterViewInit, Component, effect, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
-import { TimelineService } from '../../../services/timeline.service';
+import { ZoomScrollService } from '../../../services/zoom-scroll.service';
 import { CommonModule } from '@angular/common';
 import { ProjectState } from '../../../state/project.state';
 import { GlobalsState } from '../../../state/subservices/globals.state';
 import { TimeSigOptionsN } from '@shared/types/studio';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
 	selector: 'studio-editor-timeline-header',
-	imports: [CommonModule],
+	imports: [CommonModule, MatIconModule],
 	providers: [ProjectState],
 	template: `
 		<div #container class="container" (wheel)="onWheel($event)">
 			<canvas #canvas class="canvas"></canvas>
-			<div class="controls"></div>
+			<div class="controls">
+				<button class="control-btn" (click)="onButtonZoomIn()">
+					<mat-icon>zoom_in</mat-icon>
+				</button>
+				<button class="control-btn" (click)="onButtonZoomOut()">
+					<mat-icon>zoom_out</mat-icon>
+				</button>
+				<button class="control-btn">
+					<mat-icon>grid_3x3</mat-icon>
+				</button>
+			</div>
 			<div #timeline_header_scrollable class="scrollable"></div>
 		</div>
 	`,
@@ -29,7 +40,7 @@ export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 	CANVAS_PADDING = 20;
 
 	constructor(
-		public timelineService: TimelineService,
+		public timelineService: ZoomScrollService,
 		private globalsState: GlobalsState
 	) {}
 
@@ -217,4 +228,7 @@ export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 		ctx.lineTo(x, 30)
 		ctx.stroke()
 	}
+
+	onButtonZoomIn() { this.timelineService.adjustZoom(1, this.container!.clientWidth/2, 0.5); }
+	onButtonZoomOut() { this.timelineService.adjustZoom(-1, this.container!.clientWidth/2, 0.5); }
 }

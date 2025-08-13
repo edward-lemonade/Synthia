@@ -3,7 +3,7 @@ import { ProjectState } from '../state/project.state';
 import { GlobalsState } from '../state/subservices/globals.state';
 
 @Injectable()
-export class TimelineService {
+export class ZoomScrollService {
 	BASE_PIXELS_PER_MEASURE = 100;
 
 	private timelineHeaderContainer?: HTMLDivElement;
@@ -31,12 +31,11 @@ export class TimelineService {
 	setWindowPosY(position : number) { this.windowPosY.set(position); }
 	setZoom(factor: number) { this.zoomFactor.set(Math.max(0.1, factor)); }
 
-	adjustZoom(direction: number, mousePos: number) {
+	adjustZoom(direction: number, mousePos: number, zoomSpeed = 0.02) {
 		if (!this.timelineHeaderContainer) return;
 
 		const minMeasureLength = this.timelineHeaderContainer.clientWidth / this.lastMeasure();
 		const maxMeasureLength = 512;
-		const zoomSpeed = 0.02;
 
 		// calculate new zoom factor
 		const currentMeasureWidth = this.measureWidth();

@@ -5,12 +5,12 @@ import { TimelineHeaderComponent } from "./timeline-header/timeline-header.compo
 import { TracklistComponent } from "./tracklist/tracklist.component";
 import { TimelineComponent } from "./timeline/timeline.component";
 import { ProjectState } from '../../state/project.state';
-import { TimelineService } from '../../services/timeline.service';
+import { ZoomScrollService } from '../../services/zoom-scroll.service';
 
 @Component({
 	selector: 'app-studio-editor',
 	imports: [MatToolbar, TracklistHeaderComponent, TimelineHeaderComponent, TracklistComponent, TimelineComponent],
-	providers: [ProjectState, TimelineService],
+	providers: [ProjectState, ZoomScrollService],
 	template: `
 		<mat-toolbar class="headers">
 			<studio-editor-tracklist-header class="container headers-tracklist-container" #topLeft/>
@@ -34,7 +34,7 @@ export class StudioEditorComponent implements AfterViewInit {
 
 	constructor (
 		private injector: Injector,
-		public timelineService: TimelineService,
+		public timelineService: ZoomScrollService,
 	) {}
 
 	ngAfterViewInit(): void {
