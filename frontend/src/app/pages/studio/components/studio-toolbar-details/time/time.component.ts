@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
 	selector: 'studio-toolbar-details-time',
 	imports: [],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class='time-container'>
 			{{ timeFormatted }}

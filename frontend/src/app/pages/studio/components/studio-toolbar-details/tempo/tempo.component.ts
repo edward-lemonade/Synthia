@@ -1,4 +1,4 @@
-import { Component, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, WritableSignal } from '@angular/core';
 import { CommonModule, Time } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -15,6 +15,7 @@ import { GlobalsState } from '../../../state/subservices/globals.state';
 @Component({
 	selector: 'studio-toolbar-details-tempo',
 	imports: [CommonModule, FormsModule, MatButtonModule, MatButtonToggleModule, MatIcon, MatDivider, MatMenuModule],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button

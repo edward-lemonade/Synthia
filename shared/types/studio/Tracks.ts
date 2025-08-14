@@ -16,7 +16,7 @@ export interface Track {
 	index : number;
 	name : string;
 	type : "audio" | "midi";
-	files : AudioFile;
+	files : AudioFile | null;
 	color : string;
 	
 	midiInstrument : string;

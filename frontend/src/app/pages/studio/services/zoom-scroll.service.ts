@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, ElementRef, OnInit } from '@angular/core';
+import { Injectable, signal, computed, ElementRef, OnInit, effect, Injector, runInInjectionContext } from '@angular/core';
 import { ProjectState } from '../state/project.state';
 import { GlobalsState } from '../state/subservices/globals.state';
 
@@ -9,7 +9,27 @@ export class ZoomScrollService {
 	private timelineHeaderContainer?: HTMLDivElement;
 	registerTimelineHeaderContainer(el: HTMLDivElement) { this.timelineHeaderContainer = el; }
 
+	private timelineHeaderScrollable?: HTMLDivElement;
+	private tracklistScrollable?: HTMLDivElement;
+	registerTimelineHeaderScrollable(el: HTMLDivElement) { 
+		this.timelineHeaderScrollable = el; 
+		runInInjectionContext(this.injector, () => {
+			effect(() => {
+				this.timelineHeaderScrollable!.scrollLeft = this.windowPosX();
+			})
+		});
+	}
+	registerTracklistScrollable(el: HTMLDivElement) { 
+		this.tracklistScrollable = el; 
+		runInInjectionContext(this.injector, () => {
+			effect(() => {
+				this.tracklistScrollable!.scrollTop = this.windowPosY();
+			})
+		});
+	}
+
 	constructor(
+		private injector: Injector,
 		private projectState: ProjectState,
 		private globalsState: GlobalsState,
 	) {}

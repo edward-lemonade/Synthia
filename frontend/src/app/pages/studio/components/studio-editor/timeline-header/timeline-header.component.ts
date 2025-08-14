@@ -1,15 +1,12 @@
-import { AfterViewInit, Component, effect, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
 import { ZoomScrollService } from '../../../services/zoom-scroll.service';
 import { CommonModule } from '@angular/common';
-import { ProjectState } from '../../../state/project.state';
-import { GlobalsState } from '../../../state/subservices/globals.state';
-import { TimeSigOptionsN } from '@shared/types/studio';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
 	selector: 'studio-editor-timeline-header',
 	imports: [CommonModule, MatIconModule],
-	providers: [ProjectState],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #container class="container" (wheel)="onWheel($event)">
 			<canvas #canvas class="canvas"></canvas>
@@ -24,7 +21,11 @@ import { MatIconModule } from '@angular/material/icon';
 					<mat-icon>grid_3x3</mat-icon>
 				</button>
 			</div>
-			<div #timeline_header_scrollable class="scrollable"></div>
+			<div #scrollable class="scrollable">
+				<div class="scrollContent" [style.width.px]="zoomScrollService.totalWidth()"> 
+					Demo
+				</div>
+			</div>
 		</div>
 	`,
 	styleUrl: './timeline-header.component.scss'
@@ -33,6 +34,7 @@ import { MatIconModule } from '@angular/material/icon';
 export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 	@ViewChild("container", {static: true}) containerRef!: ElementRef<HTMLDivElement>;
 	@ViewChild("canvas", {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
+	@ViewChild("scrollable", {static: true}) scrollable!: ElementRef<HTMLDivElement>;
 	declare container : HTMLDivElement;
 	declare canvas : HTMLCanvasElement;
 	declare ctx : CanvasRenderingContext2D;
@@ -40,14 +42,25 @@ export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 	CANVAS_PADDING = 20;
 
 	constructor(
-		public timelineService: ZoomScrollService,
-		private globalsState: GlobalsState
+		public zoomScrollService: ZoomScrollService,
 	) {}
 
 	ngOnInit(): void {
 		this.container = this.containerRef.nativeElement;
 		this.canvas = this.canvasRef.nativeElement;
-		this.timelineService.registerTimelineHeaderContainer(this.container);
+		this.zoomScrollService.registerTimelineHeaderContainer(this.container);
+		this.zoomScrollService.registerTimelineHeaderScrollable(this.scrollable.nativeElement);
+
+		this.scrollable.nativeElement.addEventListener('wheel', (event: WheelEvent) => {
+			if (!event.ctrlKey) {
+				const scrollPos = 
+					Math.min(this.scrollable.nativeElement.clientWidth, 
+					Math.max(0, this.scrollable.nativeElement.scrollLeft + event.deltaY));
+				if (scrollPos != this.zoomScrollService.windowPosX()) {
+					this.zoomScrollService.setWindowPosX(scrollPos);
+				}
+			}
+		});
 	}
 	ngAfterViewInit(): void {
 		const dpr = window.devicePixelRatio || 1;
@@ -69,21 +82,20 @@ export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 		if (event.ctrlKey) {
 			event.preventDefault();
 			
-			// Get the element that received the wheel event
 			const target = event.currentTarget as HTMLElement;
 			const rect = target.getBoundingClientRect();
 			const mouseX = event.clientX - rect.left;
 
 			const direction = event.deltaY > 0 ? -1 : 1;
-			this.timelineService.adjustZoom(direction, mouseX);
+			this.zoomScrollService.adjustZoom(direction, mouseX);
 		}
 	}
 
 	private onTimelineChanged = effect(() => {
-		const startPos = this.timelineService.windowPosX() - this.CANVAS_PADDING;
-		const endPos = this.timelineService.windowPosX() + this.canvas.width + this.CANVAS_PADDING;
-		const measureWidth = this.timelineService.measureWidth();
-		const beatWidth = this.timelineService.beatWidth();
+		const startPos = this.zoomScrollService.windowPosX() - this.CANVAS_PADDING;
+		const endPos = this.zoomScrollService.windowPosX() + this.canvas.width + this.CANVAS_PADDING;
+		const measureWidth = this.zoomScrollService.measureWidth();
+		const beatWidth = this.zoomScrollService.beatWidth();
 		this.drawLines();
 	})
 	private drawLines(): void {
@@ -99,18 +111,18 @@ export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 		const MAX_INTERVAL_WIDTH = 100;
 		const MIN_MEASURE_WIDTH = 60;
 
-		const startPos = this.timelineService.windowPosX() - this.CANVAS_PADDING;
-		const endPos = this.timelineService.windowPosX() + this.canvas.width + this.CANVAS_PADDING;
+		const startPos = this.zoomScrollService.windowPosX() - this.CANVAS_PADDING;
+		const endPos = this.zoomScrollService.windowPosX() + this.canvas.width + this.CANVAS_PADDING;
 
 		// MEASURES
-		const measureWidth = this.timelineService.measureWidth();
+		const measureWidth = this.zoomScrollService.measureWidth();
 		const drawMeasures: boolean = true;
 		const stepSize = Math.max(1, Math.pow(2, Math.ceil(-Math.log2(measureWidth / MIN_MEASURE_WIDTH))));
 		const startMeasure = Math.ceil(startPos / measureWidth);
 		const endMeasure = Math.floor(endPos / measureWidth);
 		
 		// BEATS
-		const beatWidth = this.timelineService.beatWidth();
+		const beatWidth = this.zoomScrollService.beatWidth();
 		const drawBeats: boolean = (measureWidth > MAX_INTERVAL_WIDTH);
 		const startBeat = Math.ceil(startPos / beatWidth);
 		const endBeat = Math.ceil(endPos / beatWidth);
@@ -229,6 +241,6 @@ export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 		ctx.stroke()
 	}
 
-	onButtonZoomIn() { this.timelineService.adjustZoom(1, this.container!.clientWidth/2, 0.5); }
-	onButtonZoomOut() { this.timelineService.adjustZoom(-1, this.container!.clientWidth/2, 0.5); }
+	onButtonZoomIn() { this.zoomScrollService.adjustZoom(1, this.container!.clientWidth/2, 0.5); }
+	onButtonZoomOut() { this.zoomScrollService.adjustZoom(-1, this.container!.clientWidth/2, 0.5); }
 }

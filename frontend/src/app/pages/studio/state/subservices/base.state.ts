@@ -33,6 +33,7 @@ export abstract class BaseState<T extends Record<string, any>> {
 		});
 	}
 
+
 	get<K extends keyof T>(key: K): Signal<T[K]> {
 		return this.signals[key];
 	}

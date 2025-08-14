@@ -1,4 +1,4 @@
-import { Component, OnInit, WritableSignal, computed} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -15,6 +15,7 @@ import { GlobalsState } from '../../../state/subservices/globals.state';
 @Component({
 	selector: 'studio-toolbar-details-key',
 	imports: [CommonModule, FormsModule, MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
 			<mat-icon>music_note</mat-icon>

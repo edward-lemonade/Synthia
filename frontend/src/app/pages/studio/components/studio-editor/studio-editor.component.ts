@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Injector, ViewChild, effect, runInInjectionContext } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Injector, ViewChild, effect, runInInjectionContext } from '@angular/core';
 import { MatToolbar } from "@angular/material/toolbar";
 import { TracklistHeaderComponent } from "./tracklist-header/tracklist-header.component";
 import { TimelineHeaderComponent } from "./timeline-header/timeline-header.component";
@@ -10,7 +10,7 @@ import { ZoomScrollService } from '../../services/zoom-scroll.service';
 @Component({
 	selector: 'app-studio-editor',
 	imports: [MatToolbar, TracklistHeaderComponent, TimelineHeaderComponent, TracklistComponent, TimelineComponent],
-	providers: [ProjectState, ZoomScrollService],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-toolbar class="headers">
 			<studio-editor-tracklist-header class="container headers-tracklist-container" #topLeft/>
@@ -25,6 +25,9 @@ import { ZoomScrollService } from '../../services/zoom-scroll.service';
 	styleUrl: './studio-editor.component.scss'
 })
 export class StudioEditorComponent implements AfterViewInit {
+	@ViewChild(TimelineHeaderComponent, { static: true }) topRightChild!: TimelineHeaderComponent;
+	@ViewChild(TracklistComponent, { static: true }) lowerLeftChild!: TracklistComponent;
+
 	@ViewChild('topLeft', { static: true, read: ElementRef }) topLeft!: ElementRef<HTMLDivElement>;
 	@ViewChild('topRight', { static: true, read: ElementRef }) topRight!: ElementRef<HTMLDivElement>;
 	@ViewChild('lowerLeft', { static: true, read: ElementRef }) lowerLeft!: ElementRef<HTMLDivElement>;
@@ -38,28 +41,18 @@ export class StudioEditorComponent implements AfterViewInit {
 	) {}
 
 	ngAfterViewInit(): void {
-		setTimeout(() => {
-			if (
-				this.topLeft?.nativeElement && 
-				this.topRight?.nativeElement && 
-				this.lowerLeft?.nativeElement
-			) {
-				[this.topLeft.nativeElement, this.topRight.nativeElement, this.lowerLeft.nativeElement].forEach(element => {
-					element.addEventListener('scroll', (e) => {
-						e.preventDefault();
-						e.stopPropagation();
-					});
-				});
-			}
-		}, 100);
-
 		runInInjectionContext(this.injector, () => {
 			effect(() => {
-				const pos = this.timelineService.windowPosX();
-				//console.log(pos);
-				if (this.lowerRight?.nativeElement && this.lowerRight.nativeElement.scrollLeft !== pos) {
+				const posX = this.timelineService.windowPosX();
+				const posY = this.timelineService.windowPosY();
+
+				if (this.lowerRight?.nativeElement && this.lowerRight.nativeElement.scrollLeft !== posX) {
 					this.isProgrammaticScroll = true;
-					this.lowerRight.nativeElement.scrollLeft = pos;
+					this.lowerRight.nativeElement.scrollLeft = posX;
+				}
+				if (this.lowerRight?.nativeElement && this.lowerRight.nativeElement.scrollTop !== posY) {
+					this.isProgrammaticScroll = true;
+					this.lowerRight.nativeElement.scrollTop = posY;
 				}
 			});
 		});
@@ -77,17 +70,7 @@ export class StudioEditorComponent implements AfterViewInit {
 		const scrollTop = this.lowerRight.nativeElement.scrollTop;
 
 		this.timelineService.windowPosX.set(scrollLeft);
-		
-		// Sync horizontal with top-right
-		/*
-		if (this.topRight?.nativeElement) {
-			this.topRight.nativeElement.style.transform = `translateX(-${scrollLeft}px)`;
-		}
-		
-		// Sync vertical with lower-left  
-		if (this.lowerLeft?.nativeElement) {
-			this.lowerLeft.nativeElement.style.transform = `translateY(-${scrollTop}px)`;
-		}*/
+		this.timelineService.windowPosY.set(scrollTop);
 	}
 
 }

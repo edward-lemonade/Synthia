@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -10,6 +10,7 @@ import { HistoryService } from '../../../services/history.service';
 @Component({
 	selector: 'studio-toolbar-details-undo',
 	imports: [MatButtonModule, MatButtonToggleModule, MatIcon, MatDivider],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button

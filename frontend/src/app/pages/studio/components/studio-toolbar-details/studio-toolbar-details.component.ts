@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { MatToolbar } from "@angular/material/toolbar";
@@ -13,6 +13,7 @@ import { TimeComponent } from './time/time.component';
 @Component({
 	selector: 'app-studio-toolbar-details',
 	imports: [MatToolbar, CommonModule, VolumeComponent, KeyComponent, TempoComponent, PlaybackComponent, TimeComponent, UndoComponent],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-toolbar class='toolbar'>
 			<studio-toolbar-details-undo/>

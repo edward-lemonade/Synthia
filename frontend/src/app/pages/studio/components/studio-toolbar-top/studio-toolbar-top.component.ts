@@ -1,4 +1,4 @@
-import { Component, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatToolbar } from '@angular/material/toolbar';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +15,7 @@ import { HistoryService } from '../../services/history.service';
 @Component({
 	selector: 'app-studio-toolbar-top',
 	imports: [MatIcon, MatToolbar, FormsModule, SaveComponent, ExportComponent, PublishComponent, ShareComponent],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-toolbar class="toolbar">
 			<div class="toolbar-section left-section">
@@ -54,7 +55,7 @@ export class StudioToolbarTopComponent {
 		private historyService: HistoryService,
 	) {}
 
-	title(): string { return this.metadataState.get("title")(); }
+	title(): string { return this.metadataState.get("title")() ?? ''; }
 	setTitle(event: Event) { 
 		const input = (event.target as HTMLInputElement).value.toString();
 

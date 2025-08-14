@@ -1,6 +1,40 @@
 @use "theme" as *;	
 @use "../../../studio-vars" as *;
 
-.tracklist {
+.container {
+	height: 100%;
 
+	overflow: scroll;
+	&::-webkit-scrollbar { display: none; }
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+
+	.tracks {
+		width: $tracklist-width;
+		height: fit-content;
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-auto-rows: min-content;
+
+		align-items: start;
+
+		.track {
+			height: $track-height;
+			position: relative;
+
+			padding-left: 8px;
+			padding-right: 8px;
+			padding-top: 8px;
+			padding-bottom: 8px;
+			box-sizing: border-box;
+			margin: 0;
+
+			transition: all 0.2s;
+			display: flex;
+			flex-direction: row;
+
+			background-color: transparent;
+			border-bottom: $border-width solid $border-color;
+		}
+	}
 }

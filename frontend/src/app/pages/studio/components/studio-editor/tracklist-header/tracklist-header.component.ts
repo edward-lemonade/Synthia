@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -9,6 +9,7 @@ import { TracksState } from '../../../state/subservices/tracks.state';
 @Component({
 	selector: 'studio-editor-tracklist-header',
 	imports: [MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<button [matMenuTriggerFor]="addTrackMenu" class="add-track-btn">
 			<mat-icon>add</mat-icon>
@@ -38,6 +39,6 @@ export class TracklistHeaderComponent {
 	) {}
 
 	onAddTrack() {
-		this.tracksState.set
+		this.tracksState.addTrack();
 	}
 }

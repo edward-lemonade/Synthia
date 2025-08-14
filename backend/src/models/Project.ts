@@ -53,7 +53,7 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 	},
 
 	tracks: {
-		arr: {
+		arr: [{
 			index: 	{ type: Number },
 			name: 	{ type: String },
 			type:  	{ type: String, enum: ["audio", "midi"], default: "midi" },
@@ -83,7 +83,7 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 				duration: Number,
 				audioFile: String, // s3 url
 			}]
-		},
+		}],
 	}
 
 	// TODO: automations

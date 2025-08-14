@@ -1,4 +1,4 @@
-import { Component, OnInit, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, WritableSignal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
@@ -7,6 +7,7 @@ import { GlobalsState } from '../../../state/subservices/globals.state';
 @Component({
 	selector: 'studio-toolbar-details-volume',
 	imports: [MatIcon, MatSliderModule],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class='volume'>
 			<mat-icon class='volume-icon'>volume_up</mat-icon>
