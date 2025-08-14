@@ -17,17 +17,17 @@ import { TracksState } from '../../../state/subservices/tracks.state';
 		</button>
 		
 		<mat-menu #addTrackMenu="matMenu" [class]="'add-track-menu'">
-			<button mat-menu-item (click)="onAddTrack()">
+			<button mat-menu-item (click)="onAddTrack('audio')">
 				<p>Audio File</p>
 			</button>
-			<button mat-menu-item>
+			<button mat-menu-item (click)="onAddTrack('microphone')">
 				<p>Microphone</p>
 			</button>
-			<button mat-menu-item>
+			<button mat-menu-item (click)="onAddTrack('drums')">
 				<p>Drums</p>
 			</button>
-			<button mat-menu-item>
-				<p>Synth</p>
+			<button mat-menu-item (click)="onAddTrack('instrument')">
+				<p>Instrument</p>
 			</button>
 		</mat-menu>
 	`,
@@ -38,7 +38,7 @@ export class TracklistHeaderComponent {
 		public tracksState: TracksState
 	) {}
 
-	onAddTrack() {
-		this.tracksState.addTrack();
+	onAddTrack(type: string) {
+		this.tracksState.addTrack(type);
 	}
 }

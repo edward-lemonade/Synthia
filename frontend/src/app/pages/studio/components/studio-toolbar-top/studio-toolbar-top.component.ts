@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, Signal } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatToolbar } from '@angular/material/toolbar';
 import { FormsModule } from '@angular/forms';
@@ -32,8 +32,8 @@ import { HistoryService } from '../../services/history.service';
 						class="title-input" 
 						placeholder="Untitled" 
 						type="text"
-						[value]="title().toString()"
-						(input)="setTitle($event)">
+						[(ngModel)]="titleInput"
+						(input)="updateTitle()">
 				</div>
 			</div>
 
@@ -48,19 +48,20 @@ import { HistoryService } from '../../services/history.service';
 	`,
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
-export class StudioToolbarTopComponent {
+export class StudioToolbarTopComponent implements OnInit {
 	constructor(
 		private metadataState: MetadataState,
 		private projectState: ProjectState,
 		private historyService: HistoryService,
 	) {}
 
-	title(): string { return this.metadataState.get("title")() ?? ''; }
-	setTitle(event: Event) { 
-		const input = (event.target as HTMLInputElement).value.toString();
+	ngOnInit() {
+		this.titleInput.set(this.metadataState.get('title')());
+	}
 
-		this.metadataState.set("title", input);
-		(event.target as HTMLInputElement).value = this.title().toString() 
+	titleInput = signal('')
+	updateTitle() {
+		this.metadataState.set('title', this.titleInput());
 	}
 
 	isPending(): boolean { return this.historyService.isPending() }

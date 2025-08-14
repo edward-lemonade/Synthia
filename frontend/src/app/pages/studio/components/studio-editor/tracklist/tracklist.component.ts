@@ -2,20 +2,20 @@ import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild } fro
 import { TracksState } from '../../../state/subservices/tracks.state';
 import { CommonModule } from '@angular/common';
 import { ZoomScrollService } from '../../../services/zoom-scroll.service';
+import { TrackComponent } from "./track/track.component";
 
 @Component({
 	selector: 'studio-editor-tracklist',
-	imports: [CommonModule],
+	imports: [CommonModule, TrackComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #scrollable class="container" (scroll)="onScroll()">
 			<div class="tracks">
-				<div 
+				<tracklist-track
 					*ngFor="let track of getTracks(); let i = index"
-					class="track"
-					>
-					{{ track.name }}
-				</div>
+					[track]="track"
+					[index]="i"
+				></tracklist-track>
 			</div>
 		</div>
 	`,

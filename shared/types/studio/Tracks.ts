@@ -15,7 +15,7 @@ export interface Track {
 	// metadata
 	index : number;
 	name : string;
-	type : "audio" | "midi";
+	type : "audio" | "microphone" | "drums" | "instrument";
 	files : AudioFile | null;
 	color : string;
 	

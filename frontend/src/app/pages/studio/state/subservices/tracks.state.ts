@@ -21,11 +21,12 @@ export class TracksState extends BaseState<Tracks> {
 
 	readonly numTracks = computed(() => this.get("arr").length);
 
-	addTrack() {
+
+	addTrack(type: string) {
 		const newTrack : Track = {
 			index : this.numTracks(),
 			name : "Track",
-			type : "audio",
+			type : type as typeof newTrack.type,
 			files : null,
 			color : "white",
 			
@@ -58,6 +59,19 @@ export class TracksState extends BaseState<Tracks> {
 		updated.splice(newIndex, 0, track);       // Insert it at `newIndex`
 		updated.forEach((t, i) => t.index = i);
 
+		this.set("arr", updated);
+	}
+
+	modifyTrack(index: number, prop: keyof Track, value: any) {
+		const curr = this.get("arr")();
+		if (index < 0 || index >= curr.length) return;
+
+		const updated = [...curr];
+		updated[index] = {
+			...updated[index],
+			[prop]: value
+		};
+			
 		this.set("arr", updated);
 	}
 }
