@@ -177,7 +177,6 @@ export class TimelineHeaderComponent implements OnInit, AfterViewInit {
 
 				for (let j = 1; j < stepSize; j += 1) {
 					x += measureWidth;
-					console.log(i+j);
 					this.drawMediumLine(x);
 				}
 			}

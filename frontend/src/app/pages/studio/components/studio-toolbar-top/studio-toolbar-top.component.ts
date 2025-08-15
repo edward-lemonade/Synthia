@@ -8,8 +8,7 @@ import { ExportComponent } from './export/export.component';
 import { PublishComponent } from './publish/publish.component';
 import { ShareComponent } from './share/share.component';
 
-import { MetadataState } from '../../state/subservices/metadata.state';
-import { ProjectState } from '../../state/project.state';
+import { ProjectState, ProjectState_Metadata } from '../../services/project-state.service';
 import { HistoryService } from '../../services/history.service';
 
 @Component({
@@ -50,18 +49,17 @@ import { HistoryService } from '../../services/history.service';
 })
 export class StudioToolbarTopComponent implements OnInit {
 	constructor(
-		private metadataState: MetadataState,
 		private projectState: ProjectState,
 		private historyService: HistoryService,
 	) {}
 
 	ngOnInit() {
-		this.titleInput.set(this.metadataState.get('title')());
+		this.titleInput.set(this.projectState.metadataState.title());
 	}
 
 	titleInput = signal('')
 	updateTitle() {
-		this.metadataState.set('title', this.titleInput());
+		this.projectState.metadataState.title.set(this.titleInput());
 	}
 
 	isPending(): boolean { return this.historyService.isPending() }

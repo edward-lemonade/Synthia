@@ -4,7 +4,7 @@ import { TracklistHeaderComponent } from "./tracklist-header/tracklist-header.co
 import { TimelineHeaderComponent } from "./timeline-header/timeline-header.component";
 import { TracklistComponent } from "./tracklist/tracklist.component";
 import { TimelineComponent } from "./timeline/timeline.component";
-import { ProjectState } from '../../state/project.state';
+import { ProjectState } from '../../services/project-state.service';
 import { ZoomScrollService } from '../../services/zoom-scroll.service';
 
 @Component({

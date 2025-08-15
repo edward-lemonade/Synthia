@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 
-import { ProjectState } from '../../../state/project.state';
+import { ProjectState } from '../../../services/project-state.service';
 
 @Component({
 	selector: 'studio-toolbar-top-save',
@@ -21,6 +21,6 @@ export class SaveComponent {
 
 	onClick() {
 		console.log(this.projectState.state());
-		this.projectState.save();
+		this.projectState.saveState();
 	}
 }

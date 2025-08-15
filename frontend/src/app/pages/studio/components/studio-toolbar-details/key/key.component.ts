@@ -9,8 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { Key, KeyListAligned, KEY_INFO } from '@shared_types/studio'
+import { ProjectState, ProjectState_Globals } from '../../../services/project-state.service';
 
-import { GlobalsState } from '../../../state/subservices/globals.state';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
@@ -19,37 +19,37 @@ import { GlobalsState } from '../../../state/subservices/globals.state';
 	template: `
 		<button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">
 			<mat-icon>music_note</mat-icon>
-			<span [innerHTML]="getKeyDisplayHtml(key())"></span>
+			<span [innerHTML]="getKeyDisplayHtml(key)"></span>
 		</button>
 	
 		<mat-menu #keyMenu="matMenu" [class]="'key-menu'">
 			<div class="key-type-toggle">
-				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
-				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>
+				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key].type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
+				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key].type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>
 			</div>
 			<div class="key-grid">
 				<div class="accidentals-row">
 					<span class="key-opt-space-half"></span>
-					<ng-container *ngFor="let listedKey of KeyListAligned[KEY_INFO[key()].type]['acc']; let i = index">
+					<ng-container *ngFor="let listedKey of KeyListAligned[KEY_INFO[key].type]['acc']; let i = index">
 						<ng-container *ngIf="listedKey === null">
 							<span class="key-opt-space"></span>
 						</ng-container>
 						<button *ngIf="listedKey"
 							mat-button
 							class="key-option"
-							[class.selected]="key() == listedKey"
-							(click)="setKey(listedKey); $event.stopPropagation()">
+							[class.selected]="key == listedKey"
+							(click)="key = listedKey; $event.stopPropagation()">
 							<span [innerHTML]="getKeyDisplayHtml(listedKey)"></span>
 						</button>
 					</ng-container>
 				</div>
 				<div class="naturals-row">
-					<ng-container *ngFor="let listedKey of KeyListAligned[KEY_INFO[key()].type]['nat']; let i = index">
+					<ng-container *ngFor="let listedKey of KeyListAligned[KEY_INFO[key].type]['nat']; let i = index">
 						<button
 							mat-button
 							class="key-option"
-							[class.selected]="key() == listedKey"
-							(click)="setKey(listedKey); $event.stopPropagation()">
+							[class.selected]="key == listedKey"
+							(click)="key = listedKey; $event.stopPropagation()">
 							{{ KEY_INFO[listedKey].display }}
 						</button>
 					</ng-container>
@@ -63,20 +63,18 @@ export class KeyComponent {
 	KeyListAligned = KeyListAligned;
 	KEY_INFO = KEY_INFO
 
-	constructor(public globalsState: GlobalsState, private sanitizer: DomSanitizer) {}
+	constructor(
+		private projectState: ProjectState, 
+		private sanitizer: DomSanitizer
+	) {}
 
-	key(): Key {
-		return this.globalsState.get('key')();
-	}
-
-	setKey(key: Key) {
-		this.globalsState.set('key', key);
-	}
+	get key(): Key { return this.projectState.globalsState.key(); }
+  	set key(value: Key) { this.projectState.globalsState.key.set(value); }
 
 	setKeyType(keyType: 'maj'|'min') { 
-		const info = KEY_INFO[this.key()];
+		const info = KEY_INFO[this.key];
 		const newKey = KeyListAligned[keyType][info.acc ? 'acc' : 'nat'][info.alignedIdx];
-		if (newKey) { this.setKey(newKey); }
+		if (newKey) { this.key = newKey; }
 	}
 
 	getKeyDisplayHtml(key: Key): SafeHtml {

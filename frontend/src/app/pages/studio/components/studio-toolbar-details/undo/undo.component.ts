@@ -29,7 +29,5 @@ import { HistoryService } from '../../../services/history.service';
 	styleUrl: './undo.component.scss'
 })
 export class UndoComponent {
-	constructor(public historyService: HistoryService) {
-		this.historyService = historyService;
-	}
+	constructor(public historyService: HistoryService) {}
 }

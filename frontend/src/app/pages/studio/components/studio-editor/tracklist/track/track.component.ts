@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
-import { TracksState } from '../../../../state/subservices/tracks.state';
 import { CommonModule } from '@angular/common';
 import { ZoomScrollService } from '../../../../services/zoom-scroll.service';
 import { Track } from '@shared/types/studio';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
 
 @Component({
 	selector: 'tracklist-track',
@@ -44,7 +44,7 @@ export class TrackComponent implements OnInit {
 	iconPath = this.DEFAULT_ICON;
 
 	constructor (
-		public tracksState : TracksState,
+		public projectState : ProjectState,
 		public zoomScrollService : ZoomScrollService,
 	) {}
 
@@ -55,7 +55,7 @@ export class TrackComponent implements OnInit {
 
 	trackNameInput = signal('')
 	updateTrackName() {
-		this.tracksState.modifyTrack(this.index, "name", this.trackNameInput());
+		this.projectState.tracksState.modifyTrack(this.index, "name", this.trackNameInput());
 	}
 
 

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, WritableSignal } from '@ang
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
-import { GlobalsState } from '../../../state/subservices/globals.state';
+import { ProjectState, ProjectState_Globals } from '../../../services/project-state.service';
 
 @Component({
 	selector: 'studio-toolbar-details-volume',
@@ -13,8 +13,8 @@ import { GlobalsState } from '../../../state/subservices/globals.state';
 			<mat-icon class='volume-icon'>volume_up</mat-icon>
 			<mat-slider min="0" max="100" step="1">
 				<input matSliderThumb 
-				[value]="masterVolume()" 
-				(input)="setMasterVolume($any($event.target).valueAsNumber)"
+				[value]="masterVolume" 
+				(input)="masterVolume = ($any($event.target).valueAsNumber)"
 				>
 			</mat-slider>
 		</div>
@@ -23,8 +23,8 @@ import { GlobalsState } from '../../../state/subservices/globals.state';
 })
 
 export class VolumeComponent {
-	constructor(public globalsState: GlobalsState) {}
+	constructor(public projectState: ProjectState) {}
 
-	masterVolume(): number { return this.globalsState.get('masterVolume')(); }
-	setMasterVolume(v: number) { this.globalsState.set('masterVolume', v); }
+	get masterVolume(): number { return this.projectState.globalsState.masterVolume(); }
+	set masterVolume(v: number) { this.projectState.globalsState.masterVolume.set(v); }
 }

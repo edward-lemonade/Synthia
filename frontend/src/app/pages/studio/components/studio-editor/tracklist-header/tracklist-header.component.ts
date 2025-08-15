@@ -4,7 +4,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { TracksState } from '../../../state/subservices/tracks.state';
+import { ProjectState } from '../../../services/project-state.service';
 
 @Component({
 	selector: 'studio-editor-tracklist-header',
@@ -35,10 +35,10 @@ import { TracksState } from '../../../state/subservices/tracks.state';
 })
 export class TracklistHeaderComponent {
 	constructor(
-		public tracksState: TracksState
+		public projectState: ProjectState
 	) {}
 
 	onAddTrack(type: string) {
-		this.tracksState.addTrack(type);
+		this.projectState.tracksState.addTrack(type);
 	}
 }

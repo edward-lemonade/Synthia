@@ -1,9 +1,10 @@
-import { Injectable, signal, computed, ElementRef, OnInit, effect, Injector, runInInjectionContext } from '@angular/core';
-import { ProjectState } from '../state/project.state';
-import { GlobalsState } from '../state/subservices/globals.state';
+import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
+import { ProjectState, ProjectState_Globals } from './project-state.service';
 
 @Injectable()
 export class ZoomScrollService {
+	declare globalsState: ProjectState_Globals;
+
 	BASE_PIXELS_PER_MEASURE = 100;
 
 	private timelineHeaderContainer?: HTMLDivElement;
@@ -31,8 +32,9 @@ export class ZoomScrollService {
 	constructor(
 		private injector: Injector,
 		private projectState: ProjectState,
-		private globalsState: GlobalsState,
-	) {}
+	) {
+		this.globalsState = projectState.globalsState;
+	}
 
 	lastMeasure = signal(60);
 
@@ -41,7 +43,7 @@ export class ZoomScrollService {
 	zoomFactor = signal(1);
 
 	measureWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor());
-	beatWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor() / this.globalsState.get("timeSignature")().N)
+	beatWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor() / this.globalsState.timeSignature().N)
 	totalWidth = computed(() => this.measureWidth() * this.lastMeasure() );
 	measurePosX = computed(() => this.windowPosX() / this.measureWidth() );
 

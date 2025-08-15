@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, signal } from '@angular/core';
 import { ZoomScrollService } from '../../../services/zoom-scroll.service';
 import { CommonModule } from '@angular/common';
-import { ProjectState } from '../../../state/project.state';
-import { TracksState } from '../../../state/subservices/tracks.state';
+import { ProjectState } from '../../../services/project-state.service';
 
 @Component({
 	selector: 'studio-editor-timeline',
@@ -27,10 +26,10 @@ import { TracksState } from '../../../state/subservices/tracks.state';
 export class TimelineComponent {
 	constructor(
 		public zoomScrollService: ZoomScrollService,
-		public tracksState : TracksState,
+		public projectState : ProjectState,
 	) {}
 
 	getTracks() { 
-		return this.tracksState.get("arr")() 
+		return this.projectState.tracksState.arr() 
 	}
 }

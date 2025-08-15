@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { TracksState } from '../../../state/subservices/tracks.state';
 import { CommonModule } from '@angular/common';
 import { ZoomScrollService } from '../../../services/zoom-scroll.service';
 import { TrackComponent } from "./track/track.component";
+import { ProjectState } from '../../../services/project-state.service';
 
 @Component({
 	selector: 'studio-editor-tracklist',
@@ -25,7 +25,7 @@ export class TracklistComponent implements OnInit {
 	@ViewChild('scrollable', { static: true, read: ElementRef }) scrollable!: ElementRef<HTMLDivElement>;
 
 	constructor (
-		public tracksState : TracksState,
+		public projectState : ProjectState,
 		public zoomScrollService : ZoomScrollService,
 	) {}
 
@@ -34,7 +34,7 @@ export class TracklistComponent implements OnInit {
   	}
 
 	getTracks() { 
-		return this.tracksState.get("arr")() 
+		return this.projectState.tracksState.arr() 
 	}
 
 	onScroll() {

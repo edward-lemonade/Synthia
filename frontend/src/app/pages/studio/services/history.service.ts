@@ -1,16 +1,14 @@
-import { Injectable, inject, computed, signal } from '@angular/core';
+import { Injectable, inject, computed, signal, untracked } from '@angular/core';
 import type { Patch } from 'immer';
 
 import { Author } from '@shared/types/Author';
 
 import { AppAuthService } from '@src/app/services/app-auth.service';
 
-import { MetadataState } from '../state/subservices/metadata.state';
-import { GlobalsState } from '../state/subservices/globals.state';
-import { TracksState } from '../state/subservices/tracks.state';
+import { ProjectState } from './project-state.service';
 
 export interface PatchEntry {
-	service: string;
+	substate: string;
 	patches: Patch[] | null;          // forward patches (current -> next)
 	inversePatches: Patch[] | null;   // inverse patches (next -> current)
 	timestamp: number;
@@ -28,14 +26,8 @@ function invertPatchEntry(entry: PatchEntry) {
 
 @Injectable()
 export class HistoryService {
-	private trackedServices : {
-		"metadata": MetadataState | null,
-		"globals": GlobalsState | null,
-		"tracks": TracksState | null,
-	} = {metadata: null, globals: null, tracks: null};
-	registerMetadataService(svc: MetadataState) {this.trackedServices!.metadata = svc;}
-	registerGlobalsService(svc: GlobalsState) {this.trackedServices!.globals = svc;}
-	registerTracksService(svc: TracksState) {this.trackedServices!.tracks = svc;}
+	private projectState: ProjectState | null = null;
+	registerProjectState(p: ProjectState) {this.projectState! = p;}
 	  
 	private undoStack: PatchEntry[] = [];
 	private redoStack: PatchEntry[] = [];
@@ -47,13 +39,13 @@ export class HistoryService {
 	constructor(private auth: AppAuthService,) {}
 	
 	recordPatch(
-		service: string, 
+		substate: string, 
 		patches: Patch[], 
 		inversePatches: Patch[],
 		allowUndoRedo: boolean,
 	) {
 		const entry: PatchEntry = {
-			service,
+			substate: substate,
 			patches: patches.slice(),
 			inversePatches: (inversePatches || []).slice(),
 			timestamp: Date.now(),
@@ -75,11 +67,12 @@ export class HistoryService {
 	
 		const entry = this.undoStack.pop()!;
 
-		this.trackedServices[entry.service as keyof typeof this.trackedServices]!.applyPatchesToState(entry.inversePatches);
-
+		this.projectState!.applyPatchEntry(entry, true);
+		
 		this.redoStack.push(entry);
-		this.pendingEntries.push(invertPatchEntry(entry));
+		this.pendingEntries.push(entry);
 		this.isPending.set(this.pendingEntries.length != 0);
+
 		return true;
 	}
 
@@ -88,11 +81,12 @@ export class HistoryService {
 	
 		const entry = this.redoStack.pop()!;
 	
-		this.trackedServices[entry.service as keyof typeof this.trackedServices]!.applyPatchesToState(entry.inversePatches);
+		this.projectState!.applyPatchEntry(entry, false);
 
 		this.undoStack.push(entry);
 		this.pendingEntries.push(entry);
 		this.isPending.set(this.pendingEntries.length != 0);
+
 		return true;
 	}
 
