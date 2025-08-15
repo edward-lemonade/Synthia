@@ -16,6 +16,7 @@ export function stateSignal<T extends Record<string, any>>(
 
 	Object.assign(s, {
 		set(newValue: T[keyof T]) {
+			console.log("set", newValue);
 			if (substateType.allowUndoRedo && substateType.historyService) {
 				const currentValue = s();
 				const currentState = substateType.snapshot();
@@ -32,8 +33,9 @@ export function stateSignal<T extends Record<string, any>>(
 				}
 			}	
 		},
-		setSilent(value: T[keyof T]) {
-			internalSet(value);
+		setSilent(newValue: T[keyof T]) {
+			console.log("silent", newValue);
+			internalSet(newValue);
 		},
 	});
 

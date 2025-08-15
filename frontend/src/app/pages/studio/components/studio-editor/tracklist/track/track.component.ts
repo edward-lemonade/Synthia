@@ -5,10 +5,11 @@ import { Track } from '@shared/types/studio';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
+import { MatSliderModule } from '@angular/material/slider';
 
 @Component({
 	selector: 'tracklist-track',
-	imports: [CommonModule, MatIconModule, FormsModule],
+	imports: [CommonModule, MatIconModule, MatSliderModule,	FormsModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="track">
@@ -27,6 +28,12 @@ import { ProjectState } from '@src/app/pages/studio/services/project-state.servi
 						[(ngModel)]="trackNameInput"
 						(blur)="updateTrackName()">
 				</div>
+				<mat-slider min="0" max="100" step="1">
+					<input matSliderThumb 
+						[(ngModel)]="volumeInput" 
+						(blur)="updateVolume()"
+						>
+				</mat-slider>
 			</div>
 			<div class="section">
 
@@ -51,12 +58,17 @@ export class TrackComponent implements OnInit {
 	ngOnInit() {
 		this.iconPath = `assets/icons/${this.track.type}.svg`;
 		this.trackNameInput.set(this.track.name);
+		this.volumeInput.set(this.track.volume);
 	}
 
-	trackNameInput = signal('')
+	trackNameInput = signal('');
 	updateTrackName() {
 		this.projectState.tracksState.modifyTrack(this.index, "name", this.trackNameInput());
 	}
 
+	volumeInput = signal(100);
+	updateVolume() {
+		this.projectState.tracksState.modifyTrack(this.index, "volume", this.volumeInput());
+	}
 
 }
