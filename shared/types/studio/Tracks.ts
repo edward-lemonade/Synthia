@@ -28,7 +28,7 @@ export interface Track {
 	solo : boolean;
 
 	// effects
-	effects : AudioEffect[];
+	effects : string[];
 
 	// segments
 	midiData : MidiRegion[];

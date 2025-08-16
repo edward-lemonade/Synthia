@@ -4,7 +4,7 @@ import { MatIcon } from '@angular/material/icon';
 import { ProjectState } from '../../../services/project-state.service';
 
 @Component({
-	selector: 'studio-toolbar-top-save',
+	selector: 'studio-toolbar-top-save-btn',
 	imports: [MatIcon],
 	template: `
 		<button 
@@ -16,11 +16,10 @@ import { ProjectState } from '../../../services/project-state.service';
 	`,
 	styleUrl: '../studio-toolbar-top.component.scss'
 })
-export class SaveComponent {
+export class SaveButtonComponent {
 	constructor(public projectState: ProjectState) {}
 
 	onClick() {
-		console.log(this.projectState.state());
 		this.projectState.saveState();
 	}
 }

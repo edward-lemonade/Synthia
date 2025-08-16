@@ -1,4 +1,4 @@
-import { Injectable, Signal, WritableSignal, signal, computed, effect, runInInjectionContext, Injector } from '@angular/core';
+import { Injectable, signal, computed, Injector } from '@angular/core';
 import { ProjectStudio } from '@shared_types/ProjectStudio'
 
 import { HistoryService, PatchEntry } from './history.service';
@@ -8,35 +8,10 @@ import axios from 'axios';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, filter, take } from 'rxjs';
 
-import { Author, ProjectMetadata } from '@shared/types';
-import { DefaultKey, DefaultTimeSignature, Globals, Track, Tracks } from '@shared/types/studio';
-import { applyPatches, produceWithPatches } from 'immer';
+import { Author } from '@shared/types';
+import { applyPatches } from 'immer';
 
-import { ProjectState_Globals, ProjectState_Metadata, ProjectState_Tracks } from './substates';
-
-const DEFAULT_STATE = {
-	metadata: {
-		projectId: '',
-		title: 'Untitled',
-		authors: [] as Author[],
-		createdAt: new Date(),
-		updatedAt: new Date(),
-		isCollaboration: false,
-		isRemix: false,
-		isRemixOf: null,
-		isReleased: false,
-	} as ProjectMetadata,
-	globals: {
-		bpm: 120,
-		key: DefaultKey,
-		centOffset: 0,
-		timeSignature: DefaultTimeSignature,
-		masterVolume: 100,
-	} as Globals,
-	tracks: {
-		arr: [] as Track[],
-	} as Tracks
-} as ProjectStudio
+import { DEFAULT_STATE, ProjectState_Globals, ProjectState_Metadata, ProjectState_Tracks } from './substates';
 
 
 @Injectable()

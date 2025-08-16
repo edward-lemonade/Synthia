@@ -3,24 +3,23 @@ import { MatIcon } from '@angular/material/icon';
 import { MatToolbar } from '@angular/material/toolbar';
 import { FormsModule } from '@angular/forms';
 
-import { SaveComponent } from './save/save.component';
-import { ExportComponent } from './export/export.component';
-import { PublishComponent } from './publish/publish.component';
-import { ShareComponent } from './share/share.component';
+import { SaveButtonComponent } from './save/save-btn.component';
+import { ExportButtonComponent } from './export/export-btn.component';
+import { PublishButtonComponent } from './publish/publish-btn.component';
+import { ShareButtonComponent } from './share/share-btn.component';
 
 import { ProjectState } from '../../services/project-state.service';
 import { HistoryService } from '../../services/history.service';
+import { MenuButtonComponent } from "./menu/menu-btn.component";
 
 @Component({
 	selector: 'app-studio-toolbar-top',
-	imports: [MatIcon, MatToolbar, FormsModule, SaveComponent, ExportComponent, PublishComponent, ShareComponent],
+	imports: [MatIcon, MatToolbar, FormsModule, SaveButtonComponent, ExportButtonComponent, PublishButtonComponent, ShareButtonComponent, MenuButtonComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-toolbar class="toolbar">
 			<div class="toolbar-section left-section">
-				<button class="menu-btn">
-					<mat-icon>menu</mat-icon>
-				</button>
+				<studio-toolbar-top-menu-btn/>
 				<span>NoteFlyte</span>
 			</div>
 
@@ -38,10 +37,10 @@ import { HistoryService } from '../../services/history.service';
 
 			<div class="toolbar-section right-section">
 				<p class="saved">{{ isPending() ? "Unsaved changes" : "Saved!"}} </p>
-				<studio-toolbar-top-save/>
-				<studio-toolbar-top-export/>
-				<studio-toolbar-top-publish/>
-				<studio-toolbar-top-share/>
+				<studio-toolbar-top-save-btn/>
+				<studio-toolbar-top-export-btn/>
+				<studio-toolbar-top-publish-btn/>
+				<studio-toolbar-top-share-btn/>
 			</div>
 		</mat-toolbar>
 	`,

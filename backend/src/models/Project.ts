@@ -56,7 +56,7 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 		arr: [{
 			index: 	{ type: Number },
 			name: 	{ type: String },
-			type:  	{ type: String, enum: ["audio", "midi"], default: "midi" },
+			type:  	{ type: String, enum: ["audio", "microphone", "drums", "instrument"], default: "audio" },
 			audioFile: 	{ type: String }, // s3 url
 			color: 		{ type: String },
 
@@ -69,7 +69,7 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 			solo: 	{ type: Boolean },
 		
 			// effects
-			effects: 	{ type: String },
+			effects: 	[{ type: String }],
 		
 			// regions
 			midiData: [{
