@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
-import { ProjectState, ProjectState_Globals } from './project-state.service';
+import { ProjectState } from './project-state.service';
+import { ProjectState_Globals } from './substates';
 
 @Injectable()
 export class ZoomScrollService {

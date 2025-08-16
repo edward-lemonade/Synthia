@@ -1,5 +1,7 @@
+import { Injector } from "@angular/core";
+import { HistoryService } from "../history.service";
+
 import { signal, WritableSignal } from '@angular/core';
-import { SignalStateClass } from '../services/project-state.service';
 import { produceWithPatches } from 'immer';
 
 export type WritableStateSignal<T> = WritableSignal<T> & {
@@ -16,7 +18,6 @@ export function stateSignal<T extends Record<string, any>>(
 
 	Object.assign(s, {
 		set(newValue: T[keyof T]) {
-			console.log("set", newValue);
 			if (substateType.allowUndoRedo && substateType.historyService) {
 				const currentValue = s();
 				const currentState = substateType.snapshot();
@@ -34,10 +35,41 @@ export function stateSignal<T extends Record<string, any>>(
 			}	
 		},
 		setSilent(newValue: T[keyof T]) {
-			console.log("silent", newValue);
 			internalSet(newValue);
 		},
 	});
 
 	return s;
 }
+
+
+export type SignalState<T> = { [K in keyof T]: WritableStateSignal<T[K]> }
+
+export class SignalStateClass<T extends Record<string, any>> {
+	private _signalKeys: Set<string> = new Set();
+	
+	constructor(
+		private injector: Injector,
+		public historyService: HistoryService, // explicitly injected
+		initialData: T,
+		public substateName: string,
+		public allowUndoRedo = true,
+	) {
+		for (const key in initialData) {
+			(this as any)[key] = stateSignal(initialData[key], this, key);
+			this._signalKeys.add(key);
+		}
+	}
+
+	snapshot(): T {
+		const result = {} as T;
+		for (const key of this._signalKeys) {
+			const signalValue = (this as any)[key];
+			if (signalValue && typeof signalValue === 'function') {
+				result[key as keyof T] = signalValue();
+			}
+		}
+		return result;
+	};
+}
+

@@ -1,5 +1,6 @@
 @use "theme" as *;
 @use '@angular/material' as mat;
+@use 'sass:color';
 
 // Styles using variables
 html, body {
@@ -16,7 +17,21 @@ body {
 	min-height: 100vh;
 }
 
-
 * :not(.material-icons):not(.material-symbols-outlined){
   	font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+$my-slider-color: $accent-yellow; 
+:root {
+	@include mat.slider-overrides((
+		active-track-color: #{$my-slider-color},
+		inactive-track-color: rgba(color.scale($my-slider-color, $saturation: -45%), 0.7),
+
+		handle-color: #{$my-slider-color},
+		focus-handle-color: #{$my-slider-color},
+		focus-state-layer-color: #{rgba($my-slider-color, 0.1)},
+		hover-handle-color: #{$my-slider-color},
+		handle-height: 20px,
+		handle-width: 20px,
+	));
 }

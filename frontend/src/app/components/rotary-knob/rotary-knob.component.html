@@ -1,0 +1,42 @@
+<div class="rotary-knob-container" 
+			[style.width.px]="size" 
+			[style.height.px]="size">
+	<svg #knobSvg 
+				[attr.width]="size" 
+				[attr.height]="size" 
+				viewBox="0 0 100 100"
+				(mousedown)="onMouseDown($event)"
+				(touchstart)="onTouchStart($event)"
+				class="rotary-knob-svg">
+		
+		<!-- Background circle -->
+		<circle cx="50" cy="50" [attr.r]="RADIUS"
+						fill="none" 
+						stroke="#616161ff" 
+						[attr.stroke-width]="STROKE_WIDTH"/>
+		
+		<!-- Progress arc -->
+		<path [attr.d]="getProgressArcPath()" 
+					fill="none" 
+					[attr.stroke]="color" 
+					[attr.stroke-width]="STROKE_WIDTH"
+					stroke-linecap="round"/>
+		
+		
+		<!-- Indicator line -->
+		<line [attr.x1]="getIndicatorStart().x" 
+					[attr.y1]="getIndicatorStart().y" 
+					[attr.x2]="getIndicatorEnd().x" 
+					[attr.y2]="getIndicatorEnd().y" 
+					[attr.stroke]="disabled ? '#ccc' : color" 
+					[attr.stroke-width]="STROKE_WIDTH"
+					stroke-linecap="round"/>
+	</svg>
+	
+	<!-- Value display popup - only shows when dragging -->
+	<div class="value-popup" 
+				*ngIf="showValue && isDragging"
+				[class.visible]="isDragging">
+		{{ displayValue }}
+	</div>
+</div>

@@ -1,0 +1,50 @@
+@use "theme" as *;
+
+.rotary-knob-container {
+	position: relative;
+	display: inline-block;
+	user-select: none;
+}
+
+.rotary-knob-svg {
+	cursor: pointer;
+}
+
+.rotary-knob-svg:hover circle:nth-child(3) {
+	filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+}
+
+.value-popup {
+	position: absolute;
+	top: -25px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: $app-bg-l;
+	color: white;
+	padding: 3px 6px;
+	border-radius: 3px;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	font-size: 10px;
+	font-weight: 500;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.15s ease-in-out;
+	white-space: nowrap;
+	z-index: 1000;
+	min-width: 20px;
+	text-align: center;
+}
+
+.value-popup.visible {
+	opacity: 1;
+}
+
+.value-popup::after {
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	border: 3px solid transparent;
+	border-top-color: $app-bg-l;
+}

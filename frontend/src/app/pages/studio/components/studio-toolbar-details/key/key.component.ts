@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { Key, KeyListAligned, KEY_INFO } from '@shared_types/studio'
-import { ProjectState, ProjectState_Globals } from '../../../services/project-state.service';
+import { ProjectState } from '../../../services/project-state.service';
 
 
 @Component({

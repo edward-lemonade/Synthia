@@ -1,12 +1,17 @@
 @use "theme" as *;	
+@use '@angular/material' as mat;
 @use "../../../../studio-vars" as *;
+@use 'sass:color';
+
 
 .track {
+	--highlight-color: #{$accent-orange};
+
 	height: $track-height;
 	position: relative;
 
 	padding-left: 8px;
-	padding-right: 8px;
+	padding-right: 4px;
 	padding-top: 8px;
 	padding-bottom: 8px;
 	box-sizing: border-box;
@@ -15,19 +20,13 @@
 	transition: all 0.2s;
 	display: flex;
 	flex-direction: row;
+	justify-content: left;
+	align-items: center;
 
 	background-color: transparent;
 	border-bottom: $border-width solid $border-color;
 
-	.section {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-		justify-content: center;
-		align-items: start;
-	}
-
-	.iconDiv {
+	.iconContainer {
 		width: 24px;
 		height: 24px;
 		border-radius: 24px;
@@ -44,47 +43,226 @@
 		}
 	}
 
-	.title {
+	.section {
 		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: 300px;
-		height: 14px;
-		padding: 8px 12px;
-		border-radius: 8px;
-		background: transparent;
-		border: 1px solid transparent;
-		transition: all 0.2s ease;
-		cursor: text;
+		flex-direction: column;
+		flex: 1 1 auto;
+		justify-content: center;
+		align-items: start;
 
-		&:hover {
-			background: rgba(255, 255, 255, 0.1);
-			border-color: rgba(255, 255, 255, 0.2);
-		}
-		&:focus-within {
-			background: rgba(255, 255, 255, 0.15);
-			border-color: rgba(255, 255, 255, 0.3);
-		}
-		.title-icon {
-			color: $appbar-text;
-			font-size: 16px;
-			width: 16px;
-			height: 16px;
-			opacity: 0.7;
-		}
-		.title-input {
-			flex: 1;
+		box-sizing: border-box;
+	}
+
+	.row {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+
+		box-sizing: border-box;
+	}
+
+	.upper-controls {	
+		width: 100%;
+		height: 100%;
+
+		margin-top: 8px;
+		margin-bottom: 0px;
+		margin-left: 0px;
+		margin-right: 0px;
+
+		gap: 4px;
+
+		.title {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			width: 100%;
+			height: 100%;
+
+			border-radius: 4px;
 			background: transparent;
-			border: none;
-			outline: none;
-			color: $appbar-text;
-			font-size: 14px;
-			font-weight: 500;
+			border: 1px solid transparent;
+			transition: all 0.2s ease;
+			cursor: text;
+
+			&:hover {
+				background: rgba(255, 255, 255, 0.1);
+				border-color: rgba(255, 255, 255, 0.2);
+			}
+			&:focus-within {
+				background: rgba(255, 255, 255, 0.15);
+				border-color: rgba(255, 255, 255, 0.3);
+			}
+			.title-input {
+				flex: 0 1 auto !important;
+				width: 100% !important;
+				background: transparent;
+				border: none;
+				outline: none;
+				color: $appbar-text;
+				font-size: 14px;
+				font-weight: 500;
+				padding: 0px 5px !important;
+			}
+			.title-input::placeholder {
+				color: $appbar-text;
+				opacity: 0.6;
+			}
 		}
-		.title-input::placeholder {
+
+		.spacer {
+			flex: 1 1 auto;
+		}
+
+		.track-menu-btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0px;
+
+			flex: 1 0 auto;
+
+			height: 24px !important;
+			width: 24px !important;
+
+			background: transparent;
 			color: $appbar-text;
-			opacity: 0.6;
+			border-radius: 24px;
+			border: none;
+
+			cursor: pointer;
+			transition: all 0.2s ease;
+		}
+		.track-menu-btn:hover {
+			background: $appbar-accent-1;
+		}
+		.track-menu-btn mat-icon {
+			font-size: 20px; 
+			width: 1em;
+			height: 1em;
+			margin: 0 !important;
+		}
+	}
+	
+	.lower-controls {
+		gap: 4px;
+
+		.volume-slider-container {
+			display: flex;
+			align-items: center;
+			width: 80px;
+			height: 100%;
+
+			box-sizing: border-box;
+			flex: 0 1 auto;
+			margin: 0 0;
+
+			.volume-slider {
+				flex: 0 1 auto;
+				width: 100%;
+				min-width: 0 !important; 
+
+				@include mat.slider-overrides((
+					active-track-color: var(--highlight-color),
+					inactive-track-color: color-mix(in srgb, var(--highlight-color) 55%, transparent 45%),
+
+					handle-color: var(--highlight-color),
+					focus-handle-color: var(--highlight-color),
+					focus-state-layer-color: #{rgba(var(--highlight-color), 0.1)},
+					hover-handle-color: var(--highlight-color),
+					handle-height: 12px,
+					handle-width: 12px,
+
+					active-track-height: 3px,
+					inactive-track-height: 3px,
+				));
+				
+				// CLICKABLE HITBOX
+				::ng-deep .mdc-slider {
+					height: 20px !important;
+					min-height: 20px !important;
+				}
+				::ng-deep .mdc-slider__input {
+					height: 20px !important;
+					padding: 0 !important;
+					margin: 0 !important;
+					width: 100% !important;
+					left: 0 !important;
+					top: 50% !important;
+					transform: translateY(-50%) !important;
+				}
+
+				// RIPPLE
+				::ng-deep .mat-ripple-element {
+					width: 30px !important;
+					height: 30px !important;
+					border-radius: 15px !important;
+					top: 50% !important;
+					left: 50% !important;
+					transform: translate(-50%, -50%) !important;
+				}
+				::ng-deep .mat-ripple {
+					width: 30px !important;
+					height: 30px !important;
+					border-radius: 15px !important;
+					top: 50% !important;
+					left: 50% !important;
+					transform: translate(-50%, -50%) !important;
+				}
+
+			}	
+		}
+		app-rotary-knob {
+			display: flex;
+			max-height: 24px;
+		}
+		
+		.ms-btn-group {
+			display: flex;
+			overflow: hidden;
+			background: $appbar-accent-2;
+			height: 24px;
+			border-radius: 24px;
+			border: none;
+
+			/* Pill shape */
+			.ms-btn:first-child { border-top-left-radius: 20px; border-bottom-left-radius: 20px; }
+			.ms-btn:not(:first-child):not(:last-child) { border-radius: 0; }
+			.ms-btn:last-child { border-top-right-radius: 20px; border-bottom-right-radius: 20px; }
+
+			.ms-btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
+				width: 24px !important;
+				max-width: 24px !important;
+				border-radius: 0;
+
+				border: none;
+				background: transparent;
+				color: $appbar-text;
+
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
+
+			.ms-btn:hover {
+				background: $appbar-accent-3;
+			}
+			.ms-btn.selected {
+				background: var(--highlight-color);
+				color: $appbar-accent-1 !important;
+				border-color: var(--highlight-color);
+			}
+
+			.divider {
+				border-width: 2px !important;
+				border-color: $appbar-accent-1 !important;
+			}
 		}
 	}
 
-}
+
+}	

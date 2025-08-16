@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, effect, OnInit, signal, WritableSig
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
-import { ProjectState, ProjectState_Globals } from '../../../services/project-state.service';
+import { ProjectState } from '../../../services/project-state.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({

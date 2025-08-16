@@ -15,17 +15,26 @@
 	width: 20px;
 	height: 20px;
 }
-::ng-deep .mat-mdc-slider .mdc-slider__track--active_fill {
+
+/*
+:host ::ng-deep .mat-mdc-slider .mdc-slider__track--active_fill {
 	border-color: $accent-yellow-l !important;
 	background-color: $accent-yellow-l !important;
 }
-::ng-deep .mat-mdc-slider .mdc-slider__track--inactive {
+:host ::ng-deep .mat-mdc-slider .mdc-slider__track--inactive {
 	background-color: rgba(200, 200, 200, 1) !important;
 }
-::ng-deep .mat-mdc-slider .mdc-slider__thumb-knob {
+:host ::ng-deep .mat-mdc-slider .mdc-slider__thumb-knob {
 	background-color: $accent-yellow !important;
 	border-color: $accent-yellow !important;
 }
-::ng-deep .mat-mdc-slider .mdc-slider__value-indicator {
+:host ::ng-deep .mat-mdc-slider .mdc-slider__value-indicator {
 	background-color: $accent-yellow !important;
 }
+:host ::ng-deep .mat-mdc-slider .mdc-slider__hover-handle-color {
+	background-color: $accent-yellow !important;
+}
+:host ::ng-deep .mat-mdc-slider .mdc-slider__ripple-color {
+	background-color: $accent-yellow !important;
+}
+*/

@@ -1,6 +1,4 @@
 import { Injectable, Signal, WritableSignal, signal, computed, effect, runInInjectionContext, Injector } from '@angular/core';
-import { stateSignal, WritableStateSignal } from '../utils/state-signal';
-
 import { ProjectStudio } from '@shared_types/ProjectStudio'
 
 import { HistoryService, PatchEntry } from './history.service';
@@ -13,6 +11,8 @@ import { combineLatest, filter, take } from 'rxjs';
 import { Author, ProjectMetadata } from '@shared/types';
 import { DefaultKey, DefaultTimeSignature, Globals, Track, Tracks } from '@shared/types/studio';
 import { applyPatches, produceWithPatches } from 'immer';
+
+import { ProjectState_Globals, ProjectState_Metadata, ProjectState_Tracks } from './substates';
 
 const DEFAULT_STATE = {
 	metadata: {
@@ -37,140 +37,6 @@ const DEFAULT_STATE = {
 		arr: [] as Track[],
 	} as Tracks
 } as ProjectStudio
-
-type SignalState<T> = { [K in keyof T]: WritableStateSignal<T[K]> }
-
-export class SignalStateClass<T extends Record<string, any>> {
-	private _signalKeys: Set<string> = new Set();
-	
-	constructor(
-		private injector: Injector,
-		public historyService: HistoryService, // explicitly injected
-		initialData: T,
-		public substateName: string,
-		public allowUndoRedo = true,
-	) {
-		for (const key in initialData) {
-			(this as any)[key] = stateSignal(initialData[key], this, key);
-			this._signalKeys.add(key);
-		}
-	}
-
-	snapshot(): T {
-		const result = {} as T;
-		for (const key of this._signalKeys) {
-			const signalValue = (this as any)[key];
-			if (signalValue && typeof signalValue === 'function') {
-				result[key as keyof T] = signalValue();
-			}
-		}
-		return result;
-	};
-}
-
-export interface ProjectState_Metadata extends SignalState<ProjectMetadata> {}
-export class ProjectState_Metadata extends SignalStateClass<ProjectMetadata> {
-	constructor(
-		injector: Injector,
-		historyService: HistoryService, 
-		initialData: ProjectMetadata, 
-	) {
-		super(
-			injector,
-			historyService,
-			initialData,
-			'metadata',
-			false,
-		);
-	}
-}
-export interface ProjectState_Globals extends SignalState<Globals> {}
-export class ProjectState_Globals extends SignalStateClass<Globals> {
-	constructor(
-		injector: Injector,
-		historyService: HistoryService, 
-		initialData: Globals,
-	) {
-		super(
-			injector,
-			historyService,
-			initialData,
-			'globals',
-			true,
-		);
-	}
-}
-export interface ProjectState_Tracks extends SignalState<Tracks> {}
-export class ProjectState_Tracks extends SignalStateClass<Tracks> {
-	constructor(
-		injector: Injector,
-		historyService: HistoryService, 
-		initialData: Tracks,
-	) {
-		super(
-			injector,
-			historyService,
-			initialData,
-			'tracks',
-			true,
-		);
-	}
-
-	readonly numTracks = computed(() => this.arr().length);
-
-	addTrack(type: string) {
-		const newTrack : Track = {
-			index : this.numTracks(),
-			name : "Track",
-			type : type as typeof newTrack.type,
-			files : null,
-			color : "white",
-			
-			midiInstrument : "none",
-		
-			volume : 100,
-			pan : 0,
-			mute : false,
-			solo : false,
-
-			effects : [],
-
-			midiData : [],
-			clipData : [],
-		}
-		const curr = this.arr();
-		this.arr.set([...curr, newTrack])
-	}
-	deleteTrack(index: number) {
-		const curr = this.arr();
-		const updated = curr.filter((track, i) => i !== index);
-		this.arr.set(updated);
-	}
-	moveTrack(index: number, newIndex: number) {
-		const curr = this.arr();
-		if (index < 0 || index >= curr.length || newIndex < 0 || newIndex >= curr.length) return;
-
-		const updated = [...curr];
-		const [track] = updated.splice(index, 1); // Remove the track at `index`
-		updated.splice(newIndex, 0, track);       // Insert it at `newIndex`
-		updated.forEach((t, i) => t.index = i);
-
-		this.arr.set(updated);
-	}
-
-	modifyTrack(index: number, prop: keyof Track, value: any) {
-		const curr = this.arr();
-		if (index < 0 || index >= curr.length) return;
-
-		const updated = [...curr];
-		updated[index] = {
-			...updated[index],
-			[prop]: value
-		};
-			
-		this.arr.set(updated);
-	}
-}
 
 
 @Injectable()
