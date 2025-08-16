@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-import { ProjectMetadata } from "@shared/types/ProjectMetadata";
-import { ProjectFront } from "@shared/types/ProjectFront";
-import { ProjectStudio } from "@shared/types/ProjectStudio";
+import { ProjectMetadata } from "@shared/types";
+import { ProjectFront } from "@shared/types";
+import { ProjectStudio } from "@shared/types";
 
 const ProjectMetadataSchema = new mongoose.Schema({ // interface ProjectMetadata
 	projectId: 	{ type: String },

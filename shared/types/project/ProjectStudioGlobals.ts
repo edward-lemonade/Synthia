@@ -1,7 +1,6 @@
-import { Key } from './Key';
-import { TimeSignature } from './TimeSignature';
+import { Key, TimeSignature } from '../studio';
 
-export interface Globals {
+export interface ProjectStudioGlobals {
 	bpm : number;
 	key : Key;
 	centOffset : number;

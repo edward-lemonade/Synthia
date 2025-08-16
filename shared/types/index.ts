@@ -1,4 +1,3 @@
-export * from './ProjectMetadata';
-export * from './ProjectStudio';
-export * from './ProjectFront';
-export * from './Author';
+export * from './core'
+export * from './project';
+export * from './studio';

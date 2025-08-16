@@ -1,10 +1,10 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
 import { ProjectState } from './project-state.service';
-import { ProjectState_Globals } from './substates';
+import { ProjectStateGlobals } from './substates';
 
 @Injectable()
 export class ZoomScrollService {
-	declare globalsState: ProjectState_Globals;
+	declare globalsState: ProjectStateGlobals;
 
 	BASE_PIXELS_PER_MEASURE = 100;
 

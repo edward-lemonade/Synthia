@@ -3,7 +3,7 @@ import { AuthService as Auth0Service, User } from '@auth0/auth0-angular';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { env } from '@env/environment';
-import { Author } from '@shared/types/Author';
+import { Author } from '@shared/types';
 
 
 @Injectable({ providedIn: 'root' })

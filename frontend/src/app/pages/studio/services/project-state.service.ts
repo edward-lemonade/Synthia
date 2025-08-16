@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, Injector } from '@angular/core';
-import { ProjectStudio } from '@shared_types/ProjectStudio'
+import { ProjectStudio } from '@shared/types'
 
 import { HistoryService, PatchEntry } from './history.service';
 import { AppAuthService } from '@src/app/services/app-auth.service';
@@ -11,14 +11,14 @@ import { combineLatest, filter, take } from 'rxjs';
 import { Author } from '@shared/types';
 import { applyPatches } from 'immer';
 
-import { DEFAULT_STATE, ProjectState_Globals, ProjectState_Metadata, ProjectState_Tracks } from './substates';
+import { DEFAULT_STATE, ProjectStateGlobals, ProjectStateMetadata, ProjectStateTracks } from './substates';
 
 
 @Injectable()
 export class ProjectState {
-	declare metadataState : ProjectState_Metadata;
-	declare globalsState : ProjectState_Globals;
-	declare tracksState : ProjectState_Tracks;
+	declare metadataState : ProjectStateMetadata;
+	declare globalsState : ProjectStateGlobals;
+	declare tracksState : ProjectStateTracks;
 
 	declare substateMap : Record<string, any>;
 
@@ -69,15 +69,15 @@ export class ProjectState {
 			initialState.metadata.projectId = projectId,
 			initialState.metadata.authors = [author],
 
-			this.metadataState = new ProjectState_Metadata(this.injector, this.historyService, initialState.metadata);
-			this.globalsState = new ProjectState_Globals(this.injector, this.historyService, initialState.globals);
-			this.tracksState = new ProjectState_Tracks(this.injector, this.historyService, initialState.tracks);
+			this.metadataState = new ProjectStateMetadata(this.injector, this.historyService, initialState.metadata);
+			this.globalsState = new ProjectStateGlobals(this.injector, this.historyService, initialState.globals);
+			this.tracksState = new ProjectStateTracks(this.injector, this.historyService, initialState.tracks);
 		} else {
 			const initialState = await this.loadState(projectId);
 	
-			this.metadataState = new ProjectState_Metadata(this.injector, this.historyService, initialState.metadata);
-			this.globalsState = new ProjectState_Globals(this.injector, this.historyService, initialState.globals);
-			this.tracksState = new ProjectState_Tracks(this.injector, this.historyService, initialState.tracks);
+			this.metadataState = new ProjectStateMetadata(this.injector, this.historyService, initialState.metadata);
+			this.globalsState = new ProjectStateGlobals(this.injector, this.historyService, initialState.globals);
+			this.tracksState = new ProjectStateTracks(this.injector, this.historyService, initialState.tracks);
 		}
 
 		this.substateMap = {

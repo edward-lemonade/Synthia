@@ -1,15 +1,15 @@
-import { Globals } from "@shared/types/studio";
+import { ProjectStudioGlobals } from "@shared/types";
 
 import { SignalState, SignalStateClass } from "./_base.state";
 import { Injector } from "@angular/core";
 import { HistoryService } from "../history.service";
 
-export interface ProjectState_Globals extends SignalState<Globals> {}
-export class ProjectState_Globals extends SignalStateClass<Globals> {
+export interface ProjectStateGlobals extends SignalState<ProjectStudioGlobals> {}
+export class ProjectStateGlobals extends SignalStateClass<ProjectStudioGlobals> {
 	constructor(
 		injector: Injector,
 		historyService: HistoryService, 
-		initialData: Globals,
+		initialData: ProjectStudioGlobals,
 	) {
 		super(
 			injector,

@@ -1,5 +1,5 @@
 import { Author, ProjectMetadata, ProjectStudio } from "@shared/types";
-import { DefaultKey, DefaultTimeSignature, Globals, Track, Tracks } from "@shared/types/studio";
+import { DefaultKey, DefaultTimeSignature, ProjectStudioGlobals, Track, ProjectStudioTracks } from "@shared/types";
 
 export const DEFAULT_STATE = {
 	metadata: {
@@ -19,8 +19,8 @@ export const DEFAULT_STATE = {
 		centOffset: 0,
 		timeSignature: DefaultTimeSignature,
 		masterVolume: 100,
-	} as Globals,
+	} as ProjectStudioGlobals,
 	tracks: {
 		arr: [] as Track[],
-	} as Tracks
+	} as ProjectStudioTracks
 } as ProjectStudio

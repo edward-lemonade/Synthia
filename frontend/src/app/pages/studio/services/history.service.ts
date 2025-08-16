@@ -1,7 +1,7 @@
-import { Injectable, inject, computed, signal, untracked } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import type { Patch } from 'immer';
 
-import { Author } from '@shared/types/Author';
+import { Author } from '@shared/types';
 
 import { AppAuthService } from '@src/app/services/app-auth.service';
 

@@ -1,4 +1,4 @@
-import { ProjectMetadata } from "./";
+import { ProjectMetadata } from ".";
 
 export interface ProjectFront{ // public facing information for RELEASED projects
 	metadata: ProjectMetadata

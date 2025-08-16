@@ -1,11 +1,11 @@
-import { Track, Tracks } from "@shared/types/studio";
+import { Track, ProjectStudioTracks } from "@shared/types";
 
 import { SignalState, SignalStateClass } from "./_base.state";
 import { computed, Injector } from "@angular/core";
 import { HistoryService } from "../history.service";
 
-export interface ProjectState_Tracks extends SignalState<Tracks> {}
-export class ProjectState_Tracks extends SignalStateClass<Tracks> {
+export interface ProjectStateTracks extends SignalState<ProjectStudioTracks> {}
+export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 	readonly COLORS = [
 		'#d7e166ff',
 		'#e19f66ff',
@@ -19,7 +19,7 @@ export class ProjectState_Tracks extends SignalStateClass<Tracks> {
 	constructor(
 		injector: Injector,
 		historyService: HistoryService, 
-		initialData: Tracks,
+		initialData: ProjectStudioTracks,
 	) {
 		super(
 			injector,

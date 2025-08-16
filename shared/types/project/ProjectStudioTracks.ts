@@ -34,6 +34,6 @@ export interface Track {
 	midiData : MidiRegion[];
 	clipData : ClipRegion[];
 }
-export interface Tracks {
+export interface ProjectStudioTracks {
 	arr: Track[];
 }

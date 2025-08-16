@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ZoomScrollService } from '../../../../services/zoom-scroll.service';
-import { Track } from '@shared/types/studio';
+import { Track } from '@shared/types';
 
 import { MatIconModule } from '@angular/material/icon';
 
