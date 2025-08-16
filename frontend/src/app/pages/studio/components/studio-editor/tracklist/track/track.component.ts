@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit
 import { CommonModule } from '@angular/common';
 import { ZoomScrollService } from '../../../../services/zoom-scroll.service';
 import { Track } from '@shared/types/studio';
+
 import { MatIconModule } from '@angular/material/icon';
+
 import { FormsModule } from '@angular/forms';
 import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
 import { MatSliderModule } from '@angular/material/slider';
@@ -40,24 +42,30 @@ import { MatMenuModule } from '@angular/material/menu';
 
 					<span class="spacer"></span>
 					
-					<button [matMenuTriggerFor]="trackOptionsMenu" class="track-menu-btn">
+					<button [matMenuTriggerFor]="trackOptionsMenu" class="track-options-btn">
 						<mat-icon>more_vert</mat-icon>
 					</button>
 
 					<mat-menu #trackOptionsMenu="matMenu" [class]="'track-options-menu'">
-						<button mat-menu-item (click)="menuMoveUp()">
-							<p>Move up</p>
-						</button>
-						<button mat-menu-item (click)="menuMoveDown()">
-							<p>Move down</p>
-						</button>
-						<mat-divider></mat-divider>
-						<button mat-menu-item (click)="menuDuplicate()">
-							<p>Duplicate</p>
-						</button>
-						<button mat-menu-item (click)="menuDelete()">
-							<p>Delete</p>
-						</button>
+						<div class="track-options-menu-content">
+							<button class="track-options-menu-btn" (click)="menuMoveUp()">
+								<mat-icon>keyboard_arrow_up</mat-icon>
+								<p>Move up</p>
+							</button>
+							<button class="track-options-menu-btn" (click)="menuMoveDown()">
+								<mat-icon>keyboard_arrow_down</mat-icon>
+								<p>Move down</p>
+							</button>
+							<mat-divider class="divider"></mat-divider>
+							<button class="track-options-menu-btn" (click)="menuDuplicate()">
+								<mat-icon>content_copy</mat-icon>
+								<p>Duplicate</p>
+							</button>
+							<button class="track-options-menu-btn" (click)="menuDelete()">
+								<mat-icon>delete</mat-icon>
+								<p>Delete</p>
+							</button>
+						</div>
 					</mat-menu>
 				</div>
 

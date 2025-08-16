@@ -115,7 +115,7 @@
 			flex: 1 1 auto;
 		}
 
-		.track-menu-btn {
+		.track-options-btn {
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -134,10 +134,11 @@
 			cursor: pointer;
 			transition: all 0.2s ease;
 		}
-		.track-menu-btn:hover {
+		
+		.track-options-btn:hover {
 			background: $appbar-accent-1;
 		}
-		.track-menu-btn mat-icon {
+		.track-options-btn mat-icon {
 			font-size: 20px; 
 			width: 1em;
 			height: 1em;
@@ -256,13 +257,57 @@
 				color: $appbar-accent-1 !important;
 				border-color: var(--highlight-color);
 			}
-
-			.divider {
-				border-width: 2px !important;
-				border-color: $appbar-accent-1 !important;
-			}
 		}
 	}
 
 
 }	
+
+::ng-deep .track-options-menu {
+	background: $appbar-bg;
+	border: $border-width solid $border-color !important;
+	border-radius: 0px !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	flex: 1 0 auto;
+
+	max-height: none !important;
+	overflow: visible !important;
+	padding: 0px 8px !important;
+}
+.track-options-menu-content {
+	display: flex;
+	flex-direction: column;
+	flex: 1 0 auto;
+	
+	.track-options-menu-btn {
+		height: 30px;
+
+		font-size: 14px;
+		font-weight: 500;
+		color: $appbar-text !important;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: left;
+
+		gap: 8px;
+
+		&:hover {
+			background: $appbar-accent-1;
+			border-color: $appbar-accent-1;
+		}
+	}
+}
+
+.divider {
+	border-width: 2px !important;
+	border-color: $appbar-accent-1 !important;
+}

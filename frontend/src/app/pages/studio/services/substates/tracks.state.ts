@@ -64,18 +64,11 @@ export class ProjectState_Tracks extends SignalStateClass<Tracks> {
 		const curr = this.arr();
 		if (index < 0 || index >= curr.length || newIndex < 0 || newIndex >= curr.length) return;
 
-		// Copy so we don’t mutate
 		const updated = [...curr];
-
-		// Remove track
 		const [trackToMove] = updated.splice(index, 1);
-
-		// Insert track at newIndex
 		updated.splice(newIndex, 0, trackToMove);
 
-		// Reassign indexes
 		const final = updated.map((t, i) => ({ ...t, index: i }));
-
 		this.arr.set(final);
 	}
 

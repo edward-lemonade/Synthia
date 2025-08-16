@@ -17,18 +17,20 @@ import { ProjectState } from '../../../services/project-state.service';
 		</button>
 		
 		<mat-menu #addTrackMenu="matMenu" [class]="'add-track-menu'">
-			<button mat-menu-item (click)="onAddTrack('audio')">
-				<p>Audio File</p>
-			</button>
-			<button mat-menu-item (click)="onAddTrack('microphone')">
-				<p>Microphone</p>
-			</button>
-			<button mat-menu-item (click)="onAddTrack('drums')">
-				<p>Drums</p>
-			</button>
-			<button mat-menu-item (click)="onAddTrack('instrument')">
-				<p>Instrument</p>
-			</button>
+			<div class="add-track-menu-content">
+				<button class="add-track-menu-btn" (click)="onAddTrack('audio')">
+					<p>Audio File</p>
+				</button>
+				<button class="add-track-menu-btn" (click)="onAddTrack('microphone')">
+					<p>Microphone</p>
+				</button>
+				<button class="add-track-menu-btn" (click)="onAddTrack('drums')">
+					<p>Drums</p>
+				</button>
+				<button class="add-track-menu-btn" (click)="onAddTrack('instrument')">
+					<p>Instrument</p>
+				</button>
+			</div>
 		</mat-menu>
 	`,
 	styleUrl: './tracklist-header.component.scss'

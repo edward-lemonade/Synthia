@@ -32,13 +32,28 @@
 	justify-content: flex-start;
 	align-items: center;
 }
-.add-track-menu-btn {
-	cursor: pointer;
-	transition: all 0.2s ease;
-	background: rgba(0,0,0,0);
+.add-track-menu-content {
+	display: flex;
+	flex-direction: column;
+	
+	.add-track-menu-btn {
+		height: 30px;
 
-	font-weight: 500;
-}
-.add-track-menu-btn:hover {
-	background: $appbar-bg-l;
+		font-size: 14px;
+		font-weight: 500;
+		color: $appbar-text !important;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: left;
+
+		&:hover {
+			background: $appbar-accent-1;
+			border-color: $appbar-accent-1;
+		}
+	}
 }
