@@ -1,104 +1,63 @@
-import { ProjectMetadataModel, ProjectStudioModel } from "@models/Project";
+import { IProjectFrontDocument, IProjectMetadataDocument, IProjectStudioDocument, ProjectFrontModel, ProjectMetadataModel, ProjectStudioModel } from "@src/models";
 import { ProjectMetadata, ProjectFront, ProjectStudio } from "@shared/types";
+import mongoose from "mongoose";
 
-// QUERIES
+// ===========================================================
+// FIND QUERIES
+// ===========================================================
 
-export async function findProjectsMetadataByUser(userId: string) { // TODO HANDLE MULTIPLE RETURNS
+
+// METADATA QUERIES
+export async function findMetadatasByUser(userId: string): Promise<IProjectMetadataDocument[]> { // TODO HANDLE MULTIPLE RETURNS
 	const metadataDocs = await ProjectMetadataModel.find({"authors.userId": userId});
-	if (!metadataDocs) return [null, null];
-	const metadataObjs = metadataDocs.map(doc => doc as ProjectMetadata);
-	return [metadataDocs, metadataObjs];
+	return metadataDocs;
 }
-
-export async function findProjectMetadataById(projectId: string) {
+export async function findMetadataByProjectId(projectId: string): Promise<IProjectMetadataDocument | null> {
 	const metadataDoc = await ProjectMetadataModel.findOne({projectId: projectId});
-	if (!metadataDoc) return [null, null];
-	const metadataObj = metadataDoc as ProjectMetadata;
-	return [metadataDoc, metadataObj];
+	return metadataDoc;
+}
+export async function findMetadataById(id: mongoose.Types.ObjectId): Promise<IProjectMetadataDocument | null> {
+	const metadataDoc = await ProjectMetadataModel.findById(id);
+	return metadataDoc;
 }
 
-export async function findProjectStudioByMetadata(metadataObj: ProjectMetadata) {
+// STUDIO QUERIES
+export async function findStudioByMetadata(metadataObj: ProjectMetadata): Promise<IProjectStudioDocument | null> {
 	const projectId = metadataObj.projectId;
 	const studioDoc = await ProjectStudioModel.findOne({projectId: projectId});
-	if (!studioDoc) return [null, null];
-
-	return [studioDoc, projectMetadataAndStudioDocsToState(metadataObj, studioDoc)];
+	return studioDoc;
 }
-
-export async function findProjectStudioById(projectId: string): Promise<[any, any, ProjectStudio|null]> {
+export async function findStudioByProjectId(projectId: string): Promise<IProjectStudioDocument | null> {
 	const studioDoc = await ProjectStudioModel.findOne({projectId: projectId});
-	if (!studioDoc) return [null, null, null];
-
-	const metadataId = studioDoc.projectMetadataId;
-	const metadataDoc = await ProjectMetadataModel.findById(metadataId);
-	if (!metadataDoc) return [null, null, null];
-
-	return [studioDoc, metadataDoc, projectMetadataAndStudioDocsToState(metadataDoc, studioDoc)];
+	return studioDoc;
 }
 
-// CREATE
-
-export async function newProject(metadata: ProjectMetadata, studio: ProjectStudio) {
-	const projectMetadata = new ProjectMetadataModel(
-		metadata
-	)
-
-	let savedMetadata
-	try {
-		savedMetadata = await projectMetadata.save()
-	} catch (error) { console.error("Error occurred while saving metadata to database: ", error) }
-
-	const projectStudio = new ProjectStudioModel({
-		projectId: metadata.projectId,
-		projectMetadataId: savedMetadata!._id,
-		...studio
-	});
-
-	try {
-		projectStudio.save()
-	} catch (error) { console.error("Error occurred while saving metadata to database: ", error) }
-
-	console.log("Successfully saved new project", savedMetadata!._id)
+// FRONT QUERIES
+export async function findFrontByMetadata(metadataObj: ProjectMetadata): Promise<IProjectFrontDocument | null> {
+	const projectId = metadataObj.projectId;
+	const frontDoc = await ProjectFrontModel.findOne({projectId: projectId});
+	return frontDoc;
+}
+export async function findFrontByProjectId(projectId: string): Promise<IProjectFrontDocument | null> {
+	const frontDoc = await ProjectFrontModel.findOne({projectId: projectId});
+	return frontDoc;
 }
 
-// EDIT
 
-export async function renameProjectMetadataById(projectId: string, newName: string) {
-	const updatedDoc = await ProjectMetadataModel.findByIdAndUpdate(
-		projectId, 
-		{ title: newName },
-		{ new: true } 
-	);
-	return updatedDoc;
+// ===========================================================
+// DELETE QUERIES
+// ===========================================================
+
+
+export async function deleteMetadataByProjectId(projectId: string) {
+	const res = await ProjectMetadataModel.deleteOne({ projectId: projectId });
+	return res;
 }
-
-// DELETE
-
-export async function deleteProjectStudioAndMetadataById(projectId: string) {
-	const res1 = await ProjectStudioModel.deleteOne({ projectId: projectId });
-	const res2 = await ProjectMetadataModel.deleteOne({ projectId: projectId });
-	return [res1, res2];
+export async function deleteStudioByProjectId(projectId: string) {
+	const res = await ProjectStudioModel.deleteOne({ projectId: projectId });
+	return res;
 }
-
-// CONVERSIONS
-
-export function projectMetadataAndStudioDocsToState(projectMetadataDoc: any, projectStudioDoc: any) {
-	const projectMetadata = projectMetadataDoc.toObject() as ProjectMetadata;
-	return {
-		metadata: projectMetadata,
-		globals: projectStudioDoc.globals,
-		tracks: projectStudioDoc.tracks,
-	} as any as ProjectStudio;
-}
-
-export function stateToProjectMetadataAndStudioDocs(state: any, metadataId: string) {
-	const projectMetadata = state.metadata;
-	const projectStudio = {
-		projectId: state.metadata.projectId,
-		projectMetadataId: metadataId,
-		globals: state.globals,
-		tracks: state.tracks,
-	}
-
-	return [projectMetadata, projectStudio]
+export async function deleteFrontByProjectId(projectId: string) {
+	const res = await ProjectFrontModel.deleteOne({ projectId: projectId });
+	return res;
 }

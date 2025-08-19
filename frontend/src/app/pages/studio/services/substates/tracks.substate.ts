@@ -32,15 +32,15 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 
 	readonly numTracks = computed(() => this.arr().length);
 
-	addTrack(type: string) {
+	addTrack(type: string, instrument: string = "none") {
 		const newTrack : Track = {
 			index : this.numTracks(),
 			name : "Track",
-			type : type as typeof newTrack.type,
-			files : null,
 			color : this.COLORS[this.numTracks() % this.COLORS.length],
 			
-			midiInstrument : "none",
+			type : type as typeof newTrack.type,
+			isMidi : (type == "instrument" || type == "drums"),
+			instrument : instrument,
 		
 			volume : 100,
 			pan : 0,
@@ -49,8 +49,8 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 
 			effects : [],
 
-			midiData : [],
-			clipData : [],
+			regions : [],
+			files : [],
 		}
 		const curr = this.arr();
 		this.arr.set([...curr, newTrack])

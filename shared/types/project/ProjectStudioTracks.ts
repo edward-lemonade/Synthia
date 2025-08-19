@@ -1,25 +1,21 @@
-export interface AudioFile {}
-export interface AudioEffect {}
-export interface MidiRegion {
-	pitch: number;
-	start: number; // in beats or seconds
+export interface Region {
+	start: number; // in beats
 	duration: number;
-	velocity: number;
+	type: "midi" | "clip"; // subclass override
+	data: string[];
+	fileIndex: number;
 }
-export interface ClipRegion {
-	start: number; // in seconds
-	duration: number;
-	audioFile: string; // s3 url
-}
+
 export interface Track {
 	// metadata
 	index : number;
 	name : string;
-	type : "audio" | "microphone" | "drums" | "instrument";
-	files : AudioFile | null;
 	color : string;
-	
-	midiInstrument : string;
+
+	// subclass overrides
+	type : "audio" | "microphone" | "instrument" | "drums";
+	isMidi : boolean;
+	instrument : string;
 
 	// master settings
 	volume : number;
@@ -30,10 +26,36 @@ export interface Track {
 	// effects
 	effects : string[];
 
-	// segments
-	midiData : MidiRegion[];
-	clipData : ClipRegion[];
+	// data
+	regions : Region[];
+	files : string[];
 }
+
+export interface AudioTrack extends Track {
+	// overrides
+	type : "audio";
+	isMidi : false;
+	instrument : "none";
+}
+export interface MicrophoneTrack extends Track {
+	// overrides
+	type : "microphone";
+	isMidi : false;
+	instrument : "none";
+}
+export interface InstrumentTrack extends Track {
+	// overrides
+	type : "instrument";
+	isMidi : true;
+	instrument : string;
+}
+export interface DrumsTrack extends Track {
+	// overrides
+	type : "drums";
+	isMidi : true;
+	instrument : string;
+}
+
 export interface ProjectStudioTracks {
 	arr: Track[];
 }

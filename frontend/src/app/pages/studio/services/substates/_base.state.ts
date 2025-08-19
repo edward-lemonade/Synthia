@@ -10,7 +10,7 @@ export type WritableStateSignal<T> = WritableSignal<T> & {
 
 export function stateSignal<T extends Record<string, any>>(
 	initialValue: T[keyof T],
-	substateType: SignalStateClass<T>,
+	substate: SignalStateClass<T>,
 	key: keyof T,
 ): WritableStateSignal<T[keyof T]> {
 	const s = signal(initialValue) as WritableStateSignal<T[keyof T]>;
@@ -18,21 +18,19 @@ export function stateSignal<T extends Record<string, any>>(
 
 	Object.assign(s, {
 		set(newValue: T[keyof T]) {
-			if (substateType.allowUndoRedo && substateType.historyService) {
-				const currentValue = s();
-				const currentState = substateType.snapshot();
+			const currentValue = s();
+			const currentState = substate.snapshot();
 
-				if (currentValue !== newValue) {
-					internalSet(newValue);
+			if (currentValue !== newValue) {
+				internalSet(newValue);
 
-					const [_, patches, inversePatches] = produceWithPatches<T>(currentState, (draft: any) => {
-						draft[key] = newValue;
-					});
-					if (patches && patches.length > 0) {
-						substateType.historyService.recordPatch(substateType.substateName, patches, inversePatches, substateType.allowUndoRedo);
-					}
+				const [_, patches, inversePatches] = produceWithPatches<T>(currentState, (draft: any) => {
+					draft[key] = newValue;
+				});
+				if (patches && patches.length > 0) {
+					substate.historyService.recordPatch(substate.substateName, patches, inversePatches, substate.allowUndoRedo);
 				}
-			}	
+			}
 		},
 		setSilent(newValue: T[keyof T]) {
 			internalSet(newValue);

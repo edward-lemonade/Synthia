@@ -1,0 +1,23 @@
+import mongoose, { Document } from "mongoose";
+import { ProjectMetadata } from "@shared/types";
+
+const ProjectMetadataSchema = new mongoose.Schema({ // interface ProjectMetadata
+	projectId: 	{ type: String },
+	createdAt: 	{ type: Date, default: Date.now },
+	updatedAt: 	{ type: Date },
+	title: 		{ type: String },
+	authors: [{
+		userId: 	{ type: String }, // auth0 userId
+		username: 	{ type: String },
+	}],
+
+	isCollaboration: 	{ type: Boolean },
+	isRemix: 			{ type: Boolean },
+	isRemixOf: 			{ type: String, default: null },
+
+	isReleased: {type: Boolean, default: false},
+});
+
+export interface IProjectMetadataDocument extends Document, ProjectMetadata {}
+
+export const ProjectMetadataModel = mongoose.model<IProjectMetadataDocument>('ProjectMetadata', ProjectMetadataSchema);

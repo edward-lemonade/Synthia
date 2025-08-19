@@ -14,4 +14,3 @@ export interface ProjectFront{ // public facing information for RELEASED project
 	playlists: string[];
 	comments: string[];
 }
-

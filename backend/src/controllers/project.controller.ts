@@ -1,79 +1,104 @@
 import { Request, Response } from "express";
-import { v4 as uuidv4 } from 'uuid';
 import { applyPatches, Patch } from "immer";
-import { Document } from "mongoose";
+import mongoose, { Document } from "mongoose";
 
-import { newStudioSessionDb } from "../db/studio_session.db";
-import { findProjectsMetadataByUser, deleteProjectStudioAndMetadataById, findProjectStudioById, newProject, renameProjectMetadataById, findProjectMetadataById, stateToProjectMetadataAndStudioDocs } from "@src/db/project.db";
+import { deleteMetadataByProjectId, deleteStudioByProjectId, findMetadataByProjectId, findMetadatasByUser, findStudioByProjectId } from "@src/db/project.db";
 
 import { ProjectMetadata, ProjectStudio } from "@shared/types";
+import { ProjectMetadataTransformer, ProjectStudioTransformer } from "@src/transformers/project.transformer";
+import { IProjectMetadataDocument, ProjectMetadataModel, ProjectStudioModel } from "@src/models";
 
-export async function createSession(req: Request, res: Response) {
-	const userId = req.auth?.sub;
-	const sessionId = uuidv4();
-	
-	await newStudioSessionDb(userId, sessionId);
-
-	res.json({ sessionId });
-}
 
 export async function saveExisting(req: Request, res: Response) {
 	const projectId = req.body.projectId;
 	const patches = req.body.patches as Patch[];
 
-	const [projectStudioDoc, projectMetadataDoc, state] = await findProjectStudioById(projectId);
-	const updated = applyPatches(state as ProjectStudio, patches);
+	const [metadataDoc, studioDoc] = await Promise.all([
+		findMetadataByProjectId(projectId),
+		findStudioByProjectId(projectId)
+	]);
 
-	const [projectMetadata, projectStudio] = stateToProjectMetadataAndStudioDocs(updated, projectStudioDoc.projectMetadataId);
+	if (!metadataDoc || !studioDoc) {
+		res.json({ success: false });
+		return;
+	}
+	const state = ProjectStudioTransformer.fromDocs(studioDoc, metadataDoc)
+	const stateUpdated = applyPatches(state as ProjectStudio, patches);
 
-	Object.assign(projectStudioDoc, projectStudio);
-	Object.assign(projectMetadataDoc, projectMetadata);
+	const [studioSchema, metadataSchema] = ProjectStudioTransformer.toSchema(stateUpdated, studioDoc.projectMetadataId);
+	Object.assign(studioDoc, studioSchema);
+	Object.assign(metadataDoc, metadataSchema);
 
-	await (projectStudioDoc as Document).save();
-	await (projectMetadataDoc as Document).save();
+	const [savedMetadataDoc, savedStudioDoc] = await Promise.all([
+		metadataDoc.save(),
+		studioDoc.save(),
+	]);
+	if (!savedMetadataDoc) { console.error("Failed to save project metadata."); res.json({ success: false }); return }
+	if (!savedStudioDoc) { console.error("Failed to save project metadata."); res.json({ success: false }); return }
 
 	res.json({ success: true });
 }
 
 export async function saveNew(req: Request, res: Response) {
-	const projectState = req.body.state;
-	const projectMetadata = projectState.metadata as ProjectMetadata;
-	delete projectState.metadata; 
-	const projectStudio = projectState as ProjectStudio;
+	const state = req.body.state;
 
-	try {
-		newProject(projectMetadata, projectStudio);
-		res.json({ success: true })
-	} catch (error) {
-		return res.status(500).json({ error: "Failed to create new project" });
-	}
+	const metadataSchema = ProjectMetadataTransformer.toSchema(state.metadata);
+	const metadataDoc = new ProjectMetadataModel(metadataSchema)
+	const savedMetadataDoc = await metadataDoc.save();
+
+	if (!savedMetadataDoc) { console.error("Failed to save new project metadata."); res.json({ success: false }); return }
+
+	const [studioSchema, _] = ProjectStudioTransformer.toSchema(state, savedMetadataDoc._id as mongoose.Types.ObjectId);
+	const studioDoc = new ProjectStudioModel(studioSchema)
+	const savedStudioDoc = await studioDoc.save();
+
+	if (!savedStudioDoc) { console.error("Failed to save new project studio."); res.json({ success: false }); return }
+
+	res.json({ success: true })
 }
 
 export async function getMine(req: Request, res: Response) {
 	const userId = req.body.userId;
-	const [_, metadatas] = await findProjectsMetadataByUser(userId);
+	const metadataDocs = await findMetadatasByUser(userId);
+	const metadatas = metadataDocs.map((doc) => ProjectMetadataTransformer.fromDoc(doc));
+
 	res.json({ projects: metadatas })
 }
 
 export async function load(req: Request, res: Response) {
 	const projectId = req.body.projectId;
-	const [_, __, state] = await findProjectStudioById(projectId);
+	const [metadataDoc, studioDoc] = await Promise.all([
+		findMetadataByProjectId(projectId),
+		findStudioByProjectId(projectId)
+	]);
+	if (!metadataDoc || !studioDoc) { console.error("Failed to load project metadata."); res.json({ success: false }); return }
+
+	const state = ProjectStudioTransformer.fromDocs(studioDoc, metadataDoc);
+
 	res.json({ state: state })
 }
 
-export async function delete_studio(req: Request, res: Response) {
+export async function deleteStudio(req: Request, res: Response) {
 	const projectId = req.body.projectId;
-	const [res1, res2] = await deleteProjectStudioAndMetadataById(projectId);
-	res.json({ success: (res1.deletedCount==1) && (res2.deletedCount==1) })
+	const [resM, resS] = await Promise.all([
+		deleteMetadataByProjectId(projectId),
+		deleteStudioByProjectId(projectId)
+	]);
+	if ((resM.deletedCount+resS.deletedCount!=2)) { console.error("Failed to delete project."); res.json({ success: false }); return }
+
+	res.json({ success: true });
 }
 
 export async function rename(req: Request, res: Response) {
 	const projectId = req.body.projectId;
 	const newName = req.body.newName;
-	const updatedDoc = await renameProjectMetadataById(projectId, newName);
-	if (updatedDoc) {
-		res.json({ success: true });
-	} else {
-		res.json({ success: false })
-	}
+	
+	const metadataDoc = await findMetadataByProjectId(projectId);
+	if (!metadataDoc) { console.error("Failed to find project."); res.json({ success: false }); return }
+
+	metadataDoc.title = newName;
+    const savedDoc = await metadataDoc.save();
+	if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
+
+	res.json({ success: true });
 }

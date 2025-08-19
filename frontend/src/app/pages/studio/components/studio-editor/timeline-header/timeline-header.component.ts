@@ -23,7 +23,7 @@ import { MatIconModule } from '@angular/material/icon';
 			</div>
 			<div #scrollable class="scrollable">
 				<div class="scrollContent" [style.width.px]="zoomScrollService.totalWidth()"> 
-					Demo
+					
 				</div>
 			</div>
 		</div>
