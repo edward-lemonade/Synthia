@@ -9,12 +9,13 @@ import { StudioToolbarDetailsComponent } from './components/studio-toolbar-detai
 
 import { HistoryService } from './services/history.service';
 import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
-import { ZoomScrollService } from './services/zoom-scroll.service';
+import { ViewportService } from './services/viewport.service';
+import { TrackSelectionService } from './services/track-selection.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [ProjectState, HistoryService, AppAuthService, ZoomScrollService],
+	providers: [ProjectState, HistoryService, AppAuthService, ViewportService, TrackSelectionService],
 	template: `
 		<div class="page-container">
 			@if (projectState.isStateReady()) {

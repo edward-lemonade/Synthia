@@ -1,0 +1,21 @@
+@use "theme" as *;	
+@use "../../../../studio-vars" as *;
+
+.track {
+	height: $track-height;
+	position: relative;
+
+	padding-left: 0px;
+	padding-right: 0px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	box-sizing: border-box;
+	margin: 0;
+
+	transition: all 0.2s;
+	display: flex;
+	flex-direction: row;
+
+	background-color: transparent;
+	border-bottom: $border-width solid rgba($border-color, 0.07);
+}

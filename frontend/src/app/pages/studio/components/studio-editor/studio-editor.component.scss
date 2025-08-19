@@ -20,7 +20,7 @@
 	position: sticky;
 	top: 0;
 	width: 100%;
-	height: $timeline-header-height;
+	height: $viewport-header-height;
 
 	display: flex;
 	flex-direction: row;
@@ -41,7 +41,7 @@
 		justify-content: left;
 		align-items: center;
 	}
-	.headers-timeline-container {
+	.headers-viewport-container {
 		flex: 1;
 		flex-direction: row;
 		display: flex;
@@ -81,31 +81,11 @@
 		box-sizing: border-box;
 		overflow: hidden;
 	}
-	.body-timeline {
+	.body-viewport {
 		flex: 1;
 		min-height: 0;
 
 		border-left: $border-width solid $border-color;
-		overflow: auto;
-
-		&::-webkit-scrollbar {
-			width: 8px; // Width of the scrollbar
-			height: 8px; 
-		}
-		&::-webkit-scrollbar-track {
-			background: $app-bg-l; // Track background
-			border-radius: 10px;
-		}
-		&::-webkit-scrollbar-thumb {
-			background: $app-bg-ll; // Thumb color
-			border-radius: 10px;
-			
-			&:hover {
-				background: $near-white; // Hover color
-			}
-		}
-		&::-webkit-scrollbar-corner {
-			background: transparent; // Corner where scrollbars meet
-		}
+		overflow: hidden;
 	}
 }

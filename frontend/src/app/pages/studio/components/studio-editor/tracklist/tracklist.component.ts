@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ZoomScrollService } from '../../../services/zoom-scroll.service';
+import { ViewportService } from '../../../services/viewport.service';
 import { TrackComponent } from "./track/track.component";
 import { ProjectState } from '../../../services/project-state.service';
 
@@ -15,7 +15,7 @@ import { ProjectState } from '../../../services/project-state.service';
 					*ngFor="let track of getTracks(); let i = index"
 					[track]="track"
 					[index]="i"
-				></tracklist-track>
+				/>
 			</div>
 		</div>
 	`,
@@ -26,11 +26,11 @@ export class TracklistComponent implements OnInit {
 
 	constructor (
 		public projectState : ProjectState,
-		public zoomScrollService : ZoomScrollService,
+		public viewportService : ViewportService,
 	) {}
 
 	ngOnInit() {
-		this.zoomScrollService.registerTracklistScrollable(this.scrollable.nativeElement);
+		this.viewportService.registerTracklistScrollable(this.scrollable.nativeElement);
   	}
 
 	getTracks() { 
@@ -39,8 +39,8 @@ export class TracklistComponent implements OnInit {
 
 	onScroll() {
 		const scrollPos = this.scrollable.nativeElement.scrollTop;
-		if (scrollPos != this.zoomScrollService.windowPosY()) {
-			this.zoomScrollService.setWindowPosY(scrollPos);
+		if (scrollPos != this.viewportService.windowPosY()) {
+			this.viewportService.setWindowPosY(scrollPos);
 		}
 	}
 }

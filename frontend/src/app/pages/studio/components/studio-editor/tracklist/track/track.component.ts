@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ZoomScrollService } from '../../../../services/zoom-scroll.service';
+import { ViewportService } from '../../../../services/viewport.service';
 import { Track } from '@shared/types';
 
 import { MatIconModule } from '@angular/material/icon';
@@ -113,7 +113,7 @@ export class TrackComponent implements OnInit {
 
 	constructor (
 		public projectState : ProjectState,
-		public zoomScrollService : ZoomScrollService,
+		public viewportService : ViewportService,
 	) {}
 
 	ngOnInit() {
