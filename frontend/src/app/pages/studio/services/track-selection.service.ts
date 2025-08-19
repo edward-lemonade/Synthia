@@ -27,4 +27,8 @@ export class TrackSelectionService {
 			})
 		})
 	}
+
+	selectedBgColor(color: string) {
+		return color.slice(0, 7) + '10'
+	}
 }

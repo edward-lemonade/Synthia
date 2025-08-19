@@ -13,9 +13,10 @@ import { TrackSelectionService } from '@src/app/pages/studio/services/track-sele
 	template: `
 		<div class="track"
 			[style.--highlight-color]="color()"
-			[style.background-color]="isSelected() ? 'rg' : 'transparent'"
+			[style.background-color]="isSelected() ? colorSelectedBg() : 'transparent'"
+			(click)="select()"
 			>
-			{{index}}
+			
 		</div>
 	`,
 	styleUrl: './track.component.scss'
@@ -32,5 +33,7 @@ export class TrackComponent {
 	) {}
 
 	color = computed(() => this.track.color);
+	colorSelectedBg = computed(() => this.trackSelectService.selectedBgColor(this.track.color));
 	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
+	select() { this.trackSelectService.setSelectedTrack(this.index); }
 }

@@ -13,6 +13,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { RotaryKnobComponent } from '@src/app/components/rotary-knob/rotary-knob.component';
 import { MatDivider } from "@angular/material/divider";
 import { MatMenuModule } from '@angular/material/menu';
+import { TrackSelectionService } from '@src/app/pages/studio/services/track-selection.service';
 
 @Component({
 	selector: 'tracklist-track',
@@ -21,15 +22,17 @@ import { MatMenuModule } from '@angular/material/menu';
 	template: `
 		<div class="track"
 			[style.--highlight-color]="color()"
+			[style.background-color]="isSelected() ? colorSelectedBg() : 'transparent'"
+			(click)="select()"
 			>
 
-			<div class="section">
+			<div class="section" (click)="select()">
 				<div class="iconContainer">
 					<img src={{iconPath}} alt="icon" class="icon">
 				</div>
 			</div>
 			
-			<div class="section">
+			<div class="section" (click)="select()">
 				<div class="row upper-controls">
 					<div class="title">
 						<input 
@@ -114,6 +117,7 @@ export class TrackComponent implements OnInit {
 	constructor (
 		public projectState : ProjectState,
 		public viewportService : ViewportService,
+		public trackSelectService : TrackSelectionService,
 	) {}
 
 	ngOnInit() {
@@ -122,6 +126,11 @@ export class TrackComponent implements OnInit {
 		this.volumeInput.set(this.track.volume);
 		this.panInput.set(this.track.pan);
 	}
+
+	color = computed(() => this.track.color);
+	colorSelectedBg = computed(() => this.trackSelectService.selectedBgColor(this.track.color));
+	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
+	select() { this.trackSelectService.setSelectedTrack(this.index); }
 
 	trackNameInput = signal('');
 	updateTrackName() {
@@ -138,7 +147,6 @@ export class TrackComponent implements OnInit {
 		this.projectState.tracksState.modifyTrack(this.index, "pan", this.panInput());
 	}
 
-	color = computed(() => this.track.color);
 	mute = computed(() => this.track.mute);
 	toggleMute() { this.projectState.tracksState.modifyTrack(this.index, "mute", !this.mute()); console.log(this.mute()) }
 	solo = computed(() => this.track.solo);
