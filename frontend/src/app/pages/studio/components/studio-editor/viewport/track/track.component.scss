@@ -19,3 +19,53 @@
 	background-color: transparent;
 	border-bottom: $border-width solid rgba($border-color, 0.07);
 }
+
+
+::ng-deep .track-menu {
+	background: $appbar-bg;
+	border: $border-width solid $border-color !important;
+	border-radius: 0px !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	flex: 1 0 auto;
+
+	max-height: none !important;
+	overflow: visible !important;
+	padding: 0px 8px !important;
+}
+.track-menu-content {
+	display: flex;
+	flex-direction: column;
+	flex: 1 0 auto;
+	
+	.track-menu-btn {
+		height: 30px;
+
+		font-size: 14px;
+		font-weight: 500;
+		color: $appbar-text !important;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: left;
+
+		gap: 8px;
+
+		&:hover {
+			background: $appbar-accent-1;
+			border-color: $appbar-accent-1;
+		}
+	}
+}
+
+.divider {
+	border-width: 2px !important;
+	border-color: $appbar-accent-1 !important;
+}

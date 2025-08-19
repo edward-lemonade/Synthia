@@ -7,7 +7,13 @@ export class TrackSelectionService {
 	declare tracksState: ProjectStateTracks;
 
 	readonly selectedTrack = signal<number | null>(null);
-	public setSelectedTrack(index: number|null) { this.selectedTrack.set(index) }
+	public setSelectedTrack(index: number|null) { 
+		this.selectedTrack.set(index);
+		this.setSelectedRegion(null);
+	}
+
+	readonly selectedRegion = signal<number | null>(null);
+	public setSelectedRegion(index: number|null) { this.selectedRegion.set(index) }
 
 	constructor(
 		private injector: Injector,
@@ -23,6 +29,16 @@ export class TrackSelectionService {
 					this.selectedTrack.set(null);
 				} else if (this.selectedTrack() !== null && this.selectedTrack()! >= numTracks) {
 					this.selectedTrack.set(numTracks-1);
+				}
+
+				if (this.selectedTrack() !== null) {
+					const numRegions = this.tracksState.arr()[this.selectedTrack()!].regions.length;
+
+					if (numRegions == 0) {
+						this.selectedRegion.set(null);
+					} else if (this.selectedRegion() !== null && this.selectedRegion()! >= numRegions) {
+						this.selectedRegion.set(numRegions-1);
+					}
 				}
 			})
 		})
