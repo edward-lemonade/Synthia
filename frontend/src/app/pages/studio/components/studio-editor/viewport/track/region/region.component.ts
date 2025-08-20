@@ -18,9 +18,9 @@ import { ViewportService } from '@src/app/pages/studio/services/viewport.service
 
 			[style.width]="width()"
 			[style.left]="startPos()"
-			(click)="select()"
+			(click)="onRegionClick($event)"
 			>
-			{{ isSelected()}}
+
 		</div>
 	`,
 	styleUrl: './region.component.scss'
@@ -34,7 +34,7 @@ export class RegionComponent {
 
 	constructor (
 		public projectState : ProjectState,
-		public trackSelectService : SelectionService,
+		public selectionService : SelectionService,
 		public viewportService: ViewportService,
 	) {}
 
@@ -61,11 +61,26 @@ export class RegionComponent {
 			Math.max(0, hsl.l));
 	});
 
-	isSelected = computed(() => 
-		this.trackSelectService.selectedTrack() == this.trackIndex && 
-		this.trackSelectService.selectedRegion() == this.regionIndex
-	);
-	select() { this.trackSelectService.setSelectedTrack(this.trackIndex); this.trackSelectService.setSelectedRegion(this.regionIndex)}
+	isSelected = computed(() => {
+		const selected = this.selectionService.isRegionSelected(this.trackIndex, this.regionIndex);
+		return selected;
+	});
+
+	onMouseDown(event: MouseEvent) {
+		// Prevent viewport box selection when clicking on regions
+		event.stopPropagation();
+	}
+
+	onRegionClick(event: MouseEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (event.ctrlKey || event.metaKey) {
+			this.selectionService.toggleSelectedRegion(this.trackIndex, this.regionIndex);
+		} else {
+			this.selectionService.setSelectedRegion(this.trackIndex, this.regionIndex);
+		}
+	}
 }
 
 // COLOR HELPERS

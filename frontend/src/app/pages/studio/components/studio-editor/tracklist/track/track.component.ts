@@ -128,7 +128,7 @@ export class TrackComponent implements OnInit {
 	}
 
 	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.trackSelectService.selectedBgColor(this.track.color));
+	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color));
 	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
 	select() { this.trackSelectService.setSelectedTrack(this.index); }
 

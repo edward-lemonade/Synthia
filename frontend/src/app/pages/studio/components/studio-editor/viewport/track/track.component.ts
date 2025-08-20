@@ -65,7 +65,7 @@ export class TrackComponent {
 	}
 
 	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.trackSelectService.selectedBgColor(this.track.color));
+	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color));
 	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
 	selectTrack() { this.trackSelectService.setSelectedTrack(this.index); }
 
@@ -75,7 +75,6 @@ export class TrackComponent {
 		const target = event.currentTarget as HTMLElement;
   		const rect = target.getBoundingClientRect();
 		this.mouseX = event.clientX - rect.left;
-		console.log(this.mouseX);
 	} 
 
 	getRegions() { return this.track.regions; }

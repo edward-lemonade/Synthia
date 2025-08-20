@@ -3,6 +3,7 @@ import { Track, ProjectStudioTracks, Region } from "@shared/types";
 import { SignalState, SignalStateClass } from "./_base.state";
 import { computed, Injector } from "@angular/core";
 import { HistoryService } from "../history.service";
+import { SelectedRegion } from "../selection.service";
 
 export interface ProjectStateTracks extends SignalState<ProjectStudioTracks> {}
 export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
@@ -141,6 +142,30 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 			...updated[trackIndex],
 			regions: track.regions.filter((_, i) => i !== regionIndex)
 		};
+
+		this.arr.set(updated);
+	}
+	deleteRegions(selectedRegions: SelectedRegion[]) {
+		const regionsByTrack = selectedRegions.reduce((acc, { trackIndex, regionIndex }) => {
+			if (!acc[trackIndex]) acc[trackIndex] = [];
+			acc[trackIndex].push(regionIndex);
+			return acc;
+		}, {} as Record<number, number[]>);
+
+		const curr = this.arr();
+		const updated = curr.map((track, trackIndex) => {
+			if (!regionsByTrack[trackIndex]) return track;
+
+			const indicesToRemove = regionsByTrack[trackIndex].sort((a, b) => b - a);
+			const newRegions = [...track.regions];
+			for (const i of indicesToRemove) {
+				if (i >= 0 && i < newRegions.length) {
+					newRegions.splice(i, 1);
+				}
+			}
+
+			return { ...track, regions: newRegions };
+		});
 
 		this.arr.set(updated);
 	}
