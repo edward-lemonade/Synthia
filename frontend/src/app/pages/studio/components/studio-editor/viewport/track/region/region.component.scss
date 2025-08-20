@@ -1,7 +1,27 @@
 @use "theme" as *;	
 @use "../../../../../studio-vars" as *;
 
-.border {
+.region {
+	--colorBase: white;
+	--colorBg: color-mix(in hsl, var(--colorBase) 70%, black 30%);
+  	--colorHover: color-mix(in hsl, var(--colorBg) 85%, white 15%); 
+
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: row;
+
+	position: absolute;
+	top: 0;
+	height: 100%;
+	z-index: 1000;
+
 	border-radius: 10px;
-	border-width: 2px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: antiquewhite;
+	
+	background-color: var(--colorBg);
+	&:hover {
+		background-color: var(--colorHover);
+	}
 }

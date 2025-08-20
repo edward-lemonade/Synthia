@@ -51,16 +51,21 @@
 
 			cursor: pointer;
 			transition: all 0.2s ease;
+
+			&.active {
+				background-color: $accent-yellow;
+				color: black; 
+				
+				&:hover {
+					background-color: $accent-yellow-l; // hover when active
+				}
+			}
+			&:not(.active):hover {
+				background: $appbar-accent-3;
+				color: $appbar-text; 
+			}
 		}
-		.control-btn:hover {
-			background: $appbar-accent-3;
-		}
-		.control-btn mat-icon {
-			font-size: 24px; 
-			width: 1em;
-			height: 1em;
-			margin: 0 !important;
-		}
+		
 	}
 
 	.scroll-container {

@@ -1,7 +1,10 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
 import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Component({
 	selector: 'studio-editor-viewport-header',
@@ -17,8 +20,10 @@ import { MatIconModule } from '@angular/material/icon';
 				<button class="control-btn" (click)="onButtonZoomOut()">
 					<mat-icon>zoom_out</mat-icon>
 				</button>
-				<button class="control-btn">
-					<mat-icon>grid_3x3</mat-icon>
+				<button class="control-btn" 
+					[class.active]="this.viewportService.snapToGrid()" 
+					(click)="toggleSnap()">
+					<mat-icon class="custom-icon" svgIcon="snap-to-grid"></mat-icon>
 				</button>
 			</div>
 			<div #scrollContainer class="scroll-container">
@@ -37,9 +42,18 @@ export class ViewportHeaderComponent implements AfterViewInit {
 
 	public DPR = window.devicePixelRatio || 1;
 
+	iconPath = '/assets/icons/magnet.svg';
+
 	constructor(
+		private matIconRegistry: MatIconRegistry,
+    	private domSanitizer: DomSanitizer,
 		public viewportService: ViewportService,
-	) {}
+	) {
+		this.matIconRegistry.addSvgIcon(
+			'snap-to-grid',
+			this.domSanitizer.bypassSecurityTrustResourceUrl(this.iconPath)
+		);
+	}
 
 	ngAfterViewInit(): void {
 		const canvas = this.canvasRef.nativeElement;
@@ -77,4 +91,7 @@ export class ViewportHeaderComponent implements AfterViewInit {
 
 	onButtonZoomIn() { this.viewportService.adjustZoom(1, this.scrollContainerRef.nativeElement!.clientWidth/2, 0.5); }
 	onButtonZoomOut() { this.viewportService.adjustZoom(-1, this.scrollContainerRef.nativeElement!.clientWidth/2, 0.5); }
+
+	toggleSnap() { this.viewportService.snapToGrid.set( !this.viewportService.snapToGrid() )}
+
 }

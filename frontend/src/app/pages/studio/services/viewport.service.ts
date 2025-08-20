@@ -30,9 +30,10 @@ export class ViewportService {
 	totalWidth = computed(() => this.measureWidth() * this.lastMeasure() );
 	measurePosX = computed(() => this.windowPosX() / this.measureWidth() );
 
-	CANVAS_PADDING = 30;
+	snapToGrid = signal(false);
+	smallestUnit = signal(1);
 
-	sevPastMeasure(m : number) { this.lastMeasure.set(m); }
+	CANVAS_PADDING = 30;
 
 	setWindowPosX(position : number) { this.windowPosX.set(position); }
 	setWindowPosY(position : number) { this.windowPosY.set(position); }
@@ -60,6 +61,22 @@ export class ViewportService {
 
 		this.setZoom(newZoomFactor);
 		this.setWindowPosX(clampedWindowPosX);
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// CONVERSIONS
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	mouseToPos(x: number, snap = this.snapToGrid()) {
+		let pos = (this.windowPosX() + x) / this.measureWidth();
+		if (snap) { pos = Math.floor(pos / this.smallestUnit()) * this.smallestUnit(); }
+		return pos;
+	}
+	posToTime(pos: number) {
+		return pos * this.globalsState.timeSignature().N  / this.globalsState.bpm() * 60; // in seconds
+	}
+	timeToPos(time: number) {
+		return time/60 * this.globalsState.bpm() / this.globalsState.timeSignature().N; // in measures
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +114,6 @@ export class ViewportService {
 		this.VPHeaderCanvas = canvas;
 		this.VPHeaderCtx = ctx;	
 
-		console.log("Setting up viewport header");
 		this.setupCanvas(canvas, ctx, width, height, "header");
 
 		runInInjectionContext(this.injector, () => { // horizontal scroll sync
@@ -114,7 +130,6 @@ export class ViewportService {
 		this.VPCanvas = canvas;
 		this.VPCtx = ctx;	
 
-		console.log("Setting up viewport");
 		this.setupCanvas(canvas, ctx, width, height, "viewport");
 	}
 	setupCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, width: number, height: number, src?: string) {
@@ -188,25 +203,9 @@ export class ViewportService {
 		const drawSubdivisions: boolean = (numSubdivisions > 0);
 		const startSubdivision = Math.ceil(startPos / subdivisionWidth);
 		const endSubdivision = Math.floor(endPos / subdivisionWidth);
+		
+		let smallestUnit = stepSize;
 
-		if (drawSubdivisions) {
-			for (let i = startSubdivision; i <= endSubdivision; i += 1) {
-				const x = i * subdivisionWidth - startPos;
-				if (x < -this.CANVAS_PADDING || x > canvas1.width + this.CANVAS_PADDING) continue // shouldn't happen but keep for safety
-
-				this.drawSmallLine(ctx1, x, 30, 10);
-				this.drawSmallLine(ctx2, x, canvas2.clientHeight, canvas2.clientHeight);
-			}
-		}
-		if (drawBeats) {
-			for (let i = startBeat; i <= endBeat; i += 1) {
-				const x = i * beatWidth - startPos;
-				if (x < -this.CANVAS_PADDING || x > canvas1.width + this.CANVAS_PADDING) continue // shouldn't happen but keep for safety
-
-				this.drawMediumLine(ctx1, x, 30, 15);
-				this.drawMediumLine(ctx2, x, canvas2.clientHeight, canvas2.clientHeight);
-			}
-		}
 		if (drawMeasures) {
 			let beginJumping = startMeasure;
 			if (stepSize > 1) {
@@ -235,6 +234,30 @@ export class ViewportService {
 				ctx1.fillText((i+1).toString(), x+4, 10)
 			}
 		}
+		if (drawBeats) {
+			smallestUnit = 1.0 / this.globalsState.timeSignature().N;
+
+			for (let i = startBeat; i <= endBeat; i += 1) {
+				const x = i * beatWidth - startPos;
+				if (x < -this.CANVAS_PADDING || x > canvas1.width + this.CANVAS_PADDING) continue // shouldn't happen but keep for safety
+
+				this.drawMediumLine(ctx1, x, 30, 15);
+				this.drawMediumLine(ctx2, x, canvas2.clientHeight, canvas2.clientHeight);
+			}
+		}
+		if (drawSubdivisions) {
+			smallestUnit = (1.0 / this.globalsState.timeSignature().N) / numSubdivisions;
+
+			for (let i = startSubdivision; i <= endSubdivision; i += 1) {
+				const x = i * subdivisionWidth - startPos;
+				if (x < -this.CANVAS_PADDING || x > canvas1.width + this.CANVAS_PADDING) continue // shouldn't happen but keep for safety
+
+				this.drawSmallLine(ctx1, x, 30, 10);
+				this.drawSmallLine(ctx2, x, canvas2.clientHeight, canvas2.clientHeight);
+			}
+		}
+
+		this.smallestUnit.set(smallestUnit);
 	}
 	private drawBigLine(ctx: CanvasRenderingContext2D, x: number, y=30, length=30) {
 		if (!ctx) return

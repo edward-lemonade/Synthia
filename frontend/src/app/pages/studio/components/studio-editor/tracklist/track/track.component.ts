@@ -13,7 +13,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { RotaryKnobComponent } from '@src/app/components/rotary-knob/rotary-knob.component';
 import { MatDivider } from "@angular/material/divider";
 import { MatMenuModule } from '@angular/material/menu';
-import { TrackSelectionService } from '@src/app/pages/studio/services/track-selection.service';
+import { SelectionService } from '@src/app/pages/studio/services/selection.service';
 
 @Component({
 	selector: 'tracklist-track',
@@ -117,7 +117,7 @@ export class TrackComponent implements OnInit {
 	constructor (
 		public projectState : ProjectState,
 		public viewportService : ViewportService,
-		public trackSelectService : TrackSelectionService,
+		public trackSelectService : SelectionService,
 	) {}
 
 	ngOnInit() {

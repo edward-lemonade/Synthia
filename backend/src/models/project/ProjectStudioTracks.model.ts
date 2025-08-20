@@ -3,11 +3,7 @@ import mongoose from 'mongoose';
 const RegionSchema = new mongoose.Schema({
 	start: { type: Number, required: true }, // in beats
 	duration: { type: Number, required: true },
-	type: { 
-		type: String, 
-		enum: ['midi', 'clip'], 
-		required: true 
-	},
+	isMidi: { type: Boolean, required: true },
 	data: [{ type: String, required: true }],
 	fileIndex: { type: Number, required: true },
 }, { _id: false });

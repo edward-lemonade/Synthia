@@ -1,7 +1,7 @@
 export interface Region {
 	start: number; // in beats
 	duration: number;
-	type: "midi" | "clip"; // subclass override
+	isMidi: boolean; // subclass override
 	data: string[];
 	fileIndex: number;
 }

@@ -3,7 +3,7 @@ import { ProjectState } from './project-state.service';
 import { ProjectStateTracks } from './substates';
 
 @Injectable()
-export class TrackSelectionService {
+export class SelectionService {
 	declare tracksState: ProjectStateTracks;
 
 	readonly selectedTrack = signal<number | null>(null);
@@ -44,7 +44,5 @@ export class TrackSelectionService {
 		})
 	}
 
-	selectedBgColor(color: string) {
-		return color.slice(0, 7) + '10'
-	}
+	selectedBgColor(color: string) {return color.slice(0, 7) + '10'}
 }

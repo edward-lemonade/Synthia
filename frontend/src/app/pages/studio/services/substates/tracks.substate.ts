@@ -1,4 +1,4 @@
-import { Track, ProjectStudioTracks } from "@shared/types";
+import { Track, ProjectStudioTracks, Region } from "@shared/types";
 
 import { SignalState, SignalStateClass } from "./_base.state";
 import { computed, Injector } from "@angular/core";
@@ -71,7 +71,6 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 		const final = updated.map((t, i) => ({ ...t, index: i }));
 		this.arr.set(final);
 	}
-
 	modifyTrack(index: number, prop: keyof Track, value: any) {
 		const curr = this.arr();
 		if (index < 0 || index >= curr.length) return;
@@ -84,7 +83,6 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 			
 		this.arr.set(updated);
 	}
-
 	duplicateTrack(index: number) {
 		const curr = this.arr();
 		if (index < 0 || index >= curr.length) return;
@@ -104,4 +102,123 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 
 		this.arr.set(newArray);
 	}
+
+	addRegion(trackIndex: number,
+		isMidi: boolean,
+		start: number,
+		duration: number = 1,
+		data: string[] = [],
+		fileIndex: number = 0,
+	) {
+		const curr = this.arr();
+		if (trackIndex < 0 || trackIndex >= curr.length) return;
+
+		const region: Region = {
+			start: start,
+			duration: duration,
+			isMidi: isMidi,
+			data: data,
+			fileIndex: fileIndex,
+		}
+
+		const updated = [...curr];
+		updated[trackIndex] = {
+			...updated[trackIndex],
+			regions: [...updated[trackIndex].regions, region]
+		};
+
+		this.arr.set(updated);
+	}
+	deleteRegion(trackIndex: number, regionIndex: number) {
+		const curr = this.arr();
+		if (trackIndex < 0 || trackIndex >= curr.length) return;
+
+		const track = curr[trackIndex];
+		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
+
+		const updated = [...curr];
+		updated[trackIndex] = {
+			...updated[trackIndex],
+			regions: track.regions.filter((_, i) => i !== regionIndex)
+		};
+
+		this.arr.set(updated);
+	}
+	moveRegion(trackIndex: number, regionIndex: number, newTrackIndex: number, newStart: number) {
+		const curr = this.arr();
+		if (trackIndex < 0 || trackIndex >= curr.length || 
+			newTrackIndex < 0 || newTrackIndex >= curr.length) return;
+
+		const sourceTrack = curr[trackIndex];
+		if (regionIndex < 0 || regionIndex >= sourceTrack.regions.length) return;
+
+		const regionToMove = sourceTrack.regions[regionIndex];
+		const movedRegion = {
+			...regionToMove,
+			start: newStart
+		};
+
+		const updated = [...curr];
+
+		// Remove region from source track
+		updated[trackIndex] = {
+			...updated[trackIndex],
+			regions: sourceTrack.regions.filter((_, i) => i !== regionIndex)
+		};
+
+		// Add region to destination track
+		updated[newTrackIndex] = {
+			...updated[newTrackIndex],
+			regions: [...updated[newTrackIndex].regions, movedRegion]
+		};
+
+		this.arr.set(updated);
+	}
+	modifyRegion(trackIndex: number, regionIndex: number, prop: keyof Region, value: any) {
+		const curr = this.arr();
+		if (trackIndex < 0 || trackIndex >= curr.length) return;
+
+		const track = curr[trackIndex];
+		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
+
+		const updatedRegions = [...track.regions];
+		updatedRegions[regionIndex] = {
+			...updatedRegions[regionIndex],
+			[prop]: value
+		};
+
+		const updated = [...curr];
+		updated[trackIndex] = {
+			...updated[trackIndex],
+			regions: updatedRegions
+		};
+
+		this.arr.set(updated);
+	}
+	duplicateRegion(trackIndex: number, regionIndex: number) {
+		const curr = this.arr();
+		if (trackIndex < 0 || trackIndex >= curr.length) return;
+
+		const track = curr[trackIndex];
+		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
+
+		const regionToCopy = track.regions[regionIndex];
+		const newRegion = { ...regionToCopy };
+
+		const updatedRegions = [
+			...track.regions.slice(0, regionIndex + 1),
+			newRegion,
+			...track.regions.slice(regionIndex + 1)
+		];
+
+		const updated = [...curr];
+		updated[trackIndex] = {
+			...updated[trackIndex],
+			regions: updatedRegions
+		};
+
+		this.arr.set(updated);
+	}
+
+
 }
