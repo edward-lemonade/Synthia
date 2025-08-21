@@ -91,4 +91,8 @@ export class RegionDragService {
 	public getDragInfo(): DragInfo | null {
 		return this.dragInfo();
 	}
+
+	public getSelectedRegions() {
+		return this.selectService.selectedRegions();
+	}
 }

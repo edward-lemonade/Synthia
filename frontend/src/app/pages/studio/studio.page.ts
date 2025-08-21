@@ -9,20 +9,23 @@ import { StudioToolbarDetailsComponent } from './components/studio-toolbar-detai
 
 import { HistoryService } from './services/history.service';
 import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
+import { MidiEditorComponent } from "./components/studio-editor/midi-editor/midi-editor.component";
 import { ViewportService } from './services/viewport.service';
 import { RegionSelectService } from './services/region-select.service';
 import { RegionDragService } from './services/region-drag.service';
+import { MidiEditorService } from './services/midi-editor.service';
 
 @Component({
 	selector: 'app-studio',
-	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [ProjectState, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService],
+	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, MidiEditorComponent],
+	providers: [ProjectState, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService, MidiEditorService],
 	template: `
 		<div class="page-container">
 			@if (projectState.isStateReady()) {
 				<app-studio-toolbar-top></app-studio-toolbar-top>
 				<app-studio-toolbar-details></app-studio-toolbar-details>
 				<app-studio-editor></app-studio-editor>
+				<midi-editor></midi-editor>
 			} @else {
 				<div class="loading-container">
 					<div class="loading-spinner"></div>

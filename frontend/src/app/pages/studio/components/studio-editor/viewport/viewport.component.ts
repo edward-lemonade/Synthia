@@ -4,12 +4,11 @@ import { CommonModule } from '@angular/common';
 import { ProjectState } from '../../../services/project-state.service';
 import { TrackComponent } from "./track/track.component";
 import { BoxSelectBounds, SelectedRegion, RegionSelectService } from '../../../services/region-select.service';
-import { DragGhostRegionsComponent } from "./drag-ghost-regions/drag-ghost-regions.component";
 import { RegionDragService } from '../../../services/region-drag.service';
 
 @Component({
 	selector: 'studio-editor-viewport',
-	imports: [CommonModule, TrackComponent, DragGhostRegionsComponent],
+	imports: [CommonModule, TrackComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #container class="container"
@@ -47,15 +46,6 @@ import { RegionDragService } from '../../../services/region-drag.service';
 					[style.width.px]="boxOverlayStyle().width"
 					[style.height.px]="boxOverlayStyle().height">
 				</div>
-
-				<!-- Drag preview overlay -->
-				<drag-ghost-regions
-					[tracks]="getTracks()"
-					[trackHeight]="trackHeight"
-					[tracksElement]="tracksRef.nativeElement"
-					[containerElement]="containerRef.nativeElement"
-					[scrollContainerElement]="scrollContainerRef.nativeElement">
-				</drag-ghost-regions>
 			</div>
 		</div>
 	`,
@@ -153,8 +143,6 @@ export class ViewportComponent implements AfterViewInit {
 		) {	
 			const startX = this.viewportService.mouseXToPx(event.clientX);
 			const startY = this.viewportService.mouseYToPx(event.clientY);
-
-			console.log(startX, startY);
 
 			if (!event.ctrlKey && !event.metaKey) { this.selectService.clearSelection(); }
 
@@ -255,7 +243,6 @@ export class ViewportComponent implements AfterViewInit {
 		const width = bounds.endX - bounds.startX;
 		const height = bounds.endY - bounds.startY;
 		
-		console.log(left, top, width, height);
 		return { left, top, width, height };
 	}
 

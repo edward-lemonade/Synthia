@@ -70,7 +70,6 @@ export class ViewportService {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	pxToPos(x: number, snap = this.snapToGrid()) {
-		console.log("pxToPos")
 		let pos = (x) / this.measureWidth();
 		if (snap) { pos = this.snap(pos) }
 		return pos;

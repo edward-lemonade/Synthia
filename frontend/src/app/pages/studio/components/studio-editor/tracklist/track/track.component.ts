@@ -51,6 +51,11 @@ import { RegionSelectService } from '@src/app/pages/studio/services/region-selec
 
 					<mat-menu #trackOptionsMenu="matMenu" [class]="'track-options-menu'">
 						<div class="track-options-menu-content">
+							<button class="track-options-menu-btn" (click)="openEditor()">
+								<mat-icon>edit</mat-icon>
+								<p>Edit</p>
+							</button>
+							<mat-divider class="divider"></mat-divider>
 							<button class="track-options-menu-btn" (click)="menuMoveUp()">
 								<mat-icon>keyboard_arrow_up</mat-icon>
 								<p>Move up</p>
@@ -163,5 +168,9 @@ export class TrackComponent implements OnInit {
 	}
 	menuDelete() {
 		this.projectState.tracksState.deleteTrack(this.index);
+	}
+
+	openEditor() {
+		
 	}
 }

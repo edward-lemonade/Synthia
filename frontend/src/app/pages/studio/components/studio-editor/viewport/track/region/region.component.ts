@@ -1,20 +1,25 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, EventEmitter, Input, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Region, Track } from '@shared/types';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
 
 import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
 import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
+import { MidiEditorService } from '@src/app/pages/studio/services/midi-editor.service';
+import { DragGhostComponent } from './ghosts/drag-ghost.component';
+import { ResizeGhostComponent } from "./ghosts/resize-ghost.component";
 
 type ResizeHandle = 'left' | 'right' | null;
 
 @Component({
 	selector: 'viewport-track-region',
-	imports: [CommonModule],
+	imports: [CommonModule, MatMenuModule, MatIconModule, DragGhostComponent, ResizeGhostComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<div #region class="region"
+		<div #regionEl class="region"
 			[style.--colorBase]="color()"
 			
 			[style.border-color]="isSelected() ? 'white' : 'black'"
@@ -23,10 +28,11 @@ type ResizeHandle = 'left' | 'right' | null;
 			[style.width]="width()"
 			[style.left]="startPos()"
 			(click)="onClick($event)"
+			(contextmenu)="onContextMenu($event)"
+			[matContextMenuTriggerFor]="regionMenu"
 
 			(mousedown)="onMouseDown($event)"
 			(mousemove)="onMouseMove($event)"
-			(contextmenu)="$event.stopPropagation()"
 			>
 			<!-- Resize handles for selected regions -->
 			<div *ngIf="isSelected() && canResize()" 
@@ -37,15 +43,36 @@ type ResizeHandle = 'left' | 'right' | null;
 				(mousedown)="onResizeHandleMouseDown($event, 'right')"></div>
 		</div>
 		
-		<!-- Resize ghost -->
-		<div class="region region-ghost"
+
+		<resize-ghost
 			*ngIf="viewportService.isResizingRegion() && ghostRegion()"
-			[style.--colorBase]="color()"
-			[style.border-color]="'white'"
-			[style.width]="ghostWidth()"
-			[style.left]="ghostStartPos()"
-			>
-		</div>
+			[track]="track"
+			[ghost]="ghostRegion()"
+			/>
+
+		<!-- Drag ghost -->	
+		<drag-ghost
+			*ngIf="dragService.isDragging() && isSelected()"
+			[track]="track"
+			[region]="region"/>
+
+		<!-- Context Menu -->
+		<mat-menu #regionMenu="matMenu" [class]="'region-menu'">
+			<div class="region-menu-content">
+				<button class="region-menu-btn" mat-menu-item (click)="openMidiEditor()" *ngIf="region.isMidi">
+					<mat-icon>piano</mat-icon>
+					Open MIDI Editor
+				</button>
+				<button class="region-menu-btn" mat-menu-item (click)="duplicateRegion()">
+					<mat-icon>content_copy</mat-icon>
+					Duplicate Region
+				</button>
+				<button class="region-menu-btn" mat-menu-item (click)="deleteRegion()">
+					<mat-icon>delete</mat-icon>
+					Delete Region
+				</button>
+			</div>
+		</mat-menu>
 	`,
 	styleUrl: './region.component.scss'
 })
@@ -62,6 +89,7 @@ export class RegionComponent {
 		public selectionService : RegionSelectService,
 		public dragService : RegionDragService,
 		public viewportService: ViewportService,
+		public midiService: MidiEditorService,
 	) {}
 
 	width = computed(() => `${this.region.duration * this.viewportService.measureWidth()}px`);
@@ -244,6 +272,37 @@ export class RegionComponent {
 			start: newStart,
 			duration: newDuration
 		});
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// OTHER METHODS
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	onContextMenu(event: MouseEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
+
+	openMidiEditor() {
+		if (this.region.isMidi) {
+			this.midiService.openEditor(this.trackIndex, this.regionIndex);
+		}
+	}
+
+	duplicateRegion() {
+		const duplicatedRegion = { ...this.region };
+		this.projectState.tracksState.addRegion(
+			this.trackIndex,
+			this.region.isMidi,
+			this.region.start + this.region.duration,
+			this.region.duration,
+			this.region.data,
+			this.region.fileIndex
+		);
+	}
+
+	deleteRegion() {
+		this.projectState.tracksState.deleteRegion(this.trackIndex, this.regionIndex);
 	}
 }
 

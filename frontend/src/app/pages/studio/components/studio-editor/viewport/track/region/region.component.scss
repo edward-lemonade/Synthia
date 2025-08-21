@@ -55,3 +55,41 @@
 	border-style: dashed !important;
 	z-index: 100;
 }
+
+// Region context menu styles
+::ng-deep .region-menu {
+	.mat-mdc-menu-panel {
+		background: var(--surface-color);
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+	}
+
+	.region-menu-content {
+		padding: 8px 0;
+	}
+
+	.region-menu-btn {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 8px 16px;
+		width: 100%;
+		border: none;
+		background: transparent;
+		color: var(--text-color);
+		cursor: pointer;
+		font-size: 14px;
+		transition: background-color 0.2s;
+
+		&:hover {
+			background: var(--hover-color);
+		}
+
+		mat-icon {
+			font-size: 18px;
+			width: 18px;
+			height: 18px;
+		}
+	}
+}
