@@ -24,9 +24,9 @@ type ResizeHandle = 'left' | 'right' | null;
 			[style.left]="startPos()"
 			(click)="onClick($event)"
 
-			[style.cursor]="cursor()"
 			(mousedown)="onMouseDown($event)"
 			(mousemove)="onMouseMove($event)"
+			(contextmenu)="$event.stopPropagation()"
 			>
 			<!-- Resize handles for selected regions -->
 			<div *ngIf="isSelected() && canResize()" 
@@ -92,19 +92,6 @@ export class RegionComponent {
 		return selected;
 	});
 
-	cursor = computed(() => {
-		if (this.viewportService.isResizingRegion()) {
-			return 'ew-resize';
-		}
-		
-		const handle = this.resizeHandle();
-		if (handle) {
-			return 'ew-resize';
-		}
-		
-		return 'default';
-	});
-
 	onClick(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -148,7 +135,7 @@ export class RegionComponent {
 		} else if (this.selectionService.isRegionSelected(this.trackIndex, this.regionIndex)) {
 			const target = event.currentTarget as HTMLElement;
 			const rect = target.closest("viewport-track")!.getBoundingClientRect();
-			const mousePosX = this.viewportService.mouseToPos(event.clientX - rect.left, false);
+			const mousePosX = this.viewportService.pxToPos(event.clientX - rect.left, false);
 
 			this.dragService.prepareDrag(mousePosX, this.region);
 		} else {

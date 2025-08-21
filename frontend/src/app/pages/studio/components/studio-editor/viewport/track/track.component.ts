@@ -73,17 +73,21 @@ export class TrackComponent {
 		this.trackSelectService.setSelectedTrack(this.index); 
 	}
 
-
-	mouseX = 0; //  relative to this track div
+	mouseX = 0; 
 	onContextMenu(event: MouseEvent) {
-		const target = event.currentTarget as HTMLElement;
-  		const rect = target.getBoundingClientRect();
-		this.mouseX = event.clientX - rect.left;
+		if (event.target === event.currentTarget) {
+			const target = event.currentTarget as HTMLElement;
+			const rect = target.getBoundingClientRect();
+			this.mouseX = event.clientX - rect.left;
+		} else {
+			event.preventDefault();
+			event.stopPropagation();
+		}
 	} 
 
 	getRegions() { return this.track.regions; }
 	createRegion() {
-		const pos = this.viewportService.mouseToPos(this.mouseX);
+		const pos = this.viewportService.pxToPos(this.mouseX);
 		this.tracksState.addRegion(this.index, this.track.isMidi, pos);
 	}
 }

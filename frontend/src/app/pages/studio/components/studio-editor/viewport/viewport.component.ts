@@ -19,6 +19,7 @@ import { RegionDragService } from '../../../services/region-drag.service';
 			[style.cursor]="
 				(dragService.isDragging()) ? 'grabbing': 
 				(dragService.isDragReady()) ? 'grab': 
+				(viewportService.isResizingRegion()) ? 'ew-resize':
 				'default'
 			">
 
@@ -36,25 +37,26 @@ import { RegionDragService } from '../../../services/region-drag.service';
 						[index]="i"
 					/>
 				</div>
-			</div>
-			
-			<!-- Box selection overlay -->
-			<div *ngIf="selectionService.isBoxSelecting()" 
-				class="box-selection-overlay"
-				[style.left.px]="boxOverlayStyle().left"
-				[style.top.px]="boxOverlayStyle().top"
-				[style.width.px]="boxOverlayStyle().width"
-				[style.height.px]="boxOverlayStyle().height">
-			</div>
 
-			<!-- Drag preview overlay -->
-			<drag-ghost-regions
-				[tracks]="getTracks()"
-				[trackHeight]="trackHeight"
-				[tracksElement]="tracksRef.nativeElement"
-				[containerElement]="containerRef.nativeElement"
-				[scrollContainerElement]="scrollContainerRef.nativeElement">
-			</drag-ghost-regions>
+				<!-- Box selection overlay -->
+				<div 
+					*ngIf="selectService.isBoxSelecting()"
+					class="box-selection-overlay"
+					[style.left.px]="boxOverlayStyle().left"
+					[style.top.px]="boxOverlayStyle().top"
+					[style.width.px]="boxOverlayStyle().width"
+					[style.height.px]="boxOverlayStyle().height">
+				</div>
+
+				<!-- Drag preview overlay -->
+				<drag-ghost-regions
+					[tracks]="getTracks()"
+					[trackHeight]="trackHeight"
+					[tracksElement]="tracksRef.nativeElement"
+					[containerElement]="containerRef.nativeElement"
+					[scrollContainerElement]="scrollContainerRef.nativeElement">
+				</drag-ghost-regions>
+			</div>
 		</div>
 	`,
 	styleUrl: './viewport.component.scss'
@@ -76,7 +78,7 @@ export class ViewportComponent implements AfterViewInit {
 		private injector: Injector,
 		public viewportService: ViewportService,
 		public projectState : ProjectState,
-		public selectionService: RegionSelectService,
+		public selectService: RegionSelectService,
 		public dragService: RegionDragService,
 	) {}
 
@@ -149,17 +151,14 @@ export class ViewportComponent implements AfterViewInit {
 			!this.dragService.isDragging() && 
 			!this.viewportService.isResizingRegion()
 		) {	
-			const tracksRect = this.tracksRef.nativeElement.getBoundingClientRect();
-			const scrollLeft = this.scrollContainerRef.nativeElement.scrollLeft;
-			const scrollTop = this.scrollContainerRef.nativeElement.scrollTop;
+			const startX = this.viewportService.mouseXToPx(event.clientX);
+			const startY = this.viewportService.mouseYToPx(event.clientY);
 
-			const startX = event.clientX - tracksRect.left + scrollLeft;
-			const startY = event.clientY - tracksRect.top + scrollTop;
+			console.log(startX, startY);
 
-			if (!event.ctrlKey && !event.metaKey) { this.selectionService.clearSelection(); }
-			
-			this.selectionService.startBoxSelect(startX, startY);
-			
+			if (!event.ctrlKey && !event.metaKey) { this.selectService.clearSelection(); }
+
+			this.selectService.startBoxSelect(startX, startY);			
 			event.preventDefault();
 		}
 	}
@@ -167,14 +166,9 @@ export class ViewportComponent implements AfterViewInit {
 	onMouseMove(event: MouseEvent) {
 		if (!this.isMouseDown) {return}
 
-		const tracksRect = this.tracksRef.nativeElement.getBoundingClientRect();
-		const scrollLeft = this.viewportService.windowPosX()
-		const scrollTop = this.viewportService.windowPosY()
-		
-		const currentMouseX = event.clientX - tracksRect.left + scrollLeft;
-		const currentMouseY = event.clientY - tracksRect.top + scrollTop;
+		const currentMouseX = this.viewportService.mouseXToPx(event.clientX);
+		const currentMouseY = this.viewportService.mouseYToPx(event.clientY);
 
-		// Check if we should start dragging
 		if (this.dragService.isDragReady()) {
 			const deltaX = Math.abs(currentMouseX - this.dragService.dragInfo()!.startPosX*this.viewportService.measureWidth());
 
@@ -183,11 +177,10 @@ export class ViewportComponent implements AfterViewInit {
 			}
 		}
 
-		// Handle active operations
 		if (this.dragService.isDragging()) {
-			this.dragService.updateDrag(this.viewportService.mouseToPos(currentMouseX, false));
-		} else if (this.selectionService.isBoxSelecting()) {
-			this.selectionService.updateBoxSelect(currentMouseX, currentMouseY);
+			this.dragService.updateDrag(this.viewportService.pxToPos(currentMouseX, false));
+		} else if (this.selectService.isBoxSelecting()) {
+			this.selectService.updateBoxSelect(currentMouseX, currentMouseY);
 		}
 	}
 
@@ -198,8 +191,8 @@ export class ViewportComponent implements AfterViewInit {
 			this.dragService.completeDrag();
 		} else if (this.dragService.isDragReady()) {
 			this.dragService.cancelDrag();	
-		} else if (this.selectionService.isBoxSelecting()) {
-			this.selectionService.completeBoxSelect((bounds) => {
+		} else if (this.selectService.isBoxSelecting()) {
+			this.selectService.completeBoxSelect((bounds) => {
 				return this.getRegionsInBounds(bounds);
 			});
 		}
@@ -254,19 +247,15 @@ export class ViewportComponent implements AfterViewInit {
 	}
 
 	boxOverlayStyle() {
-		const bounds = this.selectionService.getNormalizedBoxBounds();
+		const bounds = this.selectService.getNormalizedBoxBounds();
 		if (!bounds) return { left: 0, top: 0, width: 0, height: 0 };
 		
-		const tracksRect = this.tracksRef.nativeElement.getBoundingClientRect();
-		const containerRect = this.containerRef.nativeElement.getBoundingClientRect();
-		const scrollLeft = this.scrollContainerRef.nativeElement.scrollLeft;
-		const scrollTop = this.scrollContainerRef.nativeElement.scrollTop;
-		
-		const left = bounds.startX - scrollLeft + (tracksRect.left - containerRect.left);
-		const top = bounds.startY - scrollTop + (tracksRect.top - containerRect.top);
+		const left = bounds.startX;
+		const top = bounds.startY;
 		const width = bounds.endX - bounds.startX;
 		const height = bounds.endY - bounds.startY;
 		
+		console.log(left, top, width, height);
 		return { left, top, width, height };
 	}
 
@@ -277,8 +266,8 @@ export class ViewportComponent implements AfterViewInit {
 	@HostListener('document:keydown', ['$event'])
 	onKeyDown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
-			if (this.selectionService.isBoxSelecting()) {
-				this.selectionService.cancelBoxSelect();
+			if (this.selectService.isBoxSelecting()) {
+				this.selectService.cancelBoxSelect();
 				this.isMouseDown = false;
 				this.containerRef.nativeElement.classList.remove('box-selecting');
 			}
@@ -291,15 +280,15 @@ export class ViewportComponent implements AfterViewInit {
 		}
 		
 		if (event.key === 'Delete' || event.key === 'Backspace') {
-			if (this.selectionService.hasSelectedRegions()) {
-				this.projectState.tracksState.deleteRegions(this.selectionService.selectedRegions());
-				this.selectionService.clearSelection();
+			if (this.selectService.hasSelectedRegions()) {
+				this.projectState.tracksState.deleteRegions(this.selectService.selectedRegions());
+				this.selectService.clearSelection();
 			}
 		}
 
 		if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
 			event.preventDefault();
-			this.selectionService.selectAllRegions();
+			this.selectService.selectAllRegions();
 		}
 	}
 }

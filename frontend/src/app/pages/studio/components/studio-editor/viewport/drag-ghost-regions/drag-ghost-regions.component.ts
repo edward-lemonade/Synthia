@@ -50,12 +50,7 @@ export class DragGhostRegionsComponent {
 		if (!dragInfo || !this.tracksElement || !this.containerElement || !this.scrollContainerElement) {
 			return [];
 		}
-		
-		const tracksRect = this.tracksElement.getBoundingClientRect();
-		const containerRect = this.containerElement.getBoundingClientRect();
-		const scrollLeft = this.viewportService.windowPosX();
-		const scrollTop = this.viewportService.windowPosY();
-		
+
 		const selectedRegions = this.selectionService.selectedRegions();
 		
 		return selectedRegions.map(({ trackIndex, regionIndex }) => {
@@ -64,21 +59,14 @@ export class DragGhostRegionsComponent {
 			
 			if (!region) return null;
 			
-			const regionLeft = this.viewportService.posToMouse(region.start);
-			const regionWidth = region.duration * this.viewportService.measureWidth();
-			const trackTop = this.getTrackTopPosition(trackIndex);
-
-			console.log(trackTop);
-			
-			const draggedLeft = regionLeft + dragInfo.deltaPosX * this.viewportService.measureWidth();
-			
-			const left = draggedLeft - scrollLeft + (tracksRect.left - containerRect.left);
-			const top = trackTop - scrollTop;
+			const left = this.viewportService.posToPx(region.start) + (dragInfo.deltaPosX * this.viewportService.measureWidth());
+			const top = this.getTrackTopPosition(trackIndex);
+			const width = region.duration * this.viewportService.measureWidth();
 			
 			return {
 				left,
 				top,
-				width: regionWidth,
+				width,
 				height: this.trackHeight,
 				color: this.getRegionGhostColor(track, region)
 			};
