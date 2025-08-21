@@ -67,11 +67,13 @@ export class DragGhostRegionsComponent {
 			const regionLeft = this.viewportService.posToMouse(region.start);
 			const regionWidth = region.duration * this.viewportService.measureWidth();
 			const trackTop = this.getTrackTopPosition(trackIndex);
+
+			console.log(trackTop);
 			
 			const draggedLeft = regionLeft + dragInfo.deltaPosX * this.viewportService.measureWidth();
 			
 			const left = draggedLeft - scrollLeft + (tracksRect.left - containerRect.left);
-			const top = trackTop - scrollTop + (tracksRect.top - containerRect.top);
+			const top = trackTop - scrollTop;
 			
 			return {
 				left,
