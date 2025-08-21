@@ -265,21 +265,14 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 
 		this.arr.set(updated);
 	}
-	duplicateRegion(trackIndex: number, regionIndex: number) {
+	setRegion(trackIndex: number, regionIndex: number, region: Region) {
 		const curr = this.arr();
-		if (trackIndex < 0 || trackIndex >= curr.length) return;
 
 		const track = curr[trackIndex];
 		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
 
-		const regionToCopy = track.regions[regionIndex];
-		const newRegion = { ...regionToCopy };
-
-		const updatedRegions = [
-			...track.regions.slice(0, regionIndex + 1),
-			newRegion,
-			...track.regions.slice(regionIndex + 1)
-		];
+		const updatedRegions = [...track.regions];
+		updatedRegions[regionIndex] = region;
 
 		const updated = [...curr];
 		updated[trackIndex] = {
@@ -288,6 +281,23 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 		};
 
 		this.arr.set(updated);
+	}
+	duplicateRegion(trackIndex: number, regionIndex: number) {
+		const curr = this.arr();
+		if (trackIndex < 0 || trackIndex >= curr.length) return;
+
+		const track = curr[trackIndex];
+		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
+
+		const regionToCopy = track.regions[regionIndex];
+		this.addRegion(
+			trackIndex,
+			regionToCopy.isMidi,
+			regionToCopy.start,
+			regionToCopy.duration,
+			regionToCopy.data,
+			regionToCopy.fileIndex
+		);
 	}
 
 

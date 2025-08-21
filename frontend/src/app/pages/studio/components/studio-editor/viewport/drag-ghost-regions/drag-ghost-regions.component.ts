@@ -29,7 +29,7 @@ export interface GhostRegion {
 			</div>
 		</div>
 	`,
-	styleUrl: './drag-ghost-regions.scss'
+	styleUrl: './drag-ghost-regions.component.scss'
 })
 export class DragGhostRegionsComponent {
 	@Input() tracks: any[] = [];

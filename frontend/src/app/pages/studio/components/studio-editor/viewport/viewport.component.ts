@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ProjectState } from '../../../services/project-state.service';
 import { TrackComponent } from "./track/track.component";
 import { BoxSelectBounds, SelectedRegion, RegionSelectService } from '../../../services/region-select.service';
-import { DragGhostRegionsComponent } from "./drag-ghost-regions/drag-ghost-regions";
+import { DragGhostRegionsComponent } from "./drag-ghost-regions/drag-ghost-regions.component";
 import { RegionDragService } from '../../../services/region-drag.service';
 
 @Component({
@@ -144,7 +144,11 @@ export class ViewportComponent implements AfterViewInit {
 	onMouseDown(event: MouseEvent) {
 		this.isMouseDown = true;
 		
-		if (event.button === 0 && !this.dragService.isDragReady() && !this.dragService.isDragging()) {	
+		if (event.button === 0 && 
+			!this.dragService.isDragReady() && 
+			!this.dragService.isDragging() && 
+			!this.viewportService.isResizingRegion()
+		) {	
 			const tracksRect = this.tracksRef.nativeElement.getBoundingClientRect();
 			const scrollLeft = this.scrollContainerRef.nativeElement.scrollLeft;
 			const scrollTop = this.scrollContainerRef.nativeElement.scrollTop;
@@ -269,8 +273,6 @@ export class ViewportComponent implements AfterViewInit {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	// EVENT HANDLERS
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	
 
 	@HostListener('document:keydown', ['$event'])
 	onKeyDown(event: KeyboardEvent) {

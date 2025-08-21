@@ -24,4 +24,34 @@
 	&:hover {
 		background-color: var(--colorHover);
 	}
+  
+	.resize-handle {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 8px;
+		background: transparent;
+		cursor: ew-resize;
+		z-index: 10;
+		
+		&.resize-handle-left {
+		left: 0;
+		}
+		
+		&.resize-handle-right {
+		right: 0;
+		}
+		
+		&:hover {
+			background: rgba(255, 255, 255, 0.3);
+		}
+	}
+}
+
+.region-ghost {
+	position: absolute;
+	pointer-events: none;
+	opacity: 0.7;
+	border-style: dashed !important;
+	z-index: 100;
 }
