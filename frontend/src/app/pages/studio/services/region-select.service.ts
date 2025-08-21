@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
 import { ProjectState } from './project-state.service';
 import { ProjectStateTracks } from './substates';
+import { ViewportService } from './viewport.service';
 
 export interface SelectedRegion {
 	trackIndex: number;
@@ -14,16 +15,12 @@ export interface BoxSelectBounds {
 	endY: number;
 }
 
-
 @Injectable()
-export class SelectionService {
+export class RegionSelectService {
 	declare tracksState: ProjectStateTracks;
 
 	readonly selectedTrack = signal<number | null>(null);
-	public setSelectedTrack(index: number|null) { 
-		this.selectedTrack.set(index);
-		this.setSelectedRegions([]);
-	}
+	public setSelectedTrack(index: number|null) { this.selectedTrack.set(index); }
 
 	readonly selectedRegions = signal<SelectedRegion[]>([]);
   	readonly hasSelectedRegions = computed(() => this.selectedRegions().length > 0);
@@ -34,12 +31,14 @@ export class SelectionService {
 		return Array.from(trackIndices).sort();
 	});
 
+	// Box selection state
 	readonly isBoxSelecting = signal<boolean>(false);
   	readonly boxSelectBounds = signal<BoxSelectBounds | null>(null);
-	
+
 	constructor(
 		private injector: Injector,
 		private projectState: ProjectState,
+		private viewportService: ViewportService,
 	) {
 		this.tracksState = projectState.tracksState;
 

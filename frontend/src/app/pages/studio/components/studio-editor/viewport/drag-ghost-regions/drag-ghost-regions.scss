@@ -1,0 +1,32 @@
+@use "theme" as *;	
+@use "../../../../studio-vars" as *;
+
+.drag-preview-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 15;
+	pointer-events: none;
+}
+
+.drag-ghost-region {
+	position: absolute;
+	border: 2px solid rgba(255, 165, 0, 0.8);
+	border-radius: 4px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	backdrop-filter: blur(1px);
+	transition: none;
+	
+	animation: ghostPulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes ghostPulse {
+	0% {
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	}
+	100% {
+		box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+	}
+}

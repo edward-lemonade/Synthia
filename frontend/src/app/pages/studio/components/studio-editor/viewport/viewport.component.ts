@@ -3,17 +3,24 @@ import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { ProjectState } from '../../../services/project-state.service';
 import { TrackComponent } from "./track/track.component";
-import { BoxSelectBounds, SelectedRegion, SelectionService } from '../../../services/selection.service';
+import { BoxSelectBounds, SelectedRegion, RegionSelectService } from '../../../services/region-select.service';
+import { DragGhostRegionsComponent } from "./drag-ghost-regions/drag-ghost-regions";
+import { RegionDragService } from '../../../services/region-drag.service';
 
 @Component({
 	selector: 'studio-editor-viewport',
-	imports: [CommonModule, TrackComponent],
+	imports: [CommonModule, TrackComponent, DragGhostRegionsComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #container class="container"
 			(mousedown)="onMouseDown($event)"
 			(mousemove)="onMouseMove($event)"
-			(mouseup)="onMouseUp($event)">
+			(mouseup)="onMouseUp($event)"
+			[style.cursor]="
+				(dragService.isDragging()) ? 'grabbing': 
+				(dragService.isDragReady()) ? 'grab': 
+				'default'
+			">
 
 			<canvas 
 				#canvas 
@@ -30,7 +37,8 @@ import { BoxSelectBounds, SelectedRegion, SelectionService } from '../../../serv
 					/>
 				</div>
 			</div>
-
+			
+			<!-- Box selection overlay -->
 			<div *ngIf="selectionService.isBoxSelecting()" 
 				class="box-selection-overlay"
 				[style.left.px]="boxOverlayStyle().left"
@@ -38,6 +46,15 @@ import { BoxSelectBounds, SelectedRegion, SelectionService } from '../../../serv
 				[style.width.px]="boxOverlayStyle().width"
 				[style.height.px]="boxOverlayStyle().height">
 			</div>
+
+			<!-- Drag preview overlay -->
+			<drag-ghost-regions
+				[tracks]="getTracks()"
+				[trackHeight]="trackHeight"
+				[tracksElement]="tracksRef.nativeElement"
+				[containerElement]="containerRef.nativeElement"
+				[scrollContainerElement]="scrollContainerRef.nativeElement">
+			</drag-ghost-regions>
 		</div>
 	`,
 	styleUrl: './viewport.component.scss'
@@ -51,16 +68,16 @@ export class ViewportComponent implements AfterViewInit {
 
 	public DPR = window.devicePixelRatio || 1;
 
-	// Box selection state
+	// Mouse interaction state
 	private isMouseDown = false;
-	private startX = 0;
-	private startY = 0;
+	private dragThreshold = 5; // pixels to start drag
 
 	constructor(
 		private injector: Injector,
 		public viewportService: ViewportService,
 		public projectState : ProjectState,
-		public selectionService: SelectionService,
+		public selectionService: RegionSelectService,
+		public dragService: RegionDragService,
 	) {}
 
 	getTracks() { return this.projectState.tracksState.arr(); }
@@ -121,56 +138,72 @@ export class ViewportComponent implements AfterViewInit {
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// BOX SELECTION
+	// MOUSE EVENTS
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	onMouseDown(event: MouseEvent) {
-		if (event.button === 0 && !this.isClickOnInteractiveElement(event.target as Element)) {
-			this.isMouseDown = true;
-			
+		this.isMouseDown = true;
+		
+		if (event.button === 0 && !this.dragService.isDragReady() && !this.dragService.isDragging()) {	
 			const tracksRect = this.tracksRef.nativeElement.getBoundingClientRect();
 			const scrollLeft = this.scrollContainerRef.nativeElement.scrollLeft;
 			const scrollTop = this.scrollContainerRef.nativeElement.scrollTop;
+
+			const startX = event.clientX - tracksRect.left + scrollLeft;
+			const startY = event.clientY - tracksRect.top + scrollTop;
+
+			if (!event.ctrlKey && !event.metaKey) { this.selectionService.clearSelection(); }
 			
-			this.startX = event.clientX - tracksRect.left + scrollLeft;
-			this.startY = event.clientY - tracksRect.top + scrollTop;
-			
-			if (!event.ctrlKey && !event.metaKey) {
-				this.selectionService.clearSelection();
-			}
-			
-			this.selectionService.startBoxSelect(this.startX, this.startY);
-			
-			this.containerRef.nativeElement.classList.add('box-selecting');
+			this.selectionService.startBoxSelect(startX, startY);
 			
 			event.preventDefault();
 		}
 	}
 
 	onMouseMove(event: MouseEvent) {
-		if (this.isMouseDown && this.selectionService.isBoxSelecting()) {
-			// Get coordinates relative to the tracks container (accounting for scroll)
-			const tracksRect = this.tracksRef.nativeElement.getBoundingClientRect();
-			const scrollLeft = this.scrollContainerRef.nativeElement.scrollLeft;
-			const scrollTop = this.scrollContainerRef.nativeElement.scrollTop;
-			
-			const currentX = event.clientX - tracksRect.left + scrollLeft;
-			const currentY = event.clientY - tracksRect.top + scrollTop;
-			
-			this.selectionService.updateBoxSelect(currentX, currentY);
+		if (!this.isMouseDown) {return}
+
+		const tracksRect = this.tracksRef.nativeElement.getBoundingClientRect();
+		const scrollLeft = this.viewportService.windowPosX()
+		const scrollTop = this.viewportService.windowPosY()
+		
+		const currentMouseX = event.clientX - tracksRect.left + scrollLeft;
+		const currentMouseY = event.clientY - tracksRect.top + scrollTop;
+
+		// Check if we should start dragging
+		if (this.dragService.isDragReady()) {
+			const deltaX = Math.abs(currentMouseX - this.dragService.dragInfo()!.startPosX*this.viewportService.measureWidth());
+
+			if (deltaX >= this.dragThreshold) {
+				this.dragService.startDrag();
+			}
+		}
+
+		// Handle active operations
+		if (this.dragService.isDragging()) {
+			this.dragService.updateDrag(this.viewportService.mouseToPos(currentMouseX, false));
+		} else if (this.selectionService.isBoxSelecting()) {
+			this.selectionService.updateBoxSelect(currentMouseX, currentMouseY);
 		}
 	}
 
 	onMouseUp(event: MouseEvent) {
-		if (this.isMouseDown && this.selectionService.isBoxSelecting()) {
+		this.isMouseDown = false;
+		
+		if (this.dragService.isDragging()) {
+			this.dragService.completeDrag();
+		} else if (this.dragService.isDragReady()) {
+			this.dragService.cancelDrag();	
+		} else if (this.selectionService.isBoxSelecting()) {
 			this.selectionService.completeBoxSelect((bounds) => {
 				return this.getRegionsInBounds(bounds);
 			});
 		}
-		
-		this.isMouseDown = false;
-		this.containerRef.nativeElement.classList.remove('box-selecting');
 	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// BOX SELECTION
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	private getRegionsInBounds(bounds: BoxSelectBounds): SelectedRegion[] {
 		const selectedRegions: SelectedRegion[] = [];
@@ -208,21 +241,12 @@ export class ViewportComponent implements AfterViewInit {
 		return selectedRegions;
 	}
 
-	// HELPER METHODS
-
 	private boundsIntersect(start1: number, end1: number, start2: number, end2: number): boolean {
 		return start1 <= end2 && end1 >= start2;
 	}
 
 	private getTrackTopPosition(trackIndex: number): number {
 		return trackIndex * this.trackHeight;
-	}
-
-	private isClickOnInteractiveElement(target: Element): boolean {
-		return target.closest('viewport-track-region') !== null ||
-			   target.closest('.track-header') !== null ||
-			   target.closest('button') !== null ||
-			   target.closest('input') !== null;
 	}
 
 	boxOverlayStyle() {
@@ -242,21 +266,26 @@ export class ViewportComponent implements AfterViewInit {
 		return { left, top, width, height };
 	}
 
-	// GLOBAL EVENT HANDLERS
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// EVENT HANDLERS
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	@HostListener('document:mouseup', ['$event'])
-	onDocumentMouseUp(event: MouseEvent) {
-		if (this.isMouseDown) {
-			this.onMouseUp(event);
-		}
-	}
+	
 
 	@HostListener('document:keydown', ['$event'])
 	onKeyDown(event: KeyboardEvent) {
-		if (event.key === 'Escape' && this.selectionService.isBoxSelecting()) {
-			this.selectionService.cancelBoxSelect();
-			this.isMouseDown = false;
-			this.containerRef.nativeElement.classList.remove('box-selecting');
+		if (event.key === 'Escape') {
+			if (this.selectionService.isBoxSelecting()) {
+				this.selectionService.cancelBoxSelect();
+				this.isMouseDown = false;
+				this.containerRef.nativeElement.classList.remove('box-selecting');
+			}
+			
+			if (this.dragService.isDragging()) {
+				this.dragService.cancelDrag();
+				this.isMouseDown = false;
+				this.containerRef.nativeElement.classList.remove('dragging', 'drag-ready');
+			}
 		}
 		
 		if (event.key === 'Delete' || event.key === 'Backspace') {

@@ -10,12 +10,13 @@ import { StudioToolbarDetailsComponent } from './components/studio-toolbar-detai
 import { HistoryService } from './services/history.service';
 import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
 import { ViewportService } from './services/viewport.service';
-import { SelectionService } from './services/selection.service';
+import { RegionSelectService } from './services/region-select.service';
+import { RegionDragService } from './services/region-drag.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [ProjectState, HistoryService, AppAuthService, ViewportService, SelectionService],
+	providers: [ProjectState, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService],
 	template: `
 		<div class="page-container">
 			@if (projectState.isStateReady()) {

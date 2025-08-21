@@ -1,24 +1,27 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, EventEmitter, Input, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Region, Track } from '@shared/types';
 
 import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
-import { SelectionService } from '@src/app/pages/studio/services/selection.service';
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
+import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 
 @Component({
 	selector: 'viewport-track-region',
 	imports: [CommonModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<div class="region"
+		<div #region class="region"
 			[style.--colorBase]="color()"
 			
 			[style.border-color]="isSelected() ? 'white' : 'black'"
 
 			[style.width]="width()"
 			[style.left]="startPos()"
-			(click)="onRegionClick($event)"
+			(click)="onClick($event)"
+			(mousedown)="onMouseDown($event)"
+		
 			>
 
 		</div>
@@ -31,10 +34,12 @@ export class RegionComponent {
 	@Input() trackIndex!: number;
 	@Input() region!: Region;
 	@Input() regionIndex!: number;
+	@ViewChild("region", {static: true}) regionRef!: ElementRef<HTMLDivElement>;
 
 	constructor (
 		public projectState : ProjectState,
-		public selectionService : SelectionService,
+		public selectionService : RegionSelectService,
+		public dragService : RegionDragService,
 		public viewportService: ViewportService,
 	) {}
 
@@ -66,19 +71,30 @@ export class RegionComponent {
 		return selected;
 	});
 
-	onMouseDown(event: MouseEvent) {
-		// Prevent viewport box selection when clicking on regions
-		event.stopPropagation();
-	}
-
-	onRegionClick(event: MouseEvent) {
+	onClick(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
 
-		if (event.ctrlKey || event.metaKey) {
-			this.selectionService.toggleSelectedRegion(this.trackIndex, this.regionIndex);
+		if (!this.dragService.isDragging()) {
+			if (event.ctrlKey || event.metaKey) {
+				this.selectionService.toggleSelectedRegion(this.trackIndex, this.regionIndex);
+			} else {
+				this.selectionService.setSelectedRegion(this.trackIndex, this.regionIndex);
+			}
+		}
+	}
+
+	onMouseDown(event: MouseEvent) {
+		event.preventDefault();
+		
+		if (this.selectionService.isRegionSelected(this.trackIndex, this.regionIndex)) {
+			const target = event.currentTarget as HTMLElement;
+			const rect = target.parentElement!.getBoundingClientRect();
+			const mousePosX = this.viewportService.mouseToPos(event.clientX - rect.left, false);
+
+			this.dragService.prepareDrag(mousePosX, this.region);
 		} else {
-			this.selectionService.setSelectedRegion(this.trackIndex, this.regionIndex);
+			event.stopPropagation();
 		}
 	}
 }

@@ -3,7 +3,7 @@ import { Track, ProjectStudioTracks, Region } from "@shared/types";
 import { SignalState, SignalStateClass } from "./_base.state";
 import { computed, Injector } from "@angular/core";
 import { HistoryService } from "../history.service";
-import { SelectedRegion } from "../selection.service";
+import { SelectedRegion } from "../region-select.service";
 
 export interface ProjectStateTracks extends SignalState<ProjectStudioTracks> {}
 export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
@@ -196,6 +196,51 @@ export class ProjectStateTracks extends SignalStateClass<ProjectStudioTracks> {
 			...updated[newTrackIndex],
 			regions: [...updated[newTrackIndex].regions, movedRegion]
 		};
+
+		this.arr.set(updated);
+	}
+	moveRegions(selectedRegions: SelectedRegion[], deltaPos: number) {
+		if (selectedRegions.length === 0 || deltaPos === 0) return;
+
+		const curr = this.arr();
+		const updated = [...curr];
+
+		const regionsByTrack = new Map<number, number[]>();
+		selectedRegions.forEach(({ trackIndex, regionIndex }) => {
+			if (!regionsByTrack.has(trackIndex)) {
+				regionsByTrack.set(trackIndex, []);
+			}
+			regionsByTrack.get(trackIndex)!.push(regionIndex);
+		});
+
+
+		regionsByTrack.forEach((regionIndices, trackIndex) => {
+			if (trackIndex < 0 || trackIndex >= curr.length) return;
+
+			const track = curr[trackIndex];
+			const updatedRegions = [...track.regions];
+
+			const sortedIndices = regionIndices.sort((a, b) => b - a);
+
+			sortedIndices.forEach(regionIndex => {
+				if (regionIndex >= 0 && regionIndex < updatedRegions.length) {
+					const region = updatedRegions[regionIndex];
+					const newStart = Math.max(0, region.start + deltaPos); 
+
+					updatedRegions[regionIndex] = {
+						...region,
+						start: newStart
+					};
+				}
+			});
+
+			updatedRegions.sort((a, b) => a.start - b.start);
+
+			updated[trackIndex] = {
+				...updated[trackIndex],
+				regions: updatedRegions
+			};
+		});
 
 		this.arr.set(updated);
 	}

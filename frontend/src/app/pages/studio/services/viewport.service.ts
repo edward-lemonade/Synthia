@@ -66,10 +66,10 @@ export class ViewportService {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	// CONVERSIONS
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	
 	mouseToPos(x: number, snap = this.snapToGrid()) {
 		let pos = (this.windowPosX() + x) / this.measureWidth();
-		if (snap) { pos = Math.floor(pos / this.smallestUnit()) * this.smallestUnit(); }
+		if (snap) { pos = this.snap(pos) }
 		return pos;
 	}
 	posToTime(pos: number) {
@@ -77,6 +77,18 @@ export class ViewportService {
 	}
 	timeToPos(time: number) {
 		return time/60 * this.globalsState.bpm() / this.globalsState.timeSignature().N; // in measures
+	}
+	posToMouse(pos: number) {
+		return pos * this.measureWidth() - this.windowPosX();
+	}
+	absMouseToPos(x: number, snap = this.snapToGrid()) {
+		let pos = (this.windowPosX() + x - this.VPHeaderContainer!.getBoundingClientRect().left) / this.measureWidth();
+		if (snap) { pos = this.snap(pos) }
+		return pos;
+	}
+
+	snap(pos: number) {
+		return Math.floor(pos / this.smallestUnit()) * this.smallestUnit();
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
