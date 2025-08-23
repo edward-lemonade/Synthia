@@ -115,7 +115,7 @@ export class Track {
 	effects: string[] = [];
 
 	// data
-	regions: (AudioRegion | MidiRegion)[] = [];
+	regions: Region[] = [];
 }
 
 ///////////////////////////////////////////////////////////////////

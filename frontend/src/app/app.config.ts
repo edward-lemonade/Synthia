@@ -7,10 +7,11 @@ import { provideHttpClient } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { env } from '../env/environment';
+import { provideStore } from '@ngrx/store';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
-		provideRouter(routes),
+    	provideRouter(routes),
 		provideZoneChangeDetection({ eventCoalescing: true }),
 		provideAnimations(),
 		provideHttpClient(),
@@ -25,5 +26,6 @@ export const appConfig: ApplicationConfig = {
 			cacheLocation: 'localstorage', // or 'memory' for better security in production
 			useRefreshTokens: true,
 		}),
+		provideStore()
 	]
 }

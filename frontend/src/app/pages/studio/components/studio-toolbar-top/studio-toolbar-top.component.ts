@@ -8,9 +8,15 @@ import { ExportButtonComponent } from './export/export-btn.component';
 import { PublishButtonComponent } from './publish/publish-btn.component';
 import { ShareButtonComponent } from './share/share-btn.component';
 
-import { ProjectState } from '../../services/project-state.service';
 import { HistoryService } from '../../services/history.service';
 import { MenuButtonComponent } from "./menu/menu-btn.component";
+
+import { projectFeature } from '../../state/state.reducers';
+import { Store } from '@ngrx/store';
+
+import { ProjectState } from '../../state/state.interface';
+import { Observable } from 'rxjs';
+import { selectProjectTitle } from '../../state/state.selectors';
 
 @Component({
 	selector: 'app-studio-toolbar-top',
@@ -47,10 +53,16 @@ import { MenuButtonComponent } from "./menu/menu-btn.component";
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
 export class StudioToolbarTopComponent implements OnInit {
+	project$: Observable<any>;
+	title$: Observable<string | undefined>;
+	
 	constructor(
-		private projectState: ProjectState,
+		private store: Store,
 		private historyService: HistoryService,
-	) {}
+	) {
+		this.project$ = this.store.select(projectFeature.selectProjectState);
+		this.title$ = this.store.select(selectProjectTitle)
+	}
 
 	ngOnInit() {
 		this.titleInput.set(this.projectState.metadataState.title());
