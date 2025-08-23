@@ -1,10 +1,11 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
 import { ProjectState } from './project-state.service';
-import { ProjectStateGlobals } from './substates';
+import { ProjectStudio } from '@shared/types';
+import { SignalStateClass, StudioState } from './substates';
 
 @Injectable()
 export class ViewportService {
-	declare globalsState: ProjectStateGlobals;
+	declare studioState: StudioState;
 
 	BASE_PIXELS_PER_MEASURE = 100;
 
@@ -12,7 +13,7 @@ export class ViewportService {
 		private injector: Injector,
 		private projectState: ProjectState,
 	) {
-		this.globalsState = projectState.globalsState;
+		this.studioState = projectState.studioState;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +27,7 @@ export class ViewportService {
 	zoomFactor = signal(1);
 
 	measureWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor());
-	beatWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor() / this.globalsState.timeSignature().N)
+	beatWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor() / this.studioState.timeSignature().N)
 	totalWidth = computed(() => this.measureWidth() * this.lastMeasure() );
 	measurePosX = computed(() => this.windowPosX() / this.measureWidth() );
 
@@ -75,10 +76,10 @@ export class ViewportService {
 		return pos;
 	}
 	posToTime(pos: number) {
-		return pos * this.globalsState.timeSignature().N  / this.globalsState.bpm() * 60; // in seconds
+		return pos * this.studioState.timeSignature().N  / this.studioState.bpm() * 60; // in seconds
 	}
 	timeToPos(time: number) {
-		return time/60 * this.globalsState.bpm() / this.globalsState.timeSignature().N; // in measures
+		return time/60 * this.studioState.bpm() / this.studioState.timeSignature().N; // in measures
 	}
 	posToPx(pos: number) {
 		return pos * this.measureWidth();
@@ -258,7 +259,7 @@ export class ViewportService {
 			}
 		}
 		if (drawBeats) {
-			smallestUnit = 1.0 / this.globalsState.timeSignature().N;
+			smallestUnit = 1.0 / this.studioState.timeSignature().N;
 
 			for (let i = startBeat; i <= endBeat; i += 1) {
 				const x = i * beatWidth - startPos;
@@ -269,7 +270,7 @@ export class ViewportService {
 			}
 		}
 		if (drawSubdivisions) {
-			smallestUnit = (1.0 / this.globalsState.timeSignature().N) / numSubdivisions;
+			smallestUnit = (1.0 / this.studioState.timeSignature().N) / numSubdivisions;
 
 			for (let i = startSubdivision; i <= endSubdivision; i += 1) {
 				const x = i * subdivisionWidth - startPos;

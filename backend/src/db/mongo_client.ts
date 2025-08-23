@@ -2,6 +2,18 @@ import { IProjectFrontDocument, IProjectMetadataDocument, IProjectStudioDocument
 import { ProjectMetadata, ProjectFront, ProjectStudio } from "@shared/types";
 import mongoose from "mongoose";
 
+import { MONGO_STRING } from "@src/env";
+
+export async function connectMongo() {
+	try {
+		mongoose.connect(MONGO_STRING as string);
+		console.log('MongoDB connected');
+	} catch (err) {
+		console.error('MongoDB connection failed:', err);
+		process.exit(1);
+	}
+}
+
 // ===========================================================
 // FIND QUERIES
 // ===========================================================

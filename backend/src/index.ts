@@ -4,7 +4,7 @@ import express from "express";
 import cors from "cors";
 
 import routes from "./routes";
-import { connectMongo } from "./db/mongo";
+import { connectMongo } from "./db/mongo_client";
 
 import {enablePatches} from "immer"
 enablePatches()

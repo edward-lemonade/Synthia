@@ -17,7 +17,7 @@ const ProjectFrontSchema = new mongoose.Schema({ // interface ProjectMetadata
 	comments: 		[{ type: String }],
 });
 
-export interface IProjectFrontDocument extends Document, Omit<ProjectFront, 'metadata'> {
+export interface IProjectFrontDocument extends Document, ProjectFront {
 	projectId: string,
 	projectMetadataId: mongoose.Types.ObjectId, ref: 'ProjectMetadata',
 }

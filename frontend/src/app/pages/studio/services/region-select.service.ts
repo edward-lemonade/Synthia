@@ -82,7 +82,7 @@ export class RegionSelectService {
 
 	public selectAllRegions() {
 		const regions: SelectedRegion[] = [];
-		const tracks = this.tracksState.arr();
+		const tracks = this.tracksState.tracks();
 		
 		// Iterate through all tracks and their regions
 		tracks.forEach((track, trackIndex) => {
@@ -206,7 +206,7 @@ export class RegionSelectService {
 	}
 
 	private cleanupSelectedRegions() {
-		const tracks = this.tracksState.arr();
+		const tracks = this.tracksState.tracks();
 		const current = this.selectedRegions();
 		
 		const validSelections = current.filter(selection => {

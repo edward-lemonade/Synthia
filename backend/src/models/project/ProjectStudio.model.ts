@@ -1,17 +1,25 @@
 import mongoose, { Document } from "mongoose";
 import { ProjectStudio } from "@shared/types";
-import { ProjectStudioGlobalsSchema } from "./ProjectStudioGlobals.model";
-import { ProjectStudioTracksSchema } from "./ProjectStudioTracks.model";
+import { BaseFileSchema, TrackSchema } from "./Track.model";
 
 const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 	projectId: 	{ type: String, index: true },
 	projectMetadataId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectMetadata' },
 	
-	globals: ProjectStudioGlobalsSchema,
-	tracks: ProjectStudioTracksSchema,
+	masterVolume: 	{ type: Number },
+	bpm: 			{ type: Number },
+	key: 			{ type: Number }, // Key enum
+	centOffset: 	{ type: Number },
+	timeSignature: { 
+		N: { type: Number },
+		D: { type: Number },
+	},
+	
+	tracks: { type: [TrackSchema], required: true },
+	files: { type: [BaseFileSchema], required: true }
 });
 
-export interface IProjectStudioDocument extends Document, Omit<ProjectStudio, 'metadata'> {
+export interface IProjectStudioDocument extends Document, ProjectStudio {
 	projectId: string;
   	projectMetadataId: mongoose.Types.ObjectId;
 }

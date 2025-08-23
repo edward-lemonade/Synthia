@@ -34,7 +34,7 @@ export class TracklistComponent implements OnInit {
   	}
 
 	getTracks() { 
-		return this.projectState.tracksState.arr() 
+		return this.projectState.tracksState.tracks() 
 	}
 
 	onScroll() {

@@ -8,21 +8,11 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 import { ProjectState } from './project-state.service';
 
 export interface PatchEntry {
-	substate: string;
 	patches: Patch[] | null;          // forward patches (current -> next)
 	inversePatches: Patch[] | null;   // inverse patches (next -> current)
 	timestamp: number;
 	author?: Author;
 }
-function invertPatchEntry(entry: PatchEntry) {
-	return {
-		...entry,
-		patches: entry.inversePatches?.slice() ?? null,       // forward patches to send to server
-		inversePatches: entry.patches?.slice() ?? null,       // inverse to allow redo
-		timestamp: Date.now(),
-	};
-}
-
 
 @Injectable()
 export class HistoryService {
@@ -39,13 +29,11 @@ export class HistoryService {
 	constructor(private auth: AppAuthService,) {}
 	
 	recordPatch(
-		substate: string, 
 		patches: Patch[], 
 		inversePatches: Patch[],
 		allowUndoRedo: boolean,
 	) {
 		const entry: PatchEntry = {
-			substate: substate,
 			patches: patches.slice(),
 			inversePatches: (inversePatches || []).slice(),
 			timestamp: Date.now(),

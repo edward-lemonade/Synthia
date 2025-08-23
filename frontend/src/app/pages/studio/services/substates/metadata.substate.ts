@@ -4,8 +4,8 @@ import { SignalState, SignalStateClass } from "./_base.state";
 import { Injector } from "@angular/core";
 import { HistoryService } from "../history.service";
 
-export interface ProjectStateMetadata extends SignalState<ProjectMetadata> {}
-export class ProjectStateMetadata extends SignalStateClass<ProjectMetadata> {
+export interface MetadataState extends SignalState<ProjectMetadata> {}
+export class MetadataState extends SignalStateClass<ProjectMetadata> {
 	constructor(
 		injector: Injector,
 		historyService: HistoryService, 
@@ -15,7 +15,6 @@ export class ProjectStateMetadata extends SignalStateClass<ProjectMetadata> {
 			injector,
 			historyService,
 			initialData,
-			'metadata',
 			false,
 		);
 	}

@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
 import { ProjectState } from './project-state.service';
-import { ProjectStateTracks } from './substates';
+import { ProjectStateTracks, StudioState } from './substates';
 import { ViewportService } from './viewport.service';
 import { RegionSelectService } from './region-select.service';
 import { Region } from '@shared/types';
@@ -15,7 +15,7 @@ export interface DragInfo { // in beat/measure units
 
 @Injectable()
 export class RegionDragService {
-	declare tracksState: ProjectStateTracks;
+	declare studioState: StudioState;
 
 	// Drag state
 	readonly isDragReady = signal<boolean>(false);
@@ -28,7 +28,7 @@ export class RegionDragService {
 		private viewportService: ViewportService,
 		private selectService: RegionSelectService,
 	) {
-		this.tracksState = projectState.tracksState;
+		this.studioState = projectState.studioState;
 	}
 
 	public prepareDrag(startPosX: number, region: Region) { // mouse down on region, but not moving yet
@@ -70,7 +70,7 @@ export class RegionDragService {
 
 	public completeDrag() { // mouse off
 		const deltaPosX = this.getDragDelta();
-		this.tracksState.moveRegions(this.selectService.selectedRegions(), deltaPosX);
+		this.studioState.moveRegions(this.selectService.selectedRegions(), deltaPosX);
 
 		this.isDragReady.set(false);
 		this.isDragging.set(false);

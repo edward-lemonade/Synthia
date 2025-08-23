@@ -72,7 +72,7 @@ export class ViewportComponent implements AfterViewInit {
 		public dragService: RegionDragService,
 	) {}
 
-	getTracks() { return this.projectState.tracksState.arr(); }
+	getTracks() { return this.projectState.tracksState.tracks(); }
 	trackHeight = 0;
 	
 	ngAfterViewInit(): void {
