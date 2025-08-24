@@ -4,10 +4,10 @@ import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { ProjectState } from '../../../services/project-state.service';
 import { AudioHandlerService } from '../../../services/audio-handler.service';
-import { StateService } from '../../../state/state.service';
-import { TracksService } from '../../../services/tracks.service';
-import { TrackType, AudioTrackType, MidiTrackType } from '@shared/types';
+import { DEFAULT_REGION, Region, DEFAULT_TRACK, Track } from '@shared/types';
+import { ProjectStateTracks } from '../../../services/substates';
 
 @Component({
 	selector: 'studio-editor-tracklist-header',
@@ -24,13 +24,13 @@ import { TrackType, AudioTrackType, MidiTrackType } from '@shared/types';
 				<button class="add-track-menu-btn" (click)="onAddAudioTrack()">
 					<p>Audio File</p>
 				</button>
-				<button class="add-track-menu-btn" (click)="onAddTrack(AudioTrackType.Audio)">
+				<button class="add-track-menu-btn" (click)="onAddTrack('microphone')">
 					<p>Microphone</p>
 				</button>
-				<button class="add-track-menu-btn" (click)="onAddTrack(MidiTrackType.Drums)">
+				<button class="add-track-menu-btn" (click)="onAddTrack('drums')">
 					<p>Drums</p>
 				</button>
-				<button class="add-track-menu-btn" (click)="onAddTrack(MidiTrackType.Instrument)">
+				<button class="add-track-menu-btn" (click)="onAddTrack('instrument')">
 					<p>Instrument</p>
 				</button>
 			</div>
@@ -48,19 +48,17 @@ import { TrackType, AudioTrackType, MidiTrackType } from '@shared/types';
 export class TracklistHeaderComponent {
 	@ViewChild('audioFileInput', { static: true }) audioFileInput!: ElementRef<HTMLInputElement>;
 
-	AudioTrackType = AudioTrackType;
-	MidiTrackType = MidiTrackType;
-
-	get tracks() { return this.stateService.state.studio.tracks }
+	declare tracksState: ProjectStateTracks;
 
 	constructor(
-		public stateService: StateService,
-		public tracksService: TracksService,
+		public projectState: ProjectState,
 		private audioHandler: AudioHandlerService
-	) {}
+	) {
+		this.tracksState = projectState.tracksState;
+	}
 
-	onAddTrack(type: TrackType) {
-		this.tracksService.addTrack(type);
+	onAddTrack(type: string) {
+		this.projectState.tracksState.addTrackEmpty(type);
 	}
 
 	onAddAudioTrack() {
@@ -77,21 +75,22 @@ export class TracklistHeaderComponent {
 			try {
 				// Add the audio file to the audio handler
 				const audioFile = await this.audioHandler.addAudioFile(file);
-				const trackIndex = this.tracksService.numTracks();
 
-				const trackProps = {
-					name: audioFile.name.replace(/\.[^/.]+$/, ""),
-					files: [audioFile.id],
-				}
-				this.tracksService.addTrack(AudioTrackType.Audio, trackProps);
+				let track: Track = DEFAULT_TRACK;
+
+				track.index = this.tracksState.numTracks();
+				track.name = audioFile.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+				track.color = this.tracksState.COLORS[track.index % this.tracksState.COLORS.length];
+				track.isMidi = false;
+				track.files.push(audioFile.id);
 				
-				const regionProps = {
-					duration: audioFile.duration,
-					data: [JSON.stringify({ audioFileId: audioFile.id })],
-					fileIndex: 0, // fileIndex is wrong, filler code
-				}
-
-				this.tracksService.addAudioRegion(trackIndex, regionProps);
+				let region: Region = DEFAULT_REGION;
+				
+				region.duration = audioFile.duration;
+				region.data = [JSON.stringify({ audioFileId: audioFile.id })];
+				region.fileIndex = 0;
+				
+				this.projectState.tracksState.addTrack(track);
 				console.log(`Audio track created with file: ${audioFile.name}`);
 				
 			} catch (error) {

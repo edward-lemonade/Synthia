@@ -4,7 +4,8 @@ import type { Patch } from 'immer';
 import { Author } from '@shared/types';
 
 import { AppAuthService } from '@src/app/services/app-auth.service';
-import { StateService } from '../state/state.service';
+
+import { ProjectState } from './project-state.service';
 
 export interface PatchEntry {
 	patches: Patch[] | null;          // forward patches (current -> next)
@@ -15,8 +16,8 @@ export interface PatchEntry {
 
 @Injectable()
 export class HistoryService {
-	private stateService: StateService | null = null;
-	registerProjectState(p: StateService) {this.stateService! = p;}
+	private projectState: ProjectState | null = null;
+	registerProjectState(p: ProjectState) {this.projectState! = p;}
 	  
 	private undoStack: PatchEntry[] = [];
 	private redoStack: PatchEntry[] = [];
@@ -30,7 +31,7 @@ export class HistoryService {
 	recordPatch(
 		patches: Patch[], 
 		inversePatches: Patch[],
-		allowUndoRedo: boolean = true,
+		allowUndoRedo: boolean,
 	) {
 		const entry: PatchEntry = {
 			patches: patches.slice(),
@@ -54,7 +55,7 @@ export class HistoryService {
 	
 		const entry = this.undoStack.pop()!;
 
-		this.stateService!.applyPatchEntry(entry, true);
+		this.projectState!.applyPatchEntry(entry, true);
 		
 		this.redoStack.push(entry);
 		this.pendingEntries.push(entry);
@@ -68,7 +69,7 @@ export class HistoryService {
 	
 		const entry = this.redoStack.pop()!;
 	
-		this.stateService!.applyPatchEntry(entry, false);
+		this.projectState!.applyPatchEntry(entry, false);
 
 		this.undoStack.push(entry);
 		this.pendingEntries.push(entry);

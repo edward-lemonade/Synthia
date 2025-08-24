@@ -1,31 +1,23 @@
-import { TimeSignature } from '../studio/TimeSignature';
-import { Key } from '../studio/Key';
+import { Key, TimeSignature } from '../studio';
+import { ProjectMetadata } from './ProjectMetadata';
 
-export enum RegionType { Audio="audio", Midi="midi" }
-export enum AudioTrackType { Audio="audio", Microphone="midi" }
-export enum MidiTrackType { Instrument="instrument", Drums="drums" }
-export type TrackType = AudioTrackType | MidiTrackType
-
-export function isTrackAudio(value: any): value is AudioTrackType { return Object.values(AudioTrackType).includes(value as AudioTrackType); }
-export function isTrackMidi(value: any): value is MidiTrackType { return Object.values(MidiTrackType).includes(value as MidiTrackType); }
-export function regionTypeFromTrack(value: any): RegionType { return isTrackAudio(value) ? RegionType.Audio : RegionType.Midi }
-
-// ==============================================================
-// Audio file
+///////////////////////////////////////////////////////////////////
+// AUDIO FILE
+///////////////////////////////////////////////////////////////////
 
 export interface BaseFile {
 	fileId: string;
 	originalName: string;
 
 	format: 'wav' | 'mp3' | 'flac' | 'aiff' | 'midi' | 'mid';
-	type: RegionType;
+	type: "audio" | "midi";
 
 	fileData?: Buffer;
 }
 
 export interface AudioFile extends BaseFile {
 	format: 'wav' | 'mp3' | 'flac' | 'aiff';
-	type: RegionType.Audio;
+	type: 'audio';
 
 	duration: number;
 	sampleRate: number;
@@ -60,13 +52,14 @@ export interface AudioFile extends BaseFile {
 
 export interface MidiFile extends BaseFile {
 	format: 'mid' | 'midi';
-	type: RegionType.Midi;
+	type: 'midi';
 	
 	midiJson?: {};
 }
 
-// ==============================================================
+///////////////////////////////////////////////////////////////////
 // Region
+///////////////////////////////////////////////////////////////////
 
 export interface Region {
 	trackIndex: number;
@@ -74,11 +67,11 @@ export interface Region {
 	start: number; // in beats
 	duration: number;
 
-	type: RegionType;
+	type: "audio" | "midi"
 }
 
 export interface AudioRegion extends Region {
-	type: RegionType.Audio;
+	type: "audio";
 	
 	// Audio slice info
 	audioStartOffset: number;
@@ -93,13 +86,14 @@ export interface AudioRegion extends Region {
 }
 
 export interface MidiRegion extends Region {
-	type: RegionType.Midi
+	type: "midi";
 	
 	midiData: []
 }
 
-// ==============================================================
+///////////////////////////////////////////////////////////////////
 // Track
+///////////////////////////////////////////////////////////////////
 
 export class Track {
 	// metadata
@@ -107,8 +101,8 @@ export class Track {
 	name: string = "Track";
 	color: string = "#FFFFFF";
 
-	trackType: TrackType = AudioTrackType.Audio;
-	regionType: RegionType = RegionType.Audio;
+	trackType: "audio" | "microphone" | "instrument" | "drums" = "audio";
+	regionType: "audio" | "midi" = "audio";
 	instrument?: string;
 
 	// master settings
@@ -121,11 +115,12 @@ export class Track {
 	effects: string[] = [];
 
 	// data
-	regions: Region[] = [];
+	regions: (AudioRegion | MidiRegion)[] = [];
 }
 
-// ==============================================================
+///////////////////////////////////////////////////////////////////
 // ProjectStudio
+///////////////////////////////////////////////////////////////////
 
 export interface ProjectStudio {
 	bpm : number;

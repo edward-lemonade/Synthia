@@ -2,8 +2,8 @@ import { Component } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { ProjectState } from '../../../services/project-state.service';
 import { Router } from '@angular/router';
-import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-toolbar-top-menu-btn',
@@ -34,12 +34,12 @@ import { StateService } from '../../../state/state.service';
 })
 export class MenuButtonComponent {
 	constructor(
-		public stateService: StateService,
+		public projectState: ProjectState,
 		private router: Router,
 	) {}
 
 	save() {
-		this.stateService.saveState();
+		this.projectState.saveState();
 	}
 
 	exit() {
@@ -47,7 +47,7 @@ export class MenuButtonComponent {
 	}
 
 	async saveExit() {
-		const res = await this.stateService.saveState();
+		const res = await this.projectState.saveState();
 		if (res) {
 			this.exit();
 		}

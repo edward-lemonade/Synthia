@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Region, Track } from '@shared/types';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
-import { Stateify } from '@src/app/pages/studio/state/state.factory';
 
 
 @Component({
@@ -14,16 +13,16 @@ import { Stateify } from '@src/app/pages/studio/state/state.factory';
 	template: `
 		<div 
 			class="region-ghost"
-			[style.left.px]="viewportService.posToPx(region.start() + dragService.dragInfo()!.deltaPosX)"
-			[style.width.px]="viewportService.posToPx(region.duration())"
+			[style.left.px]="viewportService.posToPx(region.start + dragService.dragInfo()!.deltaPosX)"
+			[style.width.px]="viewportService.posToPx(region.duration)"
 			[style.background-color]="getRegionGhostColor()">
 		</div>
 	`,
 	styleUrl: './ghost.component.scss'
 })
 export class DragGhostComponent {
-	@Input() track!: Stateify<Track>;
-	@Input() region!: Stateify<Region>;
+	@Input() track!: Track;
+	@Input() region!: Region;
 
 	constructor (
 		public viewportService: ViewportService,
@@ -31,7 +30,7 @@ export class DragGhostComponent {
 	) {}
 
 	public getRegionGhostColor(): string {
-		const baseColor = this.track.color() || '#007bff';
+		const baseColor = this.track.color || '#007bff';
 		
 		if (baseColor.startsWith('#')) {
 			const r = parseInt(baseColor.slice(1, 3), 16);

@@ -1,7 +1,12 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
-import { RegionPath, TracksService } from './tracks.service';
-import { StateService } from '../state/state.service';
-import { Region } from 'wavesurfer.js/src/plugin/regions';
+import { ProjectState } from './project-state.service';
+import { ProjectStateTracks } from './substates';
+import { ViewportService } from './viewport.service';
+
+export interface SelectedRegion {
+	trackIndex: number;
+	regionIndex: number;
+}
 
 export interface BoxSelectBounds {
 	startX: number;
@@ -12,10 +17,12 @@ export interface BoxSelectBounds {
 
 @Injectable()
 export class RegionSelectService {
+	declare tracksState: ProjectStateTracks;
+
 	readonly selectedTrack = signal<number | null>(null);
 	public setSelectedTrack(index: number|null) { this.selectedTrack.set(index); }
 
-	readonly selectedRegions = signal<RegionPath[]>([]);
+	readonly selectedRegions = signal<SelectedRegion[]>([]);
   	readonly hasSelectedRegions = computed(() => this.selectedRegions().length > 0);
   	readonly selectedRegionsCount = computed(() => this.selectedRegions().length);
 
@@ -30,14 +37,15 @@ export class RegionSelectService {
 
 	constructor(
 		private injector: Injector,
-		private studioState: StateService,
-		private tracksService: TracksService
+		private projectState: ProjectState,
+		private viewportService: ViewportService,
 	) {
+		this.tracksState = projectState.tracksState;
+
 		runInInjectionContext(injector, () => {
 			effect(() => {
-				const numTracks = this.tracksService.numTracks();
+				const numTracks = this.tracksState.numTracks();
 
-				
 				if (numTracks == 0) {
 					this.selectedTrack.set(null);
 				} else if (this.selectedTrack() !== null && this.selectedTrack()! >= numTracks) {
@@ -49,8 +57,9 @@ export class RegionSelectService {
 		})
 	}
 
-	// ========================================================
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	// REGION SELECTION
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public setSelectedRegion(trackIndex: number, regionIndex: number | null) {
 		if (regionIndex === null) {
@@ -58,12 +67,12 @@ export class RegionSelectService {
 			return;
 		}
 
-		const newSelection: RegionPath = { trackIndex, regionIndex };
+		const newSelection: SelectedRegion = { trackIndex, regionIndex };
 		this.selectedRegions.set([newSelection]);
 		this.selectedTrack.set(trackIndex);
 	}
 
-	public setSelectedRegions(regions: RegionPath[]) {
+	public setSelectedRegions(regions: SelectedRegion[]) {
 		this.selectedRegions.set([...regions]);
 
 		if (regions.length > 0) {
@@ -72,12 +81,12 @@ export class RegionSelectService {
 	}
 
 	public selectAllRegions() {
-		const regions: RegionPath[] = [];
-		const tracks = this.tracksService.tracks();
+		const regions: SelectedRegion[] = [];
+		const tracks = this.tracksState.tracks();
 		
 		// Iterate through all tracks and their regions
 		tracks.forEach((track, trackIndex) => {
-			track.regions().forEach((region, regionIndex) => {
+			track.regions.forEach((region, regionIndex) => {
 				regions.push({ trackIndex, regionIndex });
 			});
 		});
@@ -89,47 +98,52 @@ export class RegionSelectService {
 		}
 	}
 
-	public addSelectedRegion(regionPath: RegionPath) {
-		const alreadySelected = this.isRegionSelected(regionPath);
+
+	public addSelectedRegion(trackIndex: number, regionIndex: number) {
+		const newRegion: SelectedRegion = { trackIndex, regionIndex };
+		const current = this.selectedRegions();
+		
+		const alreadySelected = current.some(r => 
+			r.trackIndex === trackIndex && r.regionIndex === regionIndex
+		);
 		
 		if (!alreadySelected) {
-			const current = this.selectedRegions();
-			const updated = [...current, regionPath];
+			const updated = [...current, newRegion];
 			this.selectedRegions.set(updated);
 
 			if (current.length === 0) {
-				this.selectedTrack.set(regionPath.trackIndex);
+				this.selectedTrack.set(trackIndex);
 			}
 		}
 	}
 
-	public removeSelectedRegion(regionPath: RegionPath) {
+	public removeSelectedRegion(trackIndex: number, regionIndex: number) {
 		const current = this.selectedRegions();
 		const filtered = current.filter(r => 
-			!(r.trackIndex === regionPath.trackIndex && r.regionIndex === regionPath.regionIndex)
+			!(r.trackIndex === trackIndex && r.regionIndex === regionIndex)
 		);
 		this.selectedRegions.set(filtered);
 
 		// Update selected track if needed
 		if (filtered.length === 0) {
 			this.selectedTrack.set(null);
-		} else if (current.length > 0 && current[0].trackIndex === regionPath.trackIndex) {
+		} else if (current.length > 0 && current[0].trackIndex === trackIndex) {
 			this.selectedTrack.set(filtered[0].trackIndex);
 		}
 	}
 
-	public toggleSelectedRegion(regionPath: RegionPath) {
-		const isSelected = this.isRegionSelected(regionPath);
+	public toggleSelectedRegion(trackIndex: number, regionIndex: number) {
+		const isSelected = this.isRegionSelected(trackIndex, regionIndex);
 		if (isSelected) {
-			this.removeSelectedRegion(regionPath);
+			this.removeSelectedRegion(trackIndex, regionIndex);
 		} else {
-			this.addSelectedRegion(regionPath);
+			this.addSelectedRegion(trackIndex, regionIndex);
 		}
 	}
 
-	public isRegionSelected(regionPath: RegionPath): boolean {
+	public isRegionSelected(trackIndex: number, regionIndex: number): boolean {
 		return this.selectedRegions().some(r => 
-			r.trackIndex === regionPath.trackIndex && r.regionIndex === regionPath.regionIndex
+			r.trackIndex === trackIndex && r.regionIndex === regionIndex
 		);
 	}
 
@@ -138,8 +152,9 @@ export class RegionSelectService {
 		this.selectedTrack.set(null);
 	}
 
-  	// ========================================================
+  	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	// BOX SELECTION SYSTEM
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public startBoxSelect(startX: number, startY: number) {
 		this.isBoxSelecting.set(true);
@@ -162,7 +177,7 @@ export class RegionSelectService {
 		}
 	}
 
-  	public completeBoxSelect(getRegionsInBounds: (bounds: BoxSelectBounds) => RegionPath[]) {
+  	public completeBoxSelect(getRegionsInBounds: (bounds: BoxSelectBounds) => SelectedRegion[]) {
 		const bounds = this.boxSelectBounds();
 		if (bounds) {
 			const regionsInBounds = getRegionsInBounds(bounds);
@@ -191,12 +206,12 @@ export class RegionSelectService {
 	}
 
 	private cleanupSelectedRegions() {
-		const tracks = this.tracksService.tracks();
+		const tracks = this.tracksState.tracks();
 		const current = this.selectedRegions();
 		
 		const validSelections = current.filter(selection => {
 			const track = tracks[selection.trackIndex];
-			return track && selection.regionIndex < track.regions().length;
+			return track && selection.regionIndex < track.regions.length;
 		});
 
 		if (validSelections.length !== current.length) {
@@ -210,8 +225,9 @@ export class RegionSelectService {
 		}
 	}
 
-	// ========================================================
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	// UTILITY
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	getSelectedRegionsForTrack(trackIndex: number): number[] {
 		return this.selectedRegions()

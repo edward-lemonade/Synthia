@@ -1,10 +1,5 @@
-import { Region, Track, BaseFile } from '@shared/types';
-import { Schema } from 'mongoose';
-
-export enum RegionType { Audio="audio", Midi="midi" }
-export enum AudioTrackType { Audio="audio", Microphone="midi" }
-export enum MidiTrackType { Instrument="instrument", Drums="drums" }
-export type TrackType = AudioTrackType | MidiTrackType
+import { Region, AudioRegion, MidiRegion, Track, BaseFile, ProjectStudio } from '@shared/types';
+import { Schema, model, Document } from 'mongoose';
 
 
 export const BaseFileSchema = new Schema<BaseFile>({
@@ -17,7 +12,7 @@ export const BaseFileSchema = new Schema<BaseFile>({
 	},
 	type: { 
 		type: String, 
-		enum: ["audio", "midi"], 
+		enum: ['audio', 'midi'], 
 		required: true 
 	},
 }, { _id: false });
@@ -29,7 +24,7 @@ const BaseRegionSchema = new Schema<Region>({
 	duration: { type: Number, required: true },
 	type: { 
 		type: String, 
-		enum: Object.values(RegionType), 
+		enum: ['audio', 'midi'], 
 		required: true 
 	}
 }, { 
@@ -57,15 +52,15 @@ export const TrackSchema = new Schema<Track>({
 	color: { type: String, required: true, default: "#FFFFFF" },
 	trackType: { 
 		type: String, 
-		enum: [...Object.values(AudioTrackType), ...Object.values(MidiTrackType)], 
+		enum: ['audio', 'microphone', 'instrument', 'drums'], 
 		required: true,
-		default: AudioTrackType.Audio
+		default: 'audio'
 	},
 	regionType: { 
 		type: String, 
-		enum: Object.values(RegionType), 
+		enum: ['audio', 'midi'], 
 		required: true,
-		default: RegionType.Audio
+		default: 'audio'
 	},
 	instrument: { type: String, required: false },
 	volume: { type: Number, required: true, default: 100 },

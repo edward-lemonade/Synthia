@@ -1,17 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, EventEmitter, Input, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Region, RegionType, Track } from '@shared/types';
+import { Region, Track } from '@shared/types';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 
+import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
 import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
+import { MidiEditorService } from '@src/app/pages/studio/services/midi-editor.service';
 import { DragGhostComponent } from './ghosts/drag-ghost.component';
 import { ResizeGhostComponent } from "./ghosts/resize-ghost.component";
-import { RegionPath, TracksService } from '@src/app/pages/studio/services/tracks.service';
-import { StateService } from '@src/app/pages/studio/state/state.service';
-import { Stateify } from '@src/app/pages/studio/state/state.factory';
 
 type ResizeHandle = 'left' | 'right' | null;
 
@@ -60,7 +59,7 @@ type ResizeHandle = 'left' | 'right' | null;
 		<!-- Context Menu -->
 		<mat-menu #regionMenu="matMenu" [class]="'region-menu'">
 			<div class="region-menu-content">
-				<button class="region-menu-btn" mat-menu-item (click)="openMidiEditor()" *ngIf="isMidi()">
+				<button class="region-menu-btn" mat-menu-item (click)="openMidiEditor()" *ngIf="region.isMidi">
 					<mat-icon>piano</mat-icon>
 					Open MIDI Editor
 				</button>
@@ -78,37 +77,25 @@ type ResizeHandle = 'left' | 'right' | null;
 	styleUrl: './region.component.scss'
 })
 
-export class RegionComponent implements OnInit {
-	@Input() track!: Stateify<Track>;
-	@Input() region!: Stateify<Region>;
+export class RegionComponent {
+	@Input() track!: Track;
 	@Input() trackIndex!: number;
+	@Input() region!: Region;
 	@Input() regionIndex!: number;
 	@ViewChild("region", {static: true}) regionRef!: ElementRef<HTMLDivElement>;
 
-	declare regionPath: RegionPath;
-
 	constructor (
-		public stateService: StateService,
-		public tracksService: TracksService,
-		public selectionService: RegionSelectService,
-		public dragService: RegionDragService,
+		public projectState : ProjectState,
+		public selectionService : RegionSelectService,
+		public dragService : RegionDragService,
 		public viewportService: ViewportService,
+		public midiService: MidiEditorService,
 	) {}
 
-	ngOnInit(): void {
-		this.regionPath = {
-			trackIndex: this.trackIndex,
-			regionIndex: this.regionIndex
-		};
-	}
+	width = computed(() => `${this.region.duration * this.viewportService.measureWidth()}px`);
+	startPos = computed(() => `${this.region.start * this.viewportService.measureWidth()}px`);
 
-	get tracks() { return this.stateService.state.studio.tracks };
-
-	isMidi = computed(() => this.region.type() == RegionType.Midi);
-	width = computed(() => `${this.region.duration() * this.viewportService.measureWidth()}px`);
-	startPos = computed(() => `${this.region.start() * this.viewportService.measureWidth()}px`);
-
-	color = computed(() => this.track.color());
+	color = computed(() => this.track.color);
 	colorRegionBg = computed(() => {
 		const hex = this.color();
 		const hsl = hexToHsl(hex);
@@ -129,7 +116,7 @@ export class RegionComponent implements OnInit {
 	});
 
 	isSelected = computed(() => {
-		const selected = this.selectionService.isRegionSelected(this.regionPath);
+		const selected = this.selectionService.isRegionSelected(this.trackIndex, this.regionIndex);
 		return selected;
 	});
 
@@ -139,9 +126,9 @@ export class RegionComponent implements OnInit {
 
 		if (!this.dragService.isDragging()) {
 			if (event.ctrlKey || event.metaKey) {
-				this.selectionService.toggleSelectedRegion(this.regionPath);
+				this.selectionService.toggleSelectedRegion(this.trackIndex, this.regionIndex);
 			} else {
-				this.selectionService.setSelectedRegion(this.regionPath.trackIndex, this.regionPath.regionIndex);
+				this.selectionService.setSelectedRegion(this.trackIndex, this.regionIndex);
 			}
 		}
 	}
@@ -173,12 +160,12 @@ export class RegionComponent implements OnInit {
 
 		if (this.canResize() && this.resizeHandle()) {
 			this.startResize(event, this.resizeHandle()!);
-		} else if (this.selectionService.isRegionSelected(this.regionPath)) {
+		} else if (this.selectionService.isRegionSelected(this.trackIndex, this.regionIndex)) {
 			const target = event.currentTarget as HTMLElement;
 			const rect = target.closest("viewport-track")!.getBoundingClientRect();
 			const mousePosX = this.viewportService.pxToPos(event.clientX - rect.left, false);
 
-			this.dragService.prepareDrag(mousePosX, this.stateService.snapshot(this.region));
+			this.dragService.prepareDrag(mousePosX, this.region);
 		} else {
 			event.stopPropagation();
 		}
@@ -217,12 +204,12 @@ export class RegionComponent implements OnInit {
 		this.resizeStartPx.set(event.clientX);
 		
 		// Store original region state
-		this.originalRegion! = { ...this.stateService.snapshot(this.region) };
+		this.originalRegion = { ...this.region };
 		
 		// Initialize ghost with current region
 		this.ghostRegion.set({
-			start: this.region.start(),
-			duration: this.region.duration()
+			start: this.region.start,
+			duration: this.region.duration
 		});
 		
 		// Add global mouse listeners
@@ -280,10 +267,11 @@ export class RegionComponent implements OnInit {
 	};
 
 	private updateRegionSize(newStart: number, newDuration: number) {
-		const trackIndex = this.regionPath.trackIndex;
-		const regionIndex = this.regionPath.regionIndex;
-		this.tracks()[trackIndex].regions()[regionIndex].start.set(newStart);
-		this.tracks()[trackIndex].regions()[regionIndex].duration.set(newDuration);
+		this.projectState.tracksState.setRegion(this.trackIndex, this.regionIndex, {
+			...this.region,
+			start: newStart,
+			duration: newDuration
+		});
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,18 +284,25 @@ export class RegionComponent implements OnInit {
 	}
 
 	openMidiEditor() {
-		if (this.isMidi()) {
-			//this.midiService.openEditor(this.trackIndex, this.regionIndex);
+		if (this.region.isMidi) {
+			this.midiService.openEditor(this.trackIndex, this.regionIndex);
 		}
 	}
 
 	duplicateRegion() {
 		const duplicatedRegion = { ...this.region };
-		this.tracksService.duplicateRegion(this.regionPath);
+		this.projectState.tracksState.addRegion(
+			this.trackIndex,
+			this.region.isMidi,
+			this.region.start + this.region.duration,
+			this.region.duration,
+			this.region.data,
+			this.region.fileIndex
+		);
 	}
 
 	deleteRegion() {
-		this.tracksService.deleteRegion(this.regionPath);
+		this.projectState.tracksState.deleteRegion(this.trackIndex, this.regionIndex);
 	}
 }
 

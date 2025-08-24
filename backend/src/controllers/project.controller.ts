@@ -6,7 +6,7 @@ import { deleteMetadataByProjectId, deleteStudioByProjectId, findMetadataByProje
 import { putFiles } from "@src/db/s3_client";
 
 
-import { ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
+import { ProjectMetadata, ProjectStudio } from "@shared/types";
 import { ProjectMetadataTransformer, ProjectStudioTransformer } from "@src/transformers/project.transformer";
 import { IProjectMetadataDocument, ProjectMetadataModel, ProjectStudioModel } from "@src/models";
 
@@ -35,15 +35,15 @@ export async function saveExisting(req: Request, res: Response) {
 		studioDoc.save(),
 	]);
 	if (!savedMetadataDoc) { console.error("Failed to save project metadata."); res.json({ success: false }); return }
-	if (!savedStudioDoc) { console.error("Failed to save project studio."); res.json({ success: false }); return }
+	if (!savedStudioDoc) { console.error("Failed to save project metadata."); res.json({ success: false }); return }
 
 	res.json({ success: true });
 }
 
 export async function saveOverwrite(req: Request, res: Response) {
-	const state = req.body.state as ProjectState;
+	const state = req.body.state;
 
-	putFiles(state.metadata.projectId, state.studio.files);
+	putFiles(state.metadata.projectId, state.studio.tracks.files);
 
 	const [metadataDoc, studioDoc] = await Promise.all([
 		findMetadataByProjectId(state.metadata.projectId),
@@ -86,9 +86,9 @@ export async function saveOverwrite(req: Request, res: Response) {
 }
 
 export async function saveNew(req: Request, res: Response) {
-	const state = req.body.state as ProjectState;
+	const state = req.body.state;
 
-	putFiles(state.metadata.projectId, state.studio.files);
+	putFiles(state.metadata.projectId, state.tracks.files);
 
 	const metadataSchema = ProjectMetadataTransformer.toDoc(state.metadata);
 	const metadataDoc = new ProjectMetadataModel(metadataSchema)
@@ -122,7 +122,7 @@ export async function load(req: Request, res: Response) {
 	if (!metadataDoc || !studioDoc) { console.error("Failed to load project metadata."); res.json({ success: false }); return }
 
 	const state = ProjectStudioTransformer.toState(metadataDoc, studioDoc);
-	const stateWithFiles = await ProjectStudioTransformer.toFrontend(projectId, state);
+	const stateWithFiles = ProjectStudioTransformer.toFrontend(state.metadata, state.studio);
 
 	res.json({ state: stateWithFiles })
 }

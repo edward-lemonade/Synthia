@@ -6,6 +6,7 @@ import { Track } from '@shared/types';
 import { MatIconModule } from '@angular/material/icon';
 
 import { FormsModule } from '@angular/forms';
+import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
@@ -13,8 +14,6 @@ import { RotaryKnobComponent } from '@src/app/components/rotary-knob/rotary-knob
 import { MatDivider } from "@angular/material/divider";
 import { MatMenuModule } from '@angular/material/menu';
 import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
-import { StateService } from '@src/app/pages/studio/state/state.service';
-import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 
 @Component({
 	selector: 'tracklist-track',
@@ -120,58 +119,55 @@ export class TrackComponent implements OnInit {
 	DEFAULT_ICON = `assets/icons/microphone.svg`;
 	iconPath = this.DEFAULT_ICON;
 
-	get tracks() { return this.stateService.state.studio.tracks }
-
 	constructor (
-		public stateService : StateService,
-		public tracksService : TracksService,
+		public projectState : ProjectState,
 		public viewportService : ViewportService,
-		public regionSelectService : RegionSelectService,
+		public trackSelectService : RegionSelectService,
 	) {}
 
 	ngOnInit() {
-		this.iconPath = `assets/icons/${this.track.trackType}.svg`;
+		this.iconPath = `assets/icons/${this.track.type}.svg`;
 		this.trackNameInput.set(this.track.name);
 		this.volumeInput.set(this.track.volume);
 		this.panInput.set(this.track.pan);
 	}
 
 	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.regionSelectService.selectedTrackBgColor(this.track.color));
-	isSelected = computed(() => this.regionSelectService.selectedTrack() == this.index);
-	select() { this.regionSelectService.setSelectedTrack(this.index); }
+	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color));
+	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
+	select() { this.trackSelectService.setSelectedTrack(this.index); }
 
 	trackNameInput = signal('');
 	updateTrackName() {
-		this.tracks()[this.index].name.set(this.trackNameInput());
+		this.projectState.tracksState.modifyTrack(this.index, "name", this.trackNameInput());
 	}
 
 	volumeInput = signal(100);
 	updateVolume() {
-		this.tracks()[this.index].volume.set(this.volumeInput());
+		this.projectState.tracksState.modifyTrack(this.index, "volume", this.volumeInput());
 	}
 
 	panInput = signal(0);
 	updatePan() {
-		this.tracks()[this.index].pan.set(this.panInput());
+		this.projectState.tracksState.modifyTrack(this.index, "pan", this.panInput());
 	}
 
-	mute = computed(() => this.tracks()[this.index].mute());
-	toggleMute() { this.tracks()[this.index].mute.update(m => !m) }
-	solo = computed(() => this.tracks()[this.index].solo());
-	toggleSolo() { this.tracks()[this.index].solo.update(s => !s) }
+	mute = computed(() => this.track.mute);
+	toggleMute() { this.projectState.tracksState.modifyTrack(this.index, "mute", !this.mute()); console.log(this.mute()) }
+	solo = computed(() => this.track.solo);
+	toggleSolo() { this.projectState.tracksState.modifyTrack(this.index, "solo", !this.solo()); console.log(this.solo()) }
 
 	menuMoveUp() {
-		this.tracksService.moveTrack(this.index, Math.max(0, this.index-1))
+		this.projectState.tracksState.moveTrack(this.index, Math.max(0, this.index-1))
 	}
 	menuMoveDown() {
-		this.tracksService.moveTrack(this.index, Math.min(this.tracksService.numTracks()-1, this.index+1))
+		this.projectState.tracksState.moveTrack(this.index, Math.min(this.projectState.tracksState.numTracks()-1, this.index+1))
 	}
 	menuDuplicate() {
-		this.tracksService.duplicateTrack(this.index);
+		this.projectState.tracksState.duplicateTrack(this.index);
 	}
 	menuDelete() {
-		this.tracksService.deleteTrack(this.index);
+		this.projectState.tracksState.deleteTrack(this.index);
 	}
 
 	openEditor() {

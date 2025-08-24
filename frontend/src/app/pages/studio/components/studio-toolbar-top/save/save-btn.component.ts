@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
-import { StateService } from '../../../state/state.service';
+
+import { ProjectState } from '../../../services/project-state.service';
 
 @Component({
 	selector: 'studio-toolbar-top-save-btn',
@@ -16,9 +17,9 @@ import { StateService } from '../../../state/state.service';
 	styleUrl: '../studio-toolbar-top.component.scss'
 })
 export class SaveButtonComponent {
-	constructor(public stateService: StateService) {}
+	constructor(public projectState: ProjectState) {}
 
 	onClick() {
-		this.stateService.saveState();
+		this.projectState.saveState();
 	}
 }
