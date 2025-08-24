@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Region, Track } from '@shared/types';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
+import { Stateify } from '@src/app/pages/studio/state/state.factory';
 
 @Component({
 	selector: 'resize-ghost',
@@ -21,7 +22,7 @@ import { RegionDragService } from '@src/app/pages/studio/services/region-drag.se
 })
 
 export class ResizeGhostComponent {
-	@Input() track!: Track;
+	@Input() track!: Stateify<Track>;
 	@Input() ghost!: { start: number; duration: number } | null
 
 	constructor (
@@ -30,7 +31,7 @@ export class ResizeGhostComponent {
 	) {}
 
 	getRegionGhostColor(): string {
-		const baseColor = this.track.color || '#007bff';
+		const baseColor = this.track.color() || '#007bff';
 		
 		if (baseColor.startsWith('#')) {
 			const r = parseInt(baseColor.slice(1, 3), 16);

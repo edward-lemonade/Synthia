@@ -3,8 +3,6 @@ import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
 
 @Component({
 	selector: 'studio-editor-viewport-header',

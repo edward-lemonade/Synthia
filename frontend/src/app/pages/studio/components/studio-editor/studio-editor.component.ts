@@ -1,11 +1,9 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Injector, ViewChild, effect, runInInjectionContext } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatToolbar } from "@angular/material/toolbar";
 import { TracklistHeaderComponent } from "./tracklist-header/tracklist-header.component";
 import { ViewportHeaderComponent } from "./viewport-header/viewport-header.component";
 import { TracklistComponent } from "./tracklist/tracklist.component";
 import { ViewportComponent } from "./viewport/viewport.component";
-import { ProjectState } from '../../services/project-state.service';
-import { ViewportService } from '../../services/viewport.service';
 
 @Component({
 	selector: 'app-studio-editor',

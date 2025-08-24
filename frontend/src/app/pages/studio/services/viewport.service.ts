@@ -1,20 +1,16 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
-import { ProjectState } from './project-state.service';
-import { ProjectStudio } from '@shared/types';
-import { SignalStateClass, StudioState } from './substates';
+import { StateService } from '../state/state.service';
 
 @Injectable()
 export class ViewportService {
-	declare studioState: StudioState;
-
 	BASE_PIXELS_PER_MEASURE = 100;
+
+	get studioState() { return this.stateService.state.studio; }
 
 	constructor(
 		private injector: Injector,
-		private projectState: ProjectState,
-	) {
-		this.studioState = projectState.studioState;
-	}
+		private stateService: StateService,
+	) {}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	// FIELDS

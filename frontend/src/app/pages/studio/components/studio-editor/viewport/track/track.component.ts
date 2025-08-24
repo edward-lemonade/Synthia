@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
-import { Track } from '@shared/types';
+import { RegionType, Track } from '@shared/types';
 
-import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
 import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { RegionComponent } from "./region/region.component";
 
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { ProjectStateTracks } from '@src/app/pages/studio/services/substates';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
+import { TracksService } from '@src/app/pages/studio/services/tracks.service';
+import { Stateify } from '@src/app/pages/studio/state/state.factory';
 
 @Component({
 	selector: 'viewport-track',
@@ -25,7 +25,7 @@ import { RegionDragService } from '@src/app/pages/studio/services/region-drag.se
 			[matContextMenuTriggerFor]="menu">
 
 			<viewport-track-region 
-				*ngFor="let region of getRegions(); let i = index"
+				*ngFor="let region of track.regions(); let i = index"
 				
 				[track]="track"
 				[region]="region"
@@ -50,24 +50,24 @@ import { RegionDragService } from '@src/app/pages/studio/services/region-drag.se
 	styleUrl: './track.component.scss'
 })
 
-export class TrackComponent {
-	@Input() track!: Track;
+export class TrackComponent implements OnInit {
+	@Input() track!: Stateify<Track>;
 	@Input() index!: number;
 	@ViewChild('trackMenuTrigger', { static: true }) trackMenuTrigger!: MatMenuTrigger;
 
-	declare tracksState : ProjectStateTracks
-
 	constructor (
-		public projectState : ProjectState,
 		public viewportService : ViewportService,
 		public trackSelectService : RegionSelectService,
 		public dragService : RegionDragService,
-	) {
-		this.tracksState = projectState.tracksState;
-	}
+		public tracksService : TracksService,
+	) {}
 
+	ngOnInit(): void {
+		
+	}
+	
 	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color));
+	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color()));
 	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
 	onClick() { 
 		this.trackSelectService.setSelectedTrack(this.index); 
@@ -88,6 +88,10 @@ export class TrackComponent {
 	getRegions() { return this.track.regions; }
 	createRegion() {
 		const pos = this.viewportService.pxToPos(this.mouseX);
-		this.tracksState.addRegion(this.index, this.track.isMidi, pos);
+		if (this.track.regionType() == RegionType.Audio) {
+			this.tracksService.addAudioRegion(this.index, {start: pos});
+		} else {
+			this.tracksService.addMidiRegion(this.index, {start: pos});
+		}
 	}
 }

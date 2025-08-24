@@ -1,11 +1,16 @@
 import { computed, Injectable, Injector, Signal } from "@angular/core";
-import { HistoryService } from "./history.service";
-import { DEFAULT_AUDIO_REGION, DEFAULT_AUDIO_TRACK, DEFAULT_MIDI_REGION, DEFAULT_MIDI_TRACK, SignalState, SignalStateArray, SignalStateClass, StudioState, WritableStateSignal } from "./substates";
-import { Track, Region, AudioRegion, MidiRegion } from "@shared/types";
-import { SelectedRegion } from "./region-select.service";
+import { AudioRegion, MidiRegion, RegionType, regionTypeFromTrack, Track, TrackType } from "@shared/types";
+import { StateService } from "../state/state.service";
+import { DEFAULT_AUDIO_REGION, DEFAULT_AUDIO_TRACK, DEFAULT_MIDI_REGION, DEFAULT_MIDI_TRACK } from "../state/state.defaults";
+import { createState } from "../state/state.factory";
+
+export interface RegionPath {
+	trackIndex: number;
+	regionIndex: number;
+}
 
 @Injectable()
-export class ProjectState {
+export class TracksService {
 	readonly COLORS = [
 		'#d7e166ff',
 		'#e19f66ff',
@@ -16,199 +21,187 @@ export class ProjectState {
 		'#8de166ff',
 	]
 
-	readonly numTracks : Signal<number>;
-	get tracks() { return this.studioState.tracks }
-	set tracks(t: SignalStateArray<Track>) { this.studioState.tracks = t}
+	get tracks() { return this.studioState.state.studio.tracks; }
+	declare readonly numTracks : Signal<number>;
 
 	constructor(
-		private injector: Injector,
-		private historyService: HistoryService, 
-		private studioState: StudioState,
+		private studioState: StateService,
 	) {
 		this.numTracks = computed(() => {
-			const len = this.tracks.lengthSignal();
+			const len = this.tracks().length;
 			return len;
 		});
 	}
 
-	addTrack(type: string, instrument?: string) {
-		let newTrack : Track;
-		if (type == "audio") {
-			newTrack = DEFAULT_AUDIO_TRACK;
-		} else {
-			newTrack = DEFAULT_MIDI_TRACK;
-			newTrack.instrument = instrument;
-		}
-		this.studioState.tracks.push(newTrack);
+	// ========================================================
+	// Track Operations
+
+	addTrack(type: TrackType, overrides: Partial<Track> = {}) {
+		let regionType = regionTypeFromTrack(type);
+
+		let baseTrack: Track =
+			regionType === RegionType.Audio
+			? { ...DEFAULT_AUDIO_TRACK, color: this.nextTrackColor() }
+			: { ...DEFAULT_MIDI_TRACK, color: this.nextTrackColor() };
+
+		let newTrack: Track = {
+			...baseTrack,
+			...overrides,
+			trackType: type,
+			index: this.numTracks(), // always enforce index last
+		};
+
+		let newTrackState = createState(newTrack, this.studioState);
+		this.tracks.update(tracks => [...tracks, newTrackState]);
 	}
 	deleteTrack(index: number) {
-		const curr = this.tracks;
-		const updated = curr.filter((track, i) => i !== index);
-		this.tracks = updated;
+		this.tracks.update(tracks =>
+			tracks.filter((_, i) => i !== index)
+		);
 	}
 	moveTrack(index: number, newIndex: number) {
-		const curr = this.tracks;
-
-		if (index < 0 || index >= curr.length || newIndex < 0 || newIndex >= curr.length) return;
-
-		const trackToMove = curr.splice(index, 1)[0];
-		curr.splice(newIndex, 0, trackToMove);
-
-		curr.forEach((track, i) => {
-			const signal = (track as any).index; // assuming `index` is a signal
-			if (signal && typeof signal.setSilent === "function") {
-				signal.setSilent(i);
-			} else {
-				(track as any).index = i;
+		this.tracks.update(tracks => {
+			if (index < 0 || index >= tracks.length || newIndex < 0 || newIndex >= tracks.length) {
+				return tracks; 
 			}
+
+			const updated = [...tracks];
+			const [moved] = updated.splice(index, 1); // remove from old position
+			updated.splice(newIndex, 0, moved);       // insert at new position
+			return updated;
 		});
-		this.tracks = curr;
 	}
 	duplicateTrack(index: number) {
-		const curr = this.tracks;
-		if (index < 0 || index >= curr.length) return;
+		this.tracks.update(tracks => {
+			if (index < 0 || index >= tracks.length) return tracks;
 
-		const trackToCopy = curr[index] as SignalStateClass<Track> & SignalState<Track>;
-		const newTrack = { ...trackToCopy } as SignalStateClass<Track> & SignalState<Track>;
+			const updated = [...tracks];
+			const trackToDuplicate = { ...tracks[index] }; 	// shallow copy
+			updated.splice(index + 1, 0, trackToDuplicate); // insert after original
+			return updated;
+		});
+	}
 
-		if ('name' in newTrack && typeof newTrack.name === 'string') {
-			newTrack.name.set(`${newTrack.name}*`);
+	nextTrackColor() {
+		return this.COLORS[this.numTracks() % this.COLORS.length];
+	}
+
+	// ========================================================
+	// Region Operations
+
+	addAudioRegion(trackIndex: number, overrides: Partial<AudioRegion> = {}) {
+		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
+
+		const region: AudioRegion = {
+			...DEFAULT_AUDIO_REGION,
+			...overrides,
+			trackIndex, 
+		};
+
+		const newRegionState = createState(region, this.studioState);
+
+		this.tracks()[trackIndex].regions.update(regions => [
+			...regions,
+			newRegionState,
+		]);
+	}
+	addMidiRegion(trackIndex: number, overrides: Partial<MidiRegion> = {}) {
+		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
+
+		const region: MidiRegion = {
+			...DEFAULT_MIDI_REGION,
+			...overrides,
+			trackIndex, 
+		};
+
+		const newRegionState = createState(region, this.studioState);
+
+		this.tracks()[trackIndex].regions.update(regions => [
+			...regions,
+			newRegionState,
+		]);
+	}
+	deleteRegion(path: RegionPath) {
+		this.tracks()[path.trackIndex].regions.update(regions => 
+			regions.filter((_, i) => i !== path.regionIndex)
+		);
+	}
+	deleteRegions(paths: RegionPath[]) {
+		const byTrack = new Map<number, number[]>();
+		for (const p of paths) {
+			if (!byTrack.has(p.trackIndex)) byTrack.set(p.trackIndex, []);
+			byTrack.get(p.trackIndex)!.push(p.regionIndex);
 		}
 
-		this.tracks.push(newTrack);
+		byTrack.forEach((indices, trackIndex) => {
+			this.tracks()[trackIndex].regions.update(regions =>
+				regions.filter((_, i) => !indices.includes(i))
+			);
+		});
 	}
+	moveRegion(path: RegionPath, newTrackIndex: number, newStart: number) { // ensure this results in the expected reactivity
+		const track = this.tracks()[path.trackIndex];
+		const region = track.regions()[path.regionIndex];
 
-	addRegion(trackIndex: number,
-		type: "audio" | "midi",
-		start: number,
-		duration: number = 1,
-		data: string[] = [],
-		fileIndex: number = 0,
-	) {
-		const curr = this.arr();
-		if (trackIndex < 0 || trackIndex >= curr.length) return;
-
-		const region = (type == "audio") ? DEFAULT_AUDIO_REGION : DEFAULT_MIDI_REGION;
-		region.trackIndex = trackIndex;
-
-		const updated = [...curr];
-		updated[trackIndex] = {
-			...updated[trackIndex],
-			regions: [...updated[trackIndex].regions, region]
-		};
-
-		this.arr.set(updated);
-	}
-	deleteRegion(trackIndex: number, regionIndex: number) {
-		const curr = this.arr();
-		if (trackIndex < 0 || trackIndex >= curr.length) return;
-
-		const track = curr[trackIndex];
-		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
-
-		const updated = [...curr];
-		updated[trackIndex] = {
-			...updated[trackIndex],
-			regions: track.regions.filter((_, i) => i !== regionIndex)
-		};
-
-		this.arr.set(updated);
-	}
-	deleteRegions(selectedRegions: SelectedRegion[]) {
-		const regionsByTrack = selectedRegions.reduce((acc, { trackIndex, regionIndex }) => {
-			if (!acc[trackIndex]) acc[trackIndex] = [];
-			acc[trackIndex].push(regionIndex);
-			return acc;
-		}, {} as Record<number, number[]>);
-
-		const curr = this.arr();
-		const updated = curr.map((track, trackIndex) => {
-			if (!regionsByTrack[trackIndex]) return track;
-
-			const indicesToRemove = regionsByTrack[trackIndex].sort((a, b) => b - a);
-			const newRegions = [...track.regions];
-			for (const i of indicesToRemove) {
-				if (i >= 0 && i < newRegions.length) {
-					newRegions.splice(i, 1);
-				}
-			}
-
-			return { ...track, regions: newRegions };
+		track.regions.update(regions => {
+			const updated = [...regions];
+			updated.splice(path.regionIndex, 1);
+			return updated;
 		});
 
-		this.arr.set(updated);
+		const movedRegion = {...region};
+		movedRegion.trackIndex.set(newTrackIndex);
+		movedRegion.start.set(newStart);
+
+		this.tracks()[newTrackIndex].regions.update(regions => [...regions, movedRegion]);
 	}
-	moveRegion(trackIndex: number, regionIndex: number, newTrackIndex: number, newStart: number) {
-		const curr = this.arr();
-		if (trackIndex < 0 || trackIndex >= curr.length || 
-			newTrackIndex < 0 || newTrackIndex >= curr.length) return;
+	moveRegions(paths: RegionPath[], trackIndexOffset: number, startOffset: number) {
+		if (paths.length === 0) return;
 
-		const sourceTrack = curr[trackIndex];
-		if (regionIndex < 0 || regionIndex >= sourceTrack.regions.length) return;
+		// Collect regions and group by original track
+		const regionsToMove: { region: any; newTrackIndex: number }[] = [];
+		const regionsByTrack = new Map<number, number[]>();
 
-		const regionToMove = sourceTrack.regions[regionIndex];
-		const movedRegion = {
-			...regionToMove,
-			start: newStart
-		};
+		paths.forEach(path => {
+			const currentTrack = path.trackIndex;
+			const region = this.tracks()[currentTrack].regions()[path.regionIndex];
+			const newTrackIndex = currentTrack + trackIndexOffset;
 
-		const updated = [...curr];
+			regionsToMove.push({ region, newTrackIndex });
 
-		updated[trackIndex] = {
-			...updated[trackIndex],
-			regions: sourceTrack.regions.filter((_, i) => i !== regionIndex)
-		};
+			if (!regionsByTrack.has(currentTrack)) regionsByTrack.set(currentTrack, []);
+			regionsByTrack.get(currentTrack)!.push(path.regionIndex);
+		});
 
-		updated[newTrackIndex] = {
-			...updated[newTrackIndex],
-			regions: [...updated[newTrackIndex].regions, movedRegion]
-		};
+		// Remove regions from original tracks (highest index first)
+		regionsByTrack.forEach((indices, trackIndex) => {
+			const sorted = indices.slice().sort((a, b) => b - a);
+			this.tracks()[trackIndex].regions.update(regions => {
+			const updated = [...regions];
+			for (const i of sorted) updated.splice(i, 1);
+			return updated;
+			});
+		});
 
-		this.arr.set(updated);
+		// Insert moved regions into their new tracks
+		regionsToMove.forEach(({ region, newTrackIndex }) => {
+			const copy = { ...region };
+			copy.trackIndex.set(newTrackIndex);
+			copy.start.set(copy.start() + startOffset);
+
+			this.tracks()[newTrackIndex].regions.update(regions => [...regions, copy]);
+		});
 	}
-	modifyRegion(trackIndex: number, regionIndex: number, prop: keyof Region, value: any) {
-		const curr = this.arr();
-		if (trackIndex < 0 || trackIndex >= curr.length) return;
+	duplicateRegion(path: RegionPath) {
+		const track = this.tracks()[path.trackIndex];
+		const region = track.regions()[path.regionIndex];
 
-		const track = curr[trackIndex];
-		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
+		const copy = { ...region }; 
 
-		const updatedRegions = [...track.regions];
-		updatedRegions[regionIndex] = {
-			...updatedRegions[regionIndex],
-			[prop]: value
-		};
-
-		const updated = [...curr];
-		updated[trackIndex] = {
-			...updated[trackIndex],
-			regions: updatedRegions
-		};
-
-		this.arr.set(updated);
-	}
-	duplicateRegion(trackIndex: number, regionIndex: number) {
-		const curr = this.arr();
-		if (trackIndex < 0 || trackIndex >= curr.length) return;
-
-		const track = curr[trackIndex];
-		if (regionIndex < 0 || regionIndex >= track.regions.length) return;
-
-		const regionToCopy = track.regions[regionIndex];
-		const newRegion = { ...regionToCopy };
-
-		const updatedRegions = [
-			...track.regions.slice(0, regionIndex + 1),
-			newRegion,
-			...track.regions.slice(regionIndex + 1)
-		];
-
-		const updated = [...curr];
-		updated[trackIndex] = {
-			...updated[trackIndex],
-			regions: updatedRegions
-		};
-
-		this.arr.set(updated);
+		track.regions.update(regions => {
+			const updated = [...regions];
+			updated.splice(path.regionIndex + 1, 0, copy); 
+			return updated;
+		});
 	}
 }

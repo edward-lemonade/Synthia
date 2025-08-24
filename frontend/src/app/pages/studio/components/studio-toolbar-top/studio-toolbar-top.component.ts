@@ -8,9 +8,9 @@ import { ExportButtonComponent } from './export/export-btn.component';
 import { PublishButtonComponent } from './publish/publish-btn.component';
 import { ShareButtonComponent } from './share/share-btn.component';
 
-import { ProjectState } from '../../services/project-state.service';
 import { HistoryService } from '../../services/history.service';
 import { MenuButtonComponent } from "./menu/menu-btn.component";
+import { StateService } from '../../state/state.service';
 
 @Component({
 	selector: 'app-studio-toolbar-top',
@@ -47,18 +47,21 @@ import { MenuButtonComponent } from "./menu/menu-btn.component";
 	styleUrls: ['./studio-toolbar-top.component.scss']
 })
 export class StudioToolbarTopComponent implements OnInit {
+	get title() { return this.stateService.state.metadata.title }
+	
 	constructor(
-		private projectState: ProjectState,
+		private stateService: StateService,
 		private historyService: HistoryService,
 	) {}
 
 	ngOnInit() {
-		this.titleInput.set(this.projectState.metadataState.title());
+		this.titleInput.set(this.title());
 	}
 
 	titleInput = signal('')
 	updateTitle() {
-		this.projectState.metadataState.title.set(this.titleInput());
+		console.log(this.titleInput());
+		this.title.set(this.titleInput());
 	}
 
 	isPending(): boolean { return this.historyService.isPending() }

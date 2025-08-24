@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 
-import { ProjectState } from './services/project-state.service';
 
 import { AppAuthService } from '@src/app/services/app-auth.service';
 
@@ -13,14 +12,16 @@ import { ViewportService } from './services/viewport.service';
 import { RegionSelectService } from './services/region-select.service';
 import { RegionDragService } from './services/region-drag.service';
 import { AudioHandlerService } from './services/audio-handler.service';
+import { StateService } from './state/state.service';
+import { TracksService } from './services/tracks.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [ProjectState, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService, AudioHandlerService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService, AudioHandlerService],
 	template: `
 		<div class="page-container">
-			@if (projectState.isStateReady()) {
+			@if (stateService.isStateReady()) {
 				<app-studio-toolbar-top></app-studio-toolbar-top>
 				<app-studio-toolbar-details></app-studio-toolbar-details>
 				<app-studio-editor></app-studio-editor>
@@ -69,7 +70,7 @@ export class StudioPage implements OnInit {
 	sessionId: string = '';
 
 	constructor(
-		public projectState: ProjectState
+		public stateService: StateService
 	) {}
 
 	ngOnInit() {}

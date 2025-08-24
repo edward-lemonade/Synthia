@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, effect, OnInit, signal, WritableSig
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from "@angular/material/slider";
 
-import { ProjectState } from '../../../services/project-state.service';
 import { FormsModule } from '@angular/forms';
+import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-toolbar-details-volume',
@@ -24,15 +24,17 @@ import { FormsModule } from '@angular/forms';
 })
 
 export class VolumeComponent {
-	constructor(public projectState: ProjectState) {
-		this.volumeInput.set(projectState.globalsState.masterVolume());
+	get masterVolume() { return this.stateService.state.studio.masterVolume }
+
+	constructor(public stateService: StateService) {
+		this.volumeInput.set(this.masterVolume());
 		effect(() => {
-			this.volumeInput.set(projectState.globalsState.masterVolume());
+			this.volumeInput.set(this.masterVolume());
 		})
 	}
 
 	volumeInput = signal(100)
 	updateVolume() {
-		this.projectState.globalsState.masterVolume.set(this.volumeInput());
+		this.masterVolume.set(this.volumeInput());
 	}
 }

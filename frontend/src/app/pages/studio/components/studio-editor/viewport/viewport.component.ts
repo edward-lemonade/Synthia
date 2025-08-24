@@ -1,10 +1,11 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
 import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
-import { ProjectState } from '../../../services/project-state.service';
 import { TrackComponent } from "./track/track.component";
-import { BoxSelectBounds, SelectedRegion, RegionSelectService } from '../../../services/region-select.service';
+import { BoxSelectBounds, RegionSelectService } from '../../../services/region-select.service';
 import { RegionDragService } from '../../../services/region-drag.service';
+import { RegionPath, TracksService } from '../../../services/tracks.service';
+import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-editor-viewport',
@@ -30,7 +31,7 @@ import { RegionDragService } from '../../../services/region-drag.service';
 			<div #scrollContainer class="scroll-container" (scroll)="onScroll()">
 				<div #tracks class="tracks" [style.width.px]="viewportService.totalWidth()">
 					<viewport-track 
-						*ngFor="let track of getTracks(); let i = index"
+						*ngFor="let track of this.tracks(); let i = index"
 						class="track"
 						[track]="track"
 						[index]="i"
@@ -67,12 +68,13 @@ export class ViewportComponent implements AfterViewInit {
 	constructor(
 		private injector: Injector,
 		public viewportService: ViewportService,
-		public projectState : ProjectState,
+		public stateService: StateService,
+		public tracksService: TracksService,
 		public selectService: RegionSelectService,
 		public dragService: RegionDragService,
 	) {}
 
-	getTracks() { return this.projectState.tracksState.tracks(); }
+	get tracks() { return this.stateService.state.studio.tracks }
 	trackHeight = 0;
 	
 	ngAfterViewInit(): void {
@@ -86,7 +88,7 @@ export class ViewportComponent implements AfterViewInit {
 		);
 		
 		const observer = new ResizeObserver(() => {
-			this.trackHeight = (this.tracksRef.nativeElement.clientHeight / this.getTracks().length);
+			this.trackHeight = (this.tracksRef.nativeElement.clientHeight / this.tracks().length);
 
 			this.viewportService.setupCanvas(
 				canvas, ctx,
@@ -190,9 +192,9 @@ export class ViewportComponent implements AfterViewInit {
 	// BOX SELECTION
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	private getRegionsInBounds(bounds: BoxSelectBounds): SelectedRegion[] {
-		const selectedRegions: SelectedRegion[] = [];
-		const tracks = this.getTracks();
+	private getRegionsInBounds(bounds: BoxSelectBounds): RegionPath[] {
+		const selectedRegions: RegionPath[] = [];
+		const tracks = this.tracks();
 		
 		const normalizedBounds = {
 			left: Math.min(bounds.startX, bounds.endX),
@@ -209,9 +211,9 @@ export class ViewportComponent implements AfterViewInit {
 				normalizedBounds.top, normalizedBounds.bottom,
 				trackTop, trackBottom
 			)) {
-				track.regions.forEach((region, regionIndex) => {
-					const regionLeft = region.start * this.viewportService.measureWidth();
-					const regionRight = regionLeft + (region.duration * this.viewportService.measureWidth());
+				track.regions().forEach((region, regionIndex) => {
+					const regionLeft = region.start() * this.viewportService.measureWidth();
+					const regionRight = regionLeft + (region.duration() * this.viewportService.measureWidth());
 					
 					if (this.boundsIntersect(
 						normalizedBounds.left, normalizedBounds.right,
@@ -268,7 +270,7 @@ export class ViewportComponent implements AfterViewInit {
 		
 		if (event.key === 'Delete' || event.key === 'Backspace') {
 			if (this.selectService.hasSelectedRegions()) {
-				this.projectState.tracksState.deleteRegions(this.selectService.selectedRegions());
+				this.tracksService.deleteRegions(this.selectService.selectedRegions());
 				this.selectService.clearSelection();
 			}
 		}
