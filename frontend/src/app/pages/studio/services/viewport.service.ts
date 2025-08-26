@@ -2,19 +2,22 @@ import { Injectable, signal, computed, effect, Injector, runInInjectionContext }
 import { StateService } from '../state/state.service';
 
 @Injectable()
-export class ViewportService {
-	BASE_PIXELS_PER_MEASURE = 100;
-
-	get studioState() { return this.stateService.state.studio; }
+export class ViewportService { // SINGLETON
+	private static _instance: ViewportService;
+	static get instance(): ViewportService { return ViewportService._instance; }
 
 	constructor(
 		private injector: Injector,
-		private stateService: StateService,
-	) {}
+	) {
+		ViewportService._instance = this;
+	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// FIELDS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	get studioState() { return StateService.instance.state.studio; }
+ 
+	// ==============================================================================================
+	// Fields
+
+	BASE_PIXELS_PER_MEASURE = 100;
 
 	lastMeasure = signal(60);
 
@@ -62,9 +65,8 @@ export class ViewportService {
 
 	isResizingRegion = signal(false);
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// CONVERSIONS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==============================================================================================
+	// Conversions
 	
 	pxToPos(x: number, snap = this.snapToGrid()) {
 		let pos = (x) / this.measureWidth();
@@ -99,9 +101,8 @@ export class ViewportService {
 		return Math.floor(pos / this.smallestUnit()) * this.smallestUnit();
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// TRACKLIST SCROLL SYNC (vertical)
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==============================================================================================
+	// Tracklist Scroll Sync (vertical)
 
 	private tracklistScrollable?: HTMLDivElement;
 	registerTracklistScrollable(el: HTMLDivElement) { 
@@ -114,9 +115,8 @@ export class ViewportService {
 	}
 
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// CANVASES
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==============================================================================================
+	// Canvases
 
 	private VPHeaderContainer?: HTMLDivElement; // VIEWPORT HEADER
 	private VPHeaderCanvas?: HTMLCanvasElement;
@@ -168,9 +168,8 @@ export class ViewportService {
 		this.drawLines();
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// LINE DRAWING
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==============================================================================================
+	// Line Deawing
 
 	private onViewportChanged = effect(() => {
 		const startPos = this.windowPosX() - this.CANVAS_PADDING;

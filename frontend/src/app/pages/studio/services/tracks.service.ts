@@ -1,8 +1,8 @@
 import { computed, Injectable, Injector, Signal } from "@angular/core";
-import { AudioRegion, MidiRegion, RegionType, regionTypeFromTrack, Track, TrackType } from "@shared/types";
+import { AudioRegion, MidiRegion, Region, RegionType, regionTypeFromTrack, Track, TrackType } from "@shared/types";
 import { StateService } from "../state/state.service";
-import { DEFAULT_AUDIO_REGION, DEFAULT_AUDIO_TRACK, DEFAULT_MIDI_REGION, DEFAULT_MIDI_TRACK } from "../state/state.defaults";
-import { createState } from "../state/state.factory";
+import { AUDIO_REGION_DEFAULTS, AUDIO_TRACK_DEFAULTS, MIDI_REGION_DEFAULTS, MIDI_TRACK_DEFAULTS } from "../state/state.defaults";
+import { StateNode, stateNode } from "../state/state.factory";
 
 export interface RegionPath {
 	trackIndex: number;
@@ -11,6 +11,20 @@ export interface RegionPath {
 
 @Injectable()
 export class TracksService {
+	private static _instance: TracksService;
+	static get instance(): TracksService { return TracksService._instance; }
+
+	constructor() {
+		TracksService._instance = this;
+		
+		this.numTracks = computed(() => {
+			const len = this.tracks().length;
+			return len;
+		});
+	}
+
+	get stateService() { return StateService.instance }
+
 	readonly COLORS = [
 		'#d7e166ff',
 		'#e19f66ff',
@@ -21,67 +35,51 @@ export class TracksService {
 		'#8de166ff',
 	]
 
-	get tracks() { return this.studioState.state.studio.tracks; }
+	get tracks() { return this.stateService.state.studio.tracks; }
 	declare readonly numTracks : Signal<number>;
-
-	constructor(
-		private studioState: StateService,
-	) {
-		this.numTracks = computed(() => {
-			const len = this.tracks().length;
-			return len;
-		});
-	}
 
 	// ========================================================
 	// Track Operations
 
 	addTrack(type: TrackType, overrides: Partial<Track> = {}) {
 		let regionType = regionTypeFromTrack(type);
+		let newIndex = this.numTracks();
 
 		let baseTrack: Track =
 			regionType === RegionType.Audio
-			? { ...DEFAULT_AUDIO_TRACK, color: this.nextTrackColor() }
-			: { ...DEFAULT_MIDI_TRACK, color: this.nextTrackColor() };
+			? { ...AUDIO_TRACK_DEFAULTS, color: this.nextTrackColor() }
+			: { ...MIDI_TRACK_DEFAULTS, color: this.nextTrackColor() };
 
 		let newTrack: Track = {
 			...baseTrack,
 			...overrides,
 			trackType: type,
-			index: this.numTracks(), // always enforce index last
+			index: newIndex, // always enforce index last
 		};
 
-		let newTrackState = createState(newTrack, this.studioState);
-		this.tracks.update(tracks => [...tracks, newTrackState]);
+		this.tracks.push(newTrack);
 	}
 	deleteTrack(index: number) {
-		this.tracks.update(tracks =>
-			tracks.filter((_, i) => i !== index)
-		);
+		this.tracks.update(tracks => {
+			const newTracks = tracks.filter((_, i) => i !== index);
+			newTracks.forEach((track, idx) => {
+				track.getKey = () => idx;
+			});
+			return newTracks;
+		});
 	}
 	moveTrack(index: number, newIndex: number) {
-		this.tracks.update(tracks => {
-			if (index < 0 || index >= tracks.length || newIndex < 0 || newIndex >= tracks.length) {
-				return tracks; 
-			}
+		if (index < 0 || index >= this.numTracks() || newIndex < 0 || newIndex >= this.numTracks()) { return; }
 
-			const updated = [...tracks];
-			const [moved] = updated.splice(index, 1); // remove from old position
-			updated.splice(newIndex, 0, moved);       // insert at new position
-			return updated;
-		});
+		const [moved] = this.tracks.splice(index, 1);
+		this.tracks.splice(newIndex, 0, moved);
 	}
 	duplicateTrack(index: number) {
-		this.tracks.update(tracks => {
-			if (index < 0 || index >= tracks.length) return tracks;
+		if (index < 0 || index >= this.tracks().length) return;
 
-			const updated = [...tracks];
-			const trackToDuplicate = { ...tracks[index] }; 	// shallow copy
-			updated.splice(index + 1, 0, trackToDuplicate); // insert after original
-			return updated;
-		});
+		const trackToDuplicate = { ...this.tracks()[index].snapshot() };
+		this.tracks.push(trackToDuplicate); 
 	}
-
 	nextTrackColor() {
 		return this.COLORS[this.numTracks() % this.COLORS.length];
 	}
@@ -93,12 +91,12 @@ export class TracksService {
 		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
 
 		const region: AudioRegion = {
-			...DEFAULT_AUDIO_REGION,
+			...AUDIO_REGION_DEFAULTS,
 			...overrides,
 			trackIndex, 
 		};
 
-		const newRegionState = createState(region, this.studioState);
+		const newRegionState = stateNode(region, this.stateService);
 
 		this.tracks()[trackIndex].regions.update(regions => [
 			...regions,
@@ -109,12 +107,12 @@ export class TracksService {
 		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
 
 		const region: MidiRegion = {
-			...DEFAULT_MIDI_REGION,
+			...MIDI_REGION_DEFAULTS,
 			...overrides,
 			trackIndex, 
 		};
 
-		const newRegionState = createState(region, this.studioState);
+		const newRegionState = stateNode(region, this.stateService);
 
 		this.tracks()[trackIndex].regions.update(regions => [
 			...regions,
@@ -158,40 +156,47 @@ export class TracksService {
 	moveRegions(paths: RegionPath[], trackIndexOffset: number, startOffset: number) {
 		if (paths.length === 0) return;
 
-		// Collect regions and group by original track
-		const regionsToMove: { region: any; newTrackIndex: number }[] = [];
-		const regionsByTrack = new Map<number, number[]>();
+		const extracted: { region: StateNode<Region>, newTrackIndex: number }[] = [];
 
-		paths.forEach(path => {
-			const currentTrack = path.trackIndex;
-			const region = this.tracks()[currentTrack].regions()[path.regionIndex];
-			const newTrackIndex = currentTrack + trackIndexOffset;
+		// 1. Extract regions and determine new track index
+		for (const path of paths) {
+			const region = this.tracks()[path.trackIndex].regions()[path.regionIndex];
+			const newTrackIndex = path.trackIndex + trackIndexOffset;
+			extracted.push({ region, newTrackIndex });
+		}
 
-			regionsToMove.push({ region, newTrackIndex });
+		// 2. Remove from original tracks if moving to a different track
+		if (trackIndexOffset !== 0) {
+			const regionsByTrack = new Map<number, number[]>();
+			for (const path of paths) {
+				const idxs = regionsByTrack.get(path.trackIndex) ?? [];
+				idxs.push(path.regionIndex);
+				regionsByTrack.set(path.trackIndex, idxs);
+			}
 
-			if (!regionsByTrack.has(currentTrack)) regionsByTrack.set(currentTrack, []);
-			regionsByTrack.get(currentTrack)!.push(path.regionIndex);
-		});
+			for (const [trackIndex, indices] of regionsByTrack.entries()) {
+				const regionsSignal = this.tracks()[trackIndex].regions;
+				const toRemove = new Set(indices);
+				regionsSignal.update(r => {
+					const kept = r.filter((_, i) => !toRemove.has(i));
+					return kept;
+				});
+			}
 
-		// Remove regions from original tracks (highest index first)
-		regionsByTrack.forEach((indices, trackIndex) => {
-			const sorted = indices.slice().sort((a, b) => b - a);
-			this.tracks()[trackIndex].regions.update(regions => {
-			const updated = [...regions];
-			for (const i of sorted) updated.splice(i, 1);
-			return updated;
-			});
-		});
-
-		// Insert moved regions into their new tracks
-		regionsToMove.forEach(({ region, newTrackIndex }) => {
-			const copy = { ...region };
-			copy.trackIndex.set(newTrackIndex);
-			copy.start.set(copy.start() + startOffset);
-
-			this.tracks()[newTrackIndex].regions.update(regions => [...regions, copy]);
-		});
+			for (const { region, newTrackIndex } of extracted) {
+				region.start.set(region.start() + startOffset);
+				region.trackIndex.set(newTrackIndex);
+				const paste = region.snapshot();
+				this.tracks()[newTrackIndex].regions.push(paste);
+			}
+		} else {
+			for (const { region, newTrackIndex } of extracted) {
+				region.start.set(region.start() + startOffset);
+			}
+		}
 	}
+
+
 	duplicateRegion(path: RegionPath) {
 		const track = this.tracks()[path.trackIndex];
 		const region = track.regions()[path.regionIndex];

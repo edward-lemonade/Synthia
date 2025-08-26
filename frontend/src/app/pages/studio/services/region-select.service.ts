@@ -12,27 +12,14 @@ export interface BoxSelectBounds {
 
 @Injectable()
 export class RegionSelectService {
-	readonly selectedTrack = signal<number | null>(null);
-	public setSelectedTrack(index: number|null) { this.selectedTrack.set(index); }
-
-	readonly selectedRegions = signal<RegionPath[]>([]);
-  	readonly hasSelectedRegions = computed(() => this.selectedRegions().length > 0);
-  	readonly selectedRegionsCount = computed(() => this.selectedRegions().length);
-
-	readonly tracksWithSelectedRegions = computed(() => {
-		const trackIndices = new Set(this.selectedRegions().map(r => r.trackIndex));
-		return Array.from(trackIndices).sort();
-	});
-
-	// Box selection state
-	readonly isBoxSelecting = signal<boolean>(false);
-  	readonly boxSelectBounds = signal<BoxSelectBounds | null>(null);
+	private static _instance: RegionSelectService;
+	static get instance(): RegionSelectService { return RegionSelectService._instance; }
 
 	constructor(
 		private injector: Injector,
-		private studioState: StateService,
-		private tracksService: TracksService
 	) {
+		RegionSelectService._instance = this;
+
 		runInInjectionContext(injector, () => {
 			effect(() => {
 				const numTracks = this.tracksService.numTracks();
@@ -48,6 +35,26 @@ export class RegionSelectService {
 			})
 		})
 	}
+
+	get tracksService() { return TracksService.instance }
+
+	// ========================================================
+	// FIELDS
+
+	readonly selectedTrack = signal<number | null>(null);
+	public setSelectedTrack(index: number|null) { this.selectedTrack.set(index); }
+
+	readonly selectedRegions = signal<RegionPath[]>([]);
+  	readonly hasSelectedRegions = computed(() => this.selectedRegions().length > 0);
+  	readonly selectedRegionsCount = computed(() => this.selectedRegions().length);
+
+	readonly tracksWithSelectedRegions = computed(() => {
+		const trackIndices = new Set(this.selectedRegions().map(r => r.trackIndex));
+		return Array.from(trackIndices).sort();
+	});
+
+	readonly isBoxSelecting = signal<boolean>(false);
+  	readonly boxSelectBounds = signal<BoxSelectBounds | null>(null);
 
 	// ========================================================
 	// REGION SELECTION

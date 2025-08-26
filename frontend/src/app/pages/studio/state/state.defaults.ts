@@ -1,14 +1,20 @@
-import { AudioRegion, AudioTrackType, Author, BaseFile, DefaultKey, DefaultTimeSignature, MidiRegion, MidiTrackType, ProjectMetadata, ProjectStudio, RegionType, Track } from "@shared/types";
+import { AudioRegion, AudioTrackType, Author, BaseFile, DefaultKey, DefaultTimeSignature, MidiRegion, MidiTrackType, ProjectMetadata, ProjectState, ProjectStudio, RegionType, Track } from "@shared/types";
+import { StateService } from "./state.service";
+import { StateNode } from "./state.factory";
+import { produceWithPatches } from "immer";
 
-export class NotSignal<T> {
-  	constructor(public value: T) {}
-	get() { return this.value; }
-}
+import { SignalMutator } from "./state.mutators";
+import * as SetterOverrides from "./state.mutators";
+
+export type DefaultState<T extends Record<string, any>> = T & {
+	_M: { [K in keyof T]?: SignalMutator<T[K], T[K]> | SignalMutator<StateNode<T[K]>[], T[K]>; }; // mutator overrides
+	_U?: boolean; // allow undo/redo
+};
 
 // ==============================================================
 // Top Level
 
-export const DEFAULT_METADATA: ProjectMetadata = {
+export const METADATA_DEFAULTS: DefaultState<ProjectMetadata> = {
 	projectId: '',
 	title: 'Untitled',
 	authors: [] as Author[],
@@ -18,9 +24,12 @@ export const DEFAULT_METADATA: ProjectMetadata = {
 	isRemix: false,
 	isRemixOf: null,
 	isReleased: false,
+
+	_M: { },
+	_U: false,
 };
 
-export const DEFAULT_STUDIO: ProjectStudio = {
+export const STUDIO_DEFAULTS: DefaultState<ProjectStudio> = {
 	bpm: 120,
 	key: DefaultKey,
 	centOffset: 0,
@@ -28,13 +37,17 @@ export const DEFAULT_STUDIO: ProjectStudio = {
 	masterVolume: 100,
 
 	tracks: [] as Track[],
-	files: [] as BaseFile[]
+	files: [] as BaseFile[],
+
+	_M: { 
+		bpm: SetterOverrides.studio_bpm_mutator,
+	}
 };
 
 // ==============================================================
 // Track
 
-export const DEFAULT_AUDIO_TRACK: Track = {
+export const AUDIO_TRACK_DEFAULTS: DefaultState<Track> = {
 	index: -1,
 	name: "Track",
 	color: "#FFFFFF",
@@ -49,9 +62,11 @@ export const DEFAULT_AUDIO_TRACK: Track = {
 
 	effects: [],
 	regions: [],
+
+	_M: { }
 };
 
-export const DEFAULT_MIDI_TRACK: Track = {
+export const MIDI_TRACK_DEFAULTS: DefaultState<Track> = {
 	index: -1,
 	name: "Track",
 	color: "#FFFFFF",
@@ -67,12 +82,14 @@ export const DEFAULT_MIDI_TRACK: Track = {
 
 	effects: [],
 	regions: [],
+
+	_M: { }
 };
 
 // ==============================================================
 // Region
 
-export const DEFAULT_AUDIO_REGION: AudioRegion = {
+export const AUDIO_REGION_DEFAULTS: DefaultState<AudioRegion> = {
 	trackIndex: -1,
 	fileIndex: -1,
 	start: 0,
@@ -88,9 +105,11 @@ export const DEFAULT_AUDIO_REGION: AudioRegion = {
 	timeStretch: 0,
 	fadeIn: 0,
 	fadeOut: 0,
+
+	_M: { }
 };
 
-export const DEFAULT_MIDI_REGION: MidiRegion = {
+export const MIDI_REGION_DEFAULTS: DefaultState<MidiRegion> = {
 	trackIndex: -1,
 	fileIndex: -1,
 	start: 0,
@@ -99,30 +118,6 @@ export const DEFAULT_MIDI_REGION: MidiRegion = {
 	type: RegionType.Midi,
 
 	midiData: [],
+
+	_M: { }
 };
-
-// ==============================================================
-
-/*
-this.state = {
-	metadata: {
-		projectId:	 		signal<string>(DEFAULT_METADATA.projectId),
-		title: 				signal<string>(DEFAULT_METADATA.title),
-		authors: 			signal<Author[]>(DEFAULT_METADATA.authors),
-		createdAt: 			signal<Date>(new Date()),
-		updatedAt: 			signal<Date>(new Date()),
-		isCollaboration: 	signal<boolean>(DEFAULT_METADATA.isCollaboration),
-		isRemix: 			signal<boolean>(DEFAULT_METADATA.isRemix),
-	},
-	studio: {
-		bpm: stateSignal(120, "bpm", this),
-		key: stateSignal(DefaultKey, "key", this),
-		centOffset: stateSignal(0, "centOffset", this),
-		timeSignature: stateSignal(DefaultTimeSignature, "timeSignature", this),
-		masterVolume: stateSignal(100, "masterVolume", this),
-
-		tracks: [] as Track[],
-		files: [] as BaseFile[]
-	}
-}
-*/

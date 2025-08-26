@@ -8,6 +8,7 @@ import { AudioHandlerService } from '../../../services/audio-handler.service';
 import { StateService } from '../../../state/state.service';
 import { TracksService } from '../../../services/tracks.service';
 import { TrackType, AudioTrackType, MidiTrackType } from '@shared/types';
+import { ViewportService } from '../../../services/viewport.service';
 
 @Component({
 	selector: 'studio-editor-tracklist-header',
@@ -55,6 +56,7 @@ export class TracklistHeaderComponent {
 
 	constructor(
 		public stateService: StateService,
+		public viewportService: ViewportService,
 		public tracksService: TracksService,
 		private audioHandler: AudioHandlerService
 	) {}
@@ -86,7 +88,7 @@ export class TracklistHeaderComponent {
 				this.tracksService.addTrack(AudioTrackType.Audio, trackProps);
 				
 				const regionProps = {
-					duration: audioFile.duration,
+					duration: this.viewportService.timeToPos(audioFile.duration),
 					data: [JSON.stringify({ audioFileId: audioFile.id })],
 					fileIndex: 0, // fileIndex is wrong, filler code
 				}

@@ -102,7 +102,8 @@ export class TempoComponent {
 			const finalBpm = Math.min(999, Math.max(1, parsed));
 			this.bpm.set(finalBpm);
 		}
-		(event.target as HTMLInputElement).value = this.bpm.toString()
+		
+		(event.target as HTMLInputElement).value = this.bpm().toString()
 	}
 
 	// TIME SIGNATURE

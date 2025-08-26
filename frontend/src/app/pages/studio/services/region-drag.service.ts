@@ -15,16 +15,19 @@ export interface DragInfo { // in beat/measure units
 
 @Injectable()
 export class RegionDragService {
+	private static _instance: RegionDragService;
+	static get instance(): RegionDragService { return RegionDragService._instance; }
+
+	constructor() { RegionDragService._instance = this; }
+
+	get tracksService() { return TracksService.instance }
+	get selectService() { return RegionSelectService.instance }
+	get viewportService() { return ViewportService.instance }
+
 	// Drag state
 	readonly isDragReady = signal<boolean>(false);
 	readonly isDragging = signal<boolean>(false);
 	readonly dragInfo = signal<DragInfo | null>(null);
-
-	constructor(
-		private viewportService: ViewportService,
-		private selectService: RegionSelectService,
-		private tracksService: TracksService,
-	) {}
 
 	public prepareDrag(startPosX: number, region: Region) { // mouse down on region, but not moving yet
 		this.isDragReady.set(true);

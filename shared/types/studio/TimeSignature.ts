@@ -7,6 +7,10 @@ export interface TimeSignature {
 	D: number,
 }
 
+export function timeSignatureEquals(a: TimeSignature, b: TimeSignature): boolean {
+	return a.N === b.N && a.D === b.D;
+}
+
 export function isTimeSignature(obj: any): obj is TimeSignature {
 	return obj && typeof obj.N === 'number' && typeof obj.D === 'number';
 }

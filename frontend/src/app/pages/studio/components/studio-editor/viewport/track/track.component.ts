@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
 import { RegionType, Track } from '@shared/types';
@@ -10,7 +10,8 @@ import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
-import { Stateify } from '@src/app/pages/studio/state/state.factory';
+import { StateNode } from '@src/app/pages/studio/state/state.factory';
+import { StateService } from '@src/app/pages/studio/state/state.service';
 
 @Component({
 	selector: 'viewport-track',
@@ -50,21 +51,18 @@ import { Stateify } from '@src/app/pages/studio/state/state.factory';
 	styleUrl: './track.component.scss'
 })
 
-export class TrackComponent implements OnInit {
-	@Input() track!: Stateify<Track>;
+export class TrackComponent{
+	@Input() track!: StateNode<Track>;
 	@Input() index!: number;
 	@ViewChild('trackMenuTrigger', { static: true }) trackMenuTrigger!: MatMenuTrigger;
 
 	constructor (
+		public stateService : StateService,
 		public viewportService : ViewportService,
 		public trackSelectService : RegionSelectService,
 		public dragService : RegionDragService,
 		public tracksService : TracksService,
 	) {}
-
-	ngOnInit(): void {
-		
-	}
 	
 	color = computed(() => this.track.color);
 	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color()));

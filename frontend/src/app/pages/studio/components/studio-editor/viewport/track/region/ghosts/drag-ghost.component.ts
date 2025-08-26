@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Region, Track } from '@shared/types';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
-import { Stateify } from '@src/app/pages/studio/state/state.factory';
+import { StateNode } from '@src/app/pages/studio/state/state.factory';
 
 
 @Component({
@@ -22,8 +22,8 @@ import { Stateify } from '@src/app/pages/studio/state/state.factory';
 	styleUrl: './ghost.component.scss'
 })
 export class DragGhostComponent {
-	@Input() track!: Stateify<Track>;
-	@Input() region!: Stateify<Region>;
+	@Input() track!: StateNode<Track>;
+	@Input() region!: StateNode<Region>;
 
 	constructor (
 		public viewportService: ViewportService,

@@ -149,7 +149,7 @@ export class ViewportComponent implements AfterViewInit {
 			if (!event.ctrlKey && !event.metaKey) { this.selectService.clearSelection(); }
 
 			this.selectService.startBoxSelect(startX, startY);			
-			event.preventDefault();
+			//event.preventDefault();
 		}
 	}
 

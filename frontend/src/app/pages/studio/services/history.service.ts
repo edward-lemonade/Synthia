@@ -15,9 +15,18 @@ export interface PatchEntry {
 
 @Injectable()
 export class HistoryService {
-	private stateService: StateService | null = null;
-	registerProjectState(p: StateService) {this.stateService! = p;}
-	  
+	private static _instance: HistoryService;
+	static get instance(): HistoryService { return HistoryService._instance; }
+
+	constructor(private auth: AppAuthService) {
+		HistoryService._instance = this;
+	}
+
+	get stateService() { return StateService.instance; }
+	
+	// ==============================================================================================
+	// Fields
+
 	private undoStack: PatchEntry[] = [];
 	private redoStack: PatchEntry[] = [];
 	private pendingEntries: PatchEntry[] = []; // edits yet to be saved in backend
@@ -25,8 +34,9 @@ export class HistoryService {
 
 	public isPending = signal<boolean>(this.pendingEntries.length != 0);
 
-	constructor(private auth: AppAuthService,) {}
-	
+	// ==============================================================================================
+	// Methods
+
 	recordPatch(
 		patches: Patch[], 
 		inversePatches: Patch[],

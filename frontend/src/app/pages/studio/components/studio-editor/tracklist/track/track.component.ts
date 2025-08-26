@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
 import { Track } from '@shared/types';
@@ -15,6 +15,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
+import { StateNode } from '@src/app/pages/studio/state/state.factory';
 
 @Component({
 	selector: 'tracklist-track',
@@ -114,52 +115,60 @@ import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 })
 
 export class TrackComponent implements OnInit {
-	@Input() track!: Track;
+	@Input() track!: StateNode<Track>;
 	@Input() index!: number;
 
 	DEFAULT_ICON = `assets/icons/microphone.svg`;
 	iconPath = this.DEFAULT_ICON;
-
-	get tracks() { return this.stateService.state.studio.tracks }
 
 	constructor (
 		public stateService : StateService,
 		public tracksService : TracksService,
 		public viewportService : ViewportService,
 		public regionSelectService : RegionSelectService,
-	) {}
-
-	ngOnInit() {
-		this.iconPath = `assets/icons/${this.track.trackType}.svg`;
-		this.trackNameInput.set(this.track.name);
-		this.volumeInput.set(this.track.volume);
-		this.panInput.set(this.track.pan);
+	) {
+		effect(() => {
+			this.volumeInput.set(this.track.volume());
+		});
+		effect(() => {
+			this.panInput.set(this.track.pan());
+		});
+		effect(() => {
+			this.trackNameInput.set(this.track.name());
+		});
 	}
 
-	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.regionSelectService.selectedTrackBgColor(this.track.color));
+	ngOnInit() {
+		this.iconPath = `assets/icons/${this.track.trackType()}.svg`;
+		this.trackNameInput.set(this.track.name());
+		this.volumeInput.set(this.track.volume());
+		this.panInput.set(this.track.pan());
+	}
+
+	color = computed(() => this.track.color());
+	colorSelectedBg = computed(() => this.regionSelectService.selectedTrackBgColor(this.track.color()));
 	isSelected = computed(() => this.regionSelectService.selectedTrack() == this.index);
 	select() { this.regionSelectService.setSelectedTrack(this.index); }
 
 	trackNameInput = signal('');
 	updateTrackName() {
-		this.tracks()[this.index].name.set(this.trackNameInput());
+		this.track.name.set(this.trackNameInput());
 	}
 
 	volumeInput = signal(100);
 	updateVolume() {
-		this.tracks()[this.index].volume.set(this.volumeInput());
+		this.track.volume.set(this.volumeInput());
 	}
 
 	panInput = signal(0);
 	updatePan() {
-		this.tracks()[this.index].pan.set(this.panInput());
+		this.track.pan.set(this.panInput());
 	}
 
-	mute = computed(() => this.tracks()[this.index].mute());
-	toggleMute() { this.tracks()[this.index].mute.update(m => !m) }
-	solo = computed(() => this.tracks()[this.index].solo());
-	toggleSolo() { this.tracks()[this.index].solo.update(s => !s) }
+	mute = computed(() => this.track.mute());
+	toggleMute() { this.track.mute.update(m => !m) }
+	solo = computed(() => this.track.solo());
+	toggleSolo() { this.track.solo.update(s => !s) }
 
 	menuMoveUp() {
 		this.tracksService.moveTrack(this.index, Math.max(0, this.index-1))

@@ -11,7 +11,7 @@ import { DragGhostComponent } from './ghosts/drag-ghost.component';
 import { ResizeGhostComponent } from "./ghosts/resize-ghost.component";
 import { RegionPath, TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
-import { Stateify } from '@src/app/pages/studio/state/state.factory';
+import { StateNode } from '@src/app/pages/studio/state/state.factory';
 
 type ResizeHandle = 'left' | 'right' | null;
 
@@ -79,8 +79,8 @@ type ResizeHandle = 'left' | 'right' | null;
 })
 
 export class RegionComponent implements OnInit {
-	@Input() track!: Stateify<Track>;
-	@Input() region!: Stateify<Region>;
+	@Input() track!: StateNode<Track>;
+	@Input() region!: StateNode<Region>;
 	@Input() trackIndex!: number;
 	@Input() regionIndex!: number;
 	@ViewChild("region", {static: true}) regionRef!: ElementRef<HTMLDivElement>;
@@ -178,7 +178,7 @@ export class RegionComponent implements OnInit {
 			const rect = target.closest("viewport-track")!.getBoundingClientRect();
 			const mousePosX = this.viewportService.pxToPos(event.clientX - rect.left, false);
 
-			this.dragService.prepareDrag(mousePosX, this.stateService.snapshot(this.region));
+			this.dragService.prepareDrag(mousePosX, this.region.snapshot());
 		} else {
 			event.stopPropagation();
 		}
@@ -217,7 +217,7 @@ export class RegionComponent implements OnInit {
 		this.resizeStartPx.set(event.clientX);
 		
 		// Store original region state
-		this.originalRegion! = { ...this.stateService.snapshot(this.region) };
+		this.originalRegion! = this.region.snapshot();
 		
 		// Initialize ghost with current region
 		this.ghostRegion.set({

@@ -13,7 +13,7 @@ import { StateService } from '../../../state/state.service';
 			<div class="tracks">
 				<tracklist-track
 					*ngFor="let track of tracks(); let i = index"
-					[track]="this.stateService.snapshot(track)"
+					[track]="track"
 					[index]="i"
 				/>
 			</div>

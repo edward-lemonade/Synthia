@@ -68,17 +68,15 @@ export interface MidiFile extends BaseFile {
 // ==============================================================
 // Region
 
-export interface Region {
+export interface BaseRegion {
 	trackIndex: number;
 	fileIndex: number;
 	start: number; // in beats
 	duration: number;
-
-	type: RegionType;
 }
 
-export interface AudioRegion extends Region {
-	type: RegionType.Audio;
+export interface AudioRegion extends BaseRegion {
+	readonly type: RegionType.Audio;
 	
 	// Audio slice info
 	audioStartOffset: number;
@@ -92,11 +90,13 @@ export interface AudioRegion extends Region {
 	fadeOut: number;
 }
 
-export interface MidiRegion extends Region {
-	type: RegionType.Midi
+export interface MidiRegion extends BaseRegion {
+	readonly type: RegionType.Midi
 	
 	midiData: []
 }
+
+export type Region = AudioRegion | MidiRegion;
 
 // ==============================================================
 // Track
