@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, EventEmitter, Input, OnInit, Output, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Region, RegionType, Track } from '@shared/types';
+import { AudioRegion, MidiRegion, Region, RegionType, Track } from '@shared/types';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -13,6 +13,8 @@ import { RegionPath, TracksService } from '@src/app/pages/studio/services/tracks
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
 
+import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
+import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-render.service';
 type ResizeHandle = 'left' | 'right' | null;
 
 @Component({
@@ -34,7 +36,11 @@ type ResizeHandle = 'left' | 'right' | null;
 
 			(mousedown)="onMouseDown($event)"
 			(mousemove)="onMouseMove($event)"
-			>
+		>
+			<div class="waveform-div">
+				<canvas #waveformCanvas class="waveform-canvas"></canvas>
+			</div>
+
 			<!-- Resize handles for selected regions -->
 			<div *ngIf="isSelected() && canResize()" 
 				class="resize-handle resize-handle-left"
@@ -78,14 +84,19 @@ type ResizeHandle = 'left' | 'right' | null;
 	styleUrl: './region.component.scss'
 })
 
-export class RegionComponent implements OnInit {
+export class RegionComponent implements OnInit, AfterViewInit {
 	@Input() track!: StateNode<Track>;
-	@Input() region!: StateNode<Region>;
+	@Input() region!: StateNode<AudioRegion | MidiRegion>;
 	@Input() trackIndex!: number;
 	@Input() regionIndex!: number;
 	@ViewChild("region", {static: true}) regionRef!: ElementRef<HTMLDivElement>;
+	@ViewChild('waveformCanvas', { static: true }) waveformCanvas!: ElementRef<HTMLCanvasElement>;
 
+	declare type: RegionType;
+	declare fileId: string;
 	declare regionPath: RegionPath;
+
+	currentAudioFile: any = null;
 
 	constructor (
 		public stateService: StateService,
@@ -93,6 +104,8 @@ export class RegionComponent implements OnInit {
 		public selectionService: RegionSelectService,
 		public dragService: RegionDragService,
 		public viewportService: ViewportService,
+		public audioCacheService: AudioCacheService,
+		public waveformRenderService: WaveformRenderService,
 	) {}
 
 	ngOnInit(): void {
@@ -100,7 +113,18 @@ export class RegionComponent implements OnInit {
 			trackIndex: this.trackIndex,
 			regionIndex: this.regionIndex
 		};
+		this.fileId = this.region.fileId();
 	}
+
+	ngAfterViewInit(): void {
+		this.type = this.region.type();
+		if (this.region.type() == RegionType.Audio) {
+			this.renderWaveform();
+		}
+	}
+
+	// ====================================================================================================
+	// Fields
 
 	get tracks() { return this.stateService.state.studio.tracks };
 
@@ -132,6 +156,149 @@ export class RegionComponent implements OnInit {
 		const selected = this.selectionService.isRegionSelected(this.regionPath);
 		return selected;
 	});
+
+	// ====================================================================================================
+	// Waveform
+
+	private async waitForAudioToLoad(): Promise<void> {
+		if (this.audioCacheService.cache.get(this.fileId)) {
+			return;
+		}
+
+		return new Promise((resolve, reject) => {
+			const checkInterval = setInterval(() => {
+				if (this.audioCacheService.cache.get(this.fileId)) {
+					clearInterval(checkInterval);
+					resolve();
+				}
+			}, 100); // Check every 100ms
+
+			// Timeout after 30 seconds
+			setTimeout(() => {
+				clearInterval(checkInterval);
+				reject(new Error('Timeout waiting for audio to load'));
+			}, 30000);
+		});
+	}
+
+	async renderWaveform() {
+		await this.waitForAudioToLoad()
+
+		const result = await this.waveformRenderService.renderSimple(
+			this.fileId,
+			this.waveformCanvas.nativeElement,
+		);
+		console.log(result);
+	}
+
+	// ====================================================================================================
+	// Resize System
+
+	canResize = computed(() => { return this.selectionService.selectedRegionsCount() === 1 && this.isSelected(); });
+	private resizeHandle = signal<ResizeHandle>(null);
+	private resizeStartPx = signal(0);
+	private originalRegion: Region | null = null;
+
+	ghostRegion = signal<{ start: number; duration: number } | null>(null);
+	ghostWidth = computed(() => {
+		const ghost = this.ghostRegion();
+		return ghost ? `${ghost.duration * this.viewportService.measureWidth()}px` : '0px';
+	});
+	ghostStartPos = computed(() => {
+		const ghost = this.ghostRegion();
+		return ghost ? `${ghost.start * this.viewportService.measureWidth()}px` : '0px';
+	});
+
+	onResizeHandleMouseDown(event: MouseEvent, handle: ResizeHandle) {
+		event.preventDefault();
+		event.stopPropagation();
+		
+		this.startResize(event, handle);
+	}
+	
+	private startResize(event: MouseEvent, handle: ResizeHandle) {
+		this.viewportService.isResizingRegion.set(true);
+		this.resizeHandle.set(handle);
+		
+		this.resizeStartPx.set(event.clientX);
+		
+		// Store original region state
+		this.originalRegion! = this.region.snapshot();
+		
+		// Initialize ghost with current region
+		this.ghostRegion.set({
+			start: this.region.start(),
+			duration: this.region.duration()
+		});
+		
+		// Add global mouse listeners
+		document.addEventListener('mousemove', this.onResizeMove);
+		document.addEventListener('mouseup', this.onResizeFinish);
+	}
+
+	private onResizeMove = (event: MouseEvent) => {
+		if (!this.viewportService.isResizingRegion() || !this.originalRegion) {
+			return;
+		}
+
+		const deltaPx = event.clientX - this.resizeStartPx() + 8;
+		const deltaPos = deltaPx / this.viewportService.measureWidth();
+		
+		const handle = this.resizeHandle();
+		let newStart = this.originalRegion.start;
+		let newDuration = this.originalRegion.duration;
+		let newEnd = this.originalRegion.start + this.originalRegion.duration;
+		
+		if (handle === 'left') {
+			newStart = this.viewportService.snapToGrid() ?
+				Math.max(0, this.viewportService.snap(this.originalRegion.start + deltaPos)) :
+				Math.max(0, this.originalRegion.start + deltaPos);
+		} else if (handle === 'right') {
+			newEnd = this.viewportService.snapToGrid() ?
+				Math.max(0, this.viewportService.snap(this.originalRegion.start + this.originalRegion.duration + deltaPos)) :
+				Math.max(0, this.originalRegion.start + this.originalRegion.duration + deltaPos);
+		}
+
+		if (this.type == RegionType.Audio) { // Clamp if audio region
+			const fullStart = (this.region as StateNode<AudioRegion>).fullStart();
+			const fullDuration = (this.region as StateNode<AudioRegion>).fullDuration();
+			const fullEnd = fullStart + fullDuration;
+			newStart = Math.max(newStart, fullStart); 
+			newEnd = Math.min(newEnd, fullEnd);
+			console.log("full", fullStart, fullDuration, fullEnd);
+		}
+		newDuration = Math.max(0.1, newEnd - newStart);
+
+		console.log(newStart, newDuration, newEnd);
+		
+		this.ghostRegion.set({
+			start: newStart,
+			duration: newDuration
+		});
+	};
+
+	private onResizeFinish = (event: MouseEvent) => {
+		// Commit the final size from ghost to actual region
+		const ghost = this.ghostRegion();
+		if (ghost) {
+			this.tracksService.resizeRegion(this.regionPath, ghost.start, ghost.duration);
+		}
+		
+		// Clean up resize state
+		this.viewportService.isResizingRegion.set(false);
+		this.resizeHandle.set(null);
+		this.originalRegion = null;
+		this.ghostRegion.set(null);
+		
+		// Remove global mouse listeners
+		document.removeEventListener('mousemove', this.onResizeMove);
+		document.removeEventListener('mouseup', this.onResizeFinish);
+
+		this.renderWaveform(); // rerender waveform
+	};
+
+	// ====================================================================================================
+	// Events
 
 	onClick(event: MouseEvent) {
 		event.preventDefault();
@@ -184,116 +351,13 @@ export class RegionComponent implements OnInit {
 		}
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// RESIZE SYSTEM
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	canResize = computed(() => { return this.selectionService.selectedRegionsCount() === 1 && this.isSelected(); });
-	private resizeHandle = signal<ResizeHandle>(null);
-	private resizeStartPx = signal(0);
-	private originalRegion: Region | null = null;
-
-	ghostRegion = signal<{ start: number; duration: number } | null>(null);
-	ghostWidth = computed(() => {
-		const ghost = this.ghostRegion();
-		return ghost ? `${ghost.duration * this.viewportService.measureWidth()}px` : '0px';
-	});
-	ghostStartPos = computed(() => {
-		const ghost = this.ghostRegion();
-		return ghost ? `${ghost.start * this.viewportService.measureWidth()}px` : '0px';
-	});
-
-	onResizeHandleMouseDown(event: MouseEvent, handle: ResizeHandle) {
-		event.preventDefault();
-		event.stopPropagation();
-		
-		this.startResize(event, handle);
-	}
-	
-	private startResize(event: MouseEvent, handle: ResizeHandle) {
-		this.viewportService.isResizingRegion.set(true);
-		this.resizeHandle.set(handle);
-		
-		this.resizeStartPx.set(event.clientX);
-		
-		// Store original region state
-		this.originalRegion! = this.region.snapshot();
-		
-		// Initialize ghost with current region
-		this.ghostRegion.set({
-			start: this.region.start(),
-			duration: this.region.duration()
-		});
-		
-		// Add global mouse listeners
-		document.addEventListener('mousemove', this.onDocumentMouseMove);
-		document.addEventListener('mouseup', this.onDocumentMouseUp);
-	}
-
-	private onDocumentMouseMove = (event: MouseEvent) => {
-		if (!this.viewportService.isResizingRegion() || !this.originalRegion) {
-			return;
-		}
-
-		const deltaPx = event.clientX - this.resizeStartPx() + 8;
-		const deltaPos = deltaPx / this.viewportService.measureWidth();
-		
-		const handle = this.resizeHandle();
-		let newStart = this.originalRegion.start;
-		let newDuration = this.originalRegion.duration;
-		
-		if (handle === 'left') {
-			const newEnd = this.originalRegion.start + this.originalRegion.duration;
-			newStart = this.viewportService.snapToGrid() ?
-				Math.max(0, this.viewportService.snap(this.originalRegion.start + deltaPos)) :
-				Math.max(0, this.originalRegion.start + deltaPos);
-			newDuration = Math.max(0.1, newEnd - newStart);
-		} else if (handle === 'right') {
-			const newEnd = this.viewportService.snapToGrid() ?
-				Math.max(0, this.viewportService.snap(this.originalRegion.start + this.originalRegion.duration + deltaPos)) :
-				Math.max(0, this.originalRegion.start + this.originalRegion.duration + deltaPos);
-			newDuration = Math.max(0.1, newEnd - newStart);
-		}
-		
-		this.ghostRegion.set({
-			start: newStart,
-			duration: newDuration
-		});
-	};
-
-	private onDocumentMouseUp = (event: MouseEvent) => {
-		// Commit the final size from ghost to actual region
-		const ghost = this.ghostRegion();
-		if (ghost) {
-			this.updateRegionSize(ghost.start, ghost.duration);
-		}
-		
-		// Clean up resize state
-		this.viewportService.isResizingRegion.set(false);
-		this.resizeHandle.set(null);
-		this.originalRegion = null;
-		this.ghostRegion.set(null);
-		
-		// Remove global mouse listeners
-		document.removeEventListener('mousemove', this.onDocumentMouseMove);
-		document.removeEventListener('mouseup', this.onDocumentMouseUp);
-	};
-
-	private updateRegionSize(newStart: number, newDuration: number) {
-		const trackIndex = this.regionPath.trackIndex;
-		const regionIndex = this.regionPath.regionIndex;
-		this.tracks()[trackIndex].regions()[regionIndex].start.set(newStart);
-		this.tracks()[trackIndex].regions()[regionIndex].duration.set(newDuration);
-	}
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// OTHER METHODS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	onContextMenu(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
 	}
+
+	// ====================================================================================================
+	// Region Actions
 
 	openMidiEditor() {
 		if (this.isMidi()) {
@@ -338,10 +402,10 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } {
 			case bNorm: h = (rNorm - gNorm) / d + 4; break;
 		}
 		h /= 6;
-  	}	
+	}	
 
-  	return { h: h * 360, s: s * 100, l: l * 100 };
+	return { h: h * 360, s: s * 100, l: l * 100 };
 }
 function hslToCss(h: number, s: number, l: number): string {
-  	return `hsl(${h}, ${s}%, ${l}%)`;
+	return `hsl(${h}, ${s}%, ${l}%)`;
 }

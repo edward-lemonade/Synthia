@@ -13,56 +13,18 @@ export function regionTypeFromTrack(value: any): RegionType { return isTrackAudi
 // ==============================================================
 // Audio file
 
-export interface BaseFile {
+export interface BaseFileRef {
 	fileId: string;
-	originalName: string;
-
-	format: 'wav' | 'mp3' | 'flac' | 'aiff' | 'midi' | 'mid';
+	mimeType: string;
 	type: RegionType;
-
-	fileData?: Buffer;
 }
 
-export interface AudioFile extends BaseFile {
-	format: 'wav' | 'mp3' | 'flac' | 'aiff';
+export interface AudioFileRef extends BaseFileRef {
 	type: RegionType.Audio;
-
-	duration: number;
-	sampleRate: number;
-	channels: number;
-	bitDepth: number;
-	
-	// AUDIO DATA OR CACHE REFERENCES (key difference from backend)
-	audio: {
-		// Direct audio data (when loaded)
-		original?: AudioBuffer;
-		mp3_320?: AudioBuffer;
-		mp3_128?: AudioBuffer;
-		preview?: AudioBuffer;
-		
-		// OR cache references (when not directly loaded)
-		cache: {
-			original?: string;     // IndexedDB cache key
-			mp3_320?: string;      // IndexedDB cache key  
-			mp3_128?: string;      // IndexedDB cache key
-			preview?: string;      // IndexedDB cache key
-		};
-		
-		// Loading states
-		loading: {
-			original: boolean;
-			mp3_320: boolean;
-			mp3_128: boolean;
-			preview: boolean;
-		};
-	};
 }
 
-export interface MidiFile extends BaseFile {
-	format: 'mid' | 'midi';
+export interface MidiFileRef extends BaseFileRef {
 	type: RegionType.Midi;
-	
-	midiJson?: {};
 }
 
 // ==============================================================
@@ -70,17 +32,20 @@ export interface MidiFile extends BaseFile {
 
 export interface BaseRegion {
 	trackIndex: number;
-	fileIndex: number;
+	fileId: string;
 	start: number; // in beats
-	duration: number;
+	duration: number; // in beats
 }
 
 export interface AudioRegion extends BaseRegion {
 	readonly type: RegionType.Audio;
 	
 	// Audio slice info
-	audioStartOffset: number;
-	audioEndOffset: number;
+	fullStart: number; // in beats
+	fullDuration: number; // in beats
+
+	audioStartOffset: number; // in time
+	audioEndOffset: number; // in time
 	
 	// Playback modifications
 	volume: number;
@@ -135,5 +100,5 @@ export interface ProjectStudio {
 	masterVolume : number;
 
 	tracks: Track[];
-	files: BaseFile[];
+	fileRefs: BaseFileRef[];
 }

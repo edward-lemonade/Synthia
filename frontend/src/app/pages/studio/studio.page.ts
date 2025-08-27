@@ -11,14 +11,15 @@ import { StudioEditorComponent } from "./components/studio-editor/studio-editor.
 import { ViewportService } from './services/viewport.service';
 import { RegionSelectService } from './services/region-select.service';
 import { RegionDragService } from './services/region-drag.service';
-import { AudioHandlerService } from './services/audio-handler.service';
+import { AudioCacheService } from './services/audio-cache.service';
 import { StateService } from './state/state.service';
 import { TracksService } from './services/tracks.service';
+import { WaveformRenderService } from './services/waveform-render.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService, AudioHandlerService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService, AudioCacheService, WaveformRenderService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

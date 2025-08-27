@@ -1,15 +1,17 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { BaseFile } from "@shared/types";
+import { AudioFileRef, BaseFileRef, FileMetadata, ProjectFile } from "@shared/types";
+import { RegionType } from "@src/models/project/Track.model";
 import { Readable } from "stream";
 
 const s3 = new S3Client({ region: 'us-west-1' });
 
-export async function putFile(projectId: string, fileId: string, buffer: Buffer) {
+export async function putAudioFile(projectId: string, fileId: string, file: Express.Multer.File) {
 	const key = projectId + '/' + fileId;
 	const command = new PutObjectCommand({
 		Bucket: 'noteflyte',
 		Key: key,
-		Body: buffer,
+		Body: file.buffer,
+		ContentType: file.mimetype,
 	});
 
 	try {
@@ -21,28 +23,28 @@ export async function putFile(projectId: string, fileId: string, buffer: Buffer)
 	}
 }
 
-export async function putFiles(projectId: string, backendFiles: BaseFile[]) {
-	backendFiles.forEach(backendFile => {
-		putFile(projectId, backendFile.fileId, backendFile.fileData!);
-	});
-}
-
-export async function getFile(projectId: string, fileId: string) : Promise<Buffer<ArrayBufferLike>> {
+export async function getAudioFile(projectId: string, fileId: string) : Promise<ProjectFile> {
 	const key = projectId + '/' + fileId;
+
 	const command = new GetObjectCommand({
-		Bucket: 'noteflyte',
+		Bucket: "noteflyte",
 		Key: key,
 	});
 
 	const response = await s3.send(command);
-	if (!response.Body) throw new Error("No body in response");
 
 	const stream = response.Body as Readable;
-
 	const chunks: Uint8Array[] = [];
-	for await (const chunk of stream) {
-		chunks.push(chunk);
-	}
 
-	return Buffer.concat(chunks);
+	for await (const chunk of stream) {
+		chunks.push(chunk as Uint8Array);
+	}
+	const buffer = Buffer.concat(chunks);
+
+	const projectFile: ProjectFile = {
+		fileId: fileId,
+		buffer64: buffer.toString('base64'),
+		mimeType: response.ContentType!,
+	}
+	return projectFile;
 }

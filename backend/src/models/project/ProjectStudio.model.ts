@@ -1,6 +1,6 @@
 import mongoose, { Document } from "mongoose";
 import { ProjectStudio } from "@shared/types";
-import { BaseFileSchema, TrackSchema } from "./Track.model";
+import { BaseFileRefSchema, TrackSchema } from "./Track.model";
 
 const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 	projectId: 	{ type: String, index: true },
@@ -16,7 +16,7 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 	},
 	
 	tracks: { type: [TrackSchema], required: true },
-	files: { type: [BaseFileSchema], required: true }
+	fileRefs: { type: [BaseFileRefSchema], required: true }
 });
 
 export interface IProjectStudioDocument extends Document, ProjectStudio {

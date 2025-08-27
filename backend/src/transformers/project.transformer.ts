@@ -1,7 +1,8 @@
 import { IProjectFrontDocument, IProjectMetadataDocument, IProjectStudioDocument, } from "@src/models";
-import { AudioFile, BaseFile, ProjectFront, ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
+import { AudioFileRef, BaseFileRef, ProjectFront, ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
 import mongoose from "mongoose";
-import { getFile } from "@src/db/s3_client";
+import { getAudioFile } from "@src/db/s3_client";
+import { RegionType } from "@src/models/project/Track.model";
 
 export class ProjectMetadataTransformer {
 	static fromDoc(docMeta: IProjectMetadataDocument): ProjectMetadata {
@@ -44,19 +45,5 @@ export class ProjectStudioTransformer {
 		}
 
 		return studio as IProjectStudioDocument
-	}
-
-	static async toFrontend(projectId: string, objState: ProjectState): Promise<ProjectState> {
-		let { files, ...rest } = objState.studio;
-
-		if (files) {
-			await Promise.all(
-				files.map(async (file) => {
-					file.fileData = await getFile(projectId, file.fileId);
-				})
-			);
-		}
-
-		return { metadata: objState.metadata, studio:{...objState.studio, files} };
 	}
 }

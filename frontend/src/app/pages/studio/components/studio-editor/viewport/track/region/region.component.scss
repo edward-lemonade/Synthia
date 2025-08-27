@@ -24,6 +24,17 @@
 	&:hover {
 		background-color: var(--colorHover);
 	}
+
+	.waveform-div {
+		width: 100%;
+		height: 100%;
+		background: none;
+	}
+	.waveform-canvas {
+		width: 100%;
+		height: 100%;
+		background: none;
+	}
   
 	.resize-handle {
 		position: absolute;

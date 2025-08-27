@@ -3,13 +3,20 @@ import { applyPatches, Patch } from "immer";
 import mongoose, { Document } from "mongoose";
 
 import { deleteMetadataByProjectId, deleteStudioByProjectId, findMetadataByProjectId, findMetadatasByUser, findStudioByProjectId } from "@src/db/mongo_client";
-import { putFiles } from "@src/db/s3_client";
 
 
-import { ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
+import { ProjectState } from "@shared/types";
 import { ProjectMetadataTransformer, ProjectStudioTransformer } from "@src/transformers/project.transformer";
-import { IProjectMetadataDocument, ProjectMetadataModel, ProjectStudioModel } from "@src/models";
+import { ProjectMetadataModel, ProjectStudioModel } from "@src/models";
 
+
+export async function getMine(req: Request, res: Response) {
+	const userId = req.body.userId;
+	const metadataDocs = await findMetadatasByUser(userId);
+	const metadatas = metadataDocs.map((doc) => ProjectMetadataTransformer.fromDoc(doc));
+
+	res.json({ projects: metadatas })
+}
 
 export async function saveExisting(req: Request, res: Response) {
 	const projectId = req.body.projectId;
@@ -42,8 +49,6 @@ export async function saveExisting(req: Request, res: Response) {
 
 export async function saveOverwrite(req: Request, res: Response) {
 	const state = req.body.state as ProjectState;
-
-	putFiles(state.metadata.projectId, state.studio.files);
 
 	const [metadataDoc, studioDoc] = await Promise.all([
 		findMetadataByProjectId(state.metadata.projectId),
@@ -88,8 +93,6 @@ export async function saveOverwrite(req: Request, res: Response) {
 export async function saveNew(req: Request, res: Response) {
 	const state = req.body.state as ProjectState;
 
-	putFiles(state.metadata.projectId, state.studio.files);
-
 	const metadataSchema = ProjectMetadataTransformer.toDoc(state.metadata);
 	const metadataDoc = new ProjectMetadataModel(metadataSchema)
 	const savedMetadataDoc = await metadataDoc.save();
@@ -105,14 +108,6 @@ export async function saveNew(req: Request, res: Response) {
 	res.json({ success: true })
 }
 
-export async function getMine(req: Request, res: Response) {
-	const userId = req.body.userId;
-	const metadataDocs = await findMetadatasByUser(userId);
-	const metadatas = metadataDocs.map((doc) => ProjectMetadataTransformer.fromDoc(doc));
-
-	res.json({ projects: metadatas })
-}
-
 export async function load(req: Request, res: Response) {
 	const projectId = req.body.projectId;
 	const [metadataDoc, studioDoc] = await Promise.all([
@@ -122,9 +117,7 @@ export async function load(req: Request, res: Response) {
 	if (!metadataDoc || !studioDoc) { console.error("Failed to load project metadata."); res.json({ success: false }); return }
 
 	const state = ProjectStudioTransformer.toState(metadataDoc, studioDoc);
-	const stateWithFiles = await ProjectStudioTransformer.toFrontend(projectId, state);
-
-	res.json({ state: stateWithFiles })
+	res.json({ state: state })
 }
 
 export async function deleteStudio(req: Request, res: Response) {

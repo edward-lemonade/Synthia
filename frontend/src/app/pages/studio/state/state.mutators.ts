@@ -1,7 +1,7 @@
 
 import { AudioRegion, ProjectState, RegionType, TimeSignature, timeSignatureEquals, Track } from "@shared/types";
 import { StateService } from "./state.service";
-import { Primitive, StateHelpers, StateNode, WritableStateSignal } from "./state.factory";
+import { Leaf, StateHelpers, StateNode, WritableStateSignal } from "./state.factory";
 import { produceWithPatches } from "immer";
 
 import { ViewportService } from "../services/viewport.service";
@@ -26,7 +26,7 @@ export const studio_bpm_mutator: SignalMutator<number, number> = (
 	stateNode: StateNode<number>
 ) => {
 	const currentState = StateService.instance.state.snapshot() as ProjectState;
-
+	
 	console.log("custom bpm mutator")
 	// Internal
 	internalFn();

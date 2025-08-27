@@ -68,7 +68,7 @@ export class RegionDragService {
 
 	public completeDrag() { // mouse off
 		const deltaPosX = this.getDragDelta();
-		this.tracksService.moveRegions(this.selectService.selectedRegions(), 0, deltaPosX);
+		this.tracksService.moveRegions(this.selectService.selectedRegions(), deltaPosX);
 
 		this.isDragReady.set(false);
 		this.isDragging.set(false);

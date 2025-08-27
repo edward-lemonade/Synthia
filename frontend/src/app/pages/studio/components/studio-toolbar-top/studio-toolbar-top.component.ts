@@ -60,7 +60,6 @@ export class StudioToolbarTopComponent implements OnInit {
 
 	titleInput = signal('')
 	updateTitle() {
-		console.log(this.titleInput());
 		this.title.set(this.titleInput());
 	}
 

@@ -4,10 +4,10 @@ import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { AudioHandlerService } from '../../../services/audio-handler.service';
+import { AudioCacheService } from '../../../services/audio-cache.service';
 import { StateService } from '../../../state/state.service';
 import { TracksService } from '../../../services/tracks.service';
-import { TrackType, AudioTrackType, MidiTrackType } from '@shared/types';
+import { TrackType, AudioTrackType, MidiTrackType, Track, Region, AudioRegion } from '@shared/types';
 import { ViewportService } from '../../../services/viewport.service';
 
 @Component({
@@ -58,7 +58,7 @@ export class TracklistHeaderComponent {
 		public stateService: StateService,
 		public viewportService: ViewportService,
 		public tracksService: TracksService,
-		private audioHandler: AudioHandlerService
+		private audioCacheService: AudioCacheService
 	) {}
 
 	onAddTrack(type: TrackType) {
@@ -77,24 +77,7 @@ export class TracklistHeaderComponent {
 			const file = files[0];
 			
 			try {
-				// Add the audio file to the audio handler
-				const audioFile = await this.audioHandler.addAudioFile(file);
-				const trackIndex = this.tracksService.numTracks();
-
-				const trackProps = {
-					name: audioFile.name.replace(/\.[^/.]+$/, ""),
-					files: [audioFile.id],
-				}
-				this.tracksService.addTrack(AudioTrackType.Audio, trackProps);
-				
-				const regionProps = {
-					duration: this.viewportService.timeToPos(audioFile.duration),
-					data: [JSON.stringify({ audioFileId: audioFile.id })],
-					fileIndex: 0, // fileIndex is wrong, filler code
-				}
-
-				this.tracksService.addAudioRegion(trackIndex, regionProps);
-				console.log(`Audio track created with file: ${audioFile.name}`);
+				this.tracksService.addNewAudioTrack(file);
 				
 			} catch (error) {
 				console.error('Failed to create audio track:', error);

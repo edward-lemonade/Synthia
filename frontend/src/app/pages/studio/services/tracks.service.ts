@@ -1,8 +1,10 @@
 import { computed, Injectable, Injector, Signal } from "@angular/core";
-import { AudioRegion, MidiRegion, Region, RegionType, regionTypeFromTrack, Track, TrackType } from "@shared/types";
+import { AudioRegion, AudioTrackType, MidiRegion, Region, RegionType, regionTypeFromTrack, Track, TrackType } from "@shared/types";
 import { StateService } from "../state/state.service";
 import { AUDIO_REGION_DEFAULTS, AUDIO_TRACK_DEFAULTS, MIDI_REGION_DEFAULTS, MIDI_TRACK_DEFAULTS } from "../state/state.defaults";
 import { StateNode, stateNode } from "../state/state.factory";
+import { AudioCacheService } from "./audio-cache.service";
+import { ViewportService } from "./viewport.service";
 
 export interface RegionPath {
 	trackIndex: number;
@@ -59,6 +61,30 @@ export class TracksService {
 
 		this.tracks.push(newTrack);
 	}
+	async addNewAudioTrack(file: File) {
+		const cachedAudioFile = await AudioCacheService.instance.addAudioFile(file);
+		const name = file.name.replace(/\.[^/.]+$/, "");
+
+		// New Audio Track
+		const trackIndex = this.numTracks();
+		const trackProps : Partial<Track> = {
+			name: name
+		}
+		this.addTrack(AudioTrackType.Audio, trackProps);
+		
+		// New Audio Region
+		const durationInMeasures = ViewportService.instance.timeToPos(cachedAudioFile.duration);
+		const regionProps : Partial<AudioRegion> = {
+			fileId: cachedAudioFile.fileId,
+			start: 0,
+			duration: durationInMeasures,
+			fullStart: 0,
+			fullDuration: durationInMeasures,
+			audioStartOffset: 0,
+			audioEndOffset: cachedAudioFile.duration,
+		}
+		this.addAudioRegion(trackIndex, regionProps);
+	}
 	deleteTrack(index: number) {
 		this.tracks.update(tracks => {
 			const newTracks = tracks.filter((_, i) => i !== index);
@@ -96,12 +122,7 @@ export class TracksService {
 			trackIndex, 
 		};
 
-		const newRegionState = stateNode(region, this.stateService);
-
-		this.tracks()[trackIndex].regions.update(regions => [
-			...regions,
-			newRegionState,
-		]);
+		this.tracks()[trackIndex].regions.push(region);
 	}
 	addMidiRegion(trackIndex: number, overrides: Partial<MidiRegion> = {}) {
 		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
@@ -112,12 +133,7 @@ export class TracksService {
 			trackIndex, 
 		};
 
-		const newRegionState = stateNode(region, this.stateService);
-
-		this.tracks()[trackIndex].regions.update(regions => [
-			...regions,
-			newRegionState,
-		]);
+		this.tracks()[trackIndex].regions.push(region);
 	}
 	deleteRegion(path: RegionPath) {
 		this.tracks()[path.trackIndex].regions.update(regions => 
@@ -137,66 +153,52 @@ export class TracksService {
 			);
 		});
 	}
-	moveRegion(path: RegionPath, newTrackIndex: number, newStart: number) { // ensure this results in the expected reactivity
-		const track = this.tracks()[path.trackIndex];
-		const region = track.regions()[path.regionIndex];
+	transferRegionToTrack(path: RegionPath, newTrackIndex: number) {
+		const sourceTrack = this.tracks()[path.trackIndex];
+		const targetTrack = this.tracks()[newTrackIndex];
+		const region = sourceTrack.regions()[path.regionIndex];
 
-		track.regions.update(regions => {
+		sourceTrack.regions.update(regions => { // pop out
 			const updated = [...regions];
 			updated.splice(path.regionIndex, 1);
 			return updated;
 		});
 
-		const movedRegion = {...region};
-		movedRegion.trackIndex.set(newTrackIndex);
-		movedRegion.start.set(newStart);
+		const regionData = region.snapshot();
+		regionData.trackIndex = newTrackIndex;
 
-		this.tracks()[newTrackIndex].regions.update(regions => [...regions, movedRegion]);
+		targetTrack.regions.push(regionData);
 	}
-	moveRegions(paths: RegionPath[], trackIndexOffset: number, startOffset: number) {
-		if (paths.length === 0) return;
-
-		const extracted: { region: StateNode<Region>, newTrackIndex: number }[] = [];
-
-		// 1. Extract regions and determine new track index
-		for (const path of paths) {
+	transferRegionsToTrack(paths: RegionPath[], trackIndexOffset: number) {
+		paths.forEach(path => {
+			this.transferRegionToTrack(path, path.trackIndex + trackIndexOffset);
+		});
+	}
+	moveRegion(path: RegionPath, newStart: number) {
+		const region = this.tracks()[path.trackIndex].regions()[path.regionIndex];
+		
+		region.start.set(newStart);
+		if (region.type() === RegionType.Audio) {
+			(region as StateNode<AudioRegion>).fullStart.set(newStart);
+		}
+	}
+	moveRegions(paths: RegionPath[], startOffset: number) {
+		paths.forEach(path => {
 			const region = this.tracks()[path.trackIndex].regions()[path.regionIndex];
-			const newTrackIndex = path.trackIndex + trackIndexOffset;
-			extracted.push({ region, newTrackIndex });
-		}
+			this.moveRegion(path, region.start() + startOffset);
+		});
+	}
+	resizeRegion(path: RegionPath, newStart: number, newDuration: number) {
+		const region = this.tracks()[path.trackIndex].regions()[path.regionIndex];
+		region.start.set(newStart);
+		region.duration.set(newDuration);
 
-		// 2. Remove from original tracks if moving to a different track
-		if (trackIndexOffset !== 0) {
-			const regionsByTrack = new Map<number, number[]>();
-			for (const path of paths) {
-				const idxs = regionsByTrack.get(path.trackIndex) ?? [];
-				idxs.push(path.regionIndex);
-				regionsByTrack.set(path.trackIndex, idxs);
-			}
-
-			for (const [trackIndex, indices] of regionsByTrack.entries()) {
-				const regionsSignal = this.tracks()[trackIndex].regions;
-				const toRemove = new Set(indices);
-				regionsSignal.update(r => {
-					const kept = r.filter((_, i) => !toRemove.has(i));
-					return kept;
-				});
-			}
-
-			for (const { region, newTrackIndex } of extracted) {
-				region.start.set(region.start() + startOffset);
-				region.trackIndex.set(newTrackIndex);
-				const paste = region.snapshot();
-				this.tracks()[newTrackIndex].regions.push(paste);
-			}
-		} else {
-			for (const { region, newTrackIndex } of extracted) {
-				region.start.set(region.start() + startOffset);
-			}
+		if (region.type() == RegionType.Audio) {
+			const audioRegion = (region as StateNode<AudioRegion>);
+			audioRegion.audioStartOffset.set(ViewportService.instance.posToTime(newStart - audioRegion.fullStart()));
+			audioRegion.audioEndOffset.set(ViewportService.instance.posToTime(newStart + newDuration));
 		}
 	}
-
-
 	duplicateRegion(path: RegionPath) {
 		const track = this.tracks()[path.trackIndex];
 		const region = track.regions()[path.regionIndex];

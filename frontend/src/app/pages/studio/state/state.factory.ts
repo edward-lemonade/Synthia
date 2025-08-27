@@ -1,12 +1,12 @@
 import { signal, WritableSignal } from "@angular/core";
 import { StateService } from "./state.service";
-import { Author, isAuthor, isTimeSignature, Key, ProjectState, TimeSignature } from "@shared/types";
+import { Author, BaseFileRef, isAuthor, isTimeSignature, Key, ProjectState, TimeSignature } from "@shared/types";
 import { produceWithPatches } from "immer";
-import { DefaultState } from "./state.defaults";
 import { SignalMutator } from "./state.mutators";
+import { Blueprint, BlueprintModifier } from "./state.defaults";
 
-export type Primitive = string | number | boolean | Date | TimeSignature | Author | Array<Primitive>;
-export function isPrimitive(value: any): value is Primitive {
+export type Leaf = string | number | boolean | Date | TimeSignature | Author | BaseFileRef[] | Array<Leaf>;
+export function isLeaf(value: any): value is Leaf {
 	return (typeof value === 'string' ||
 			typeof value === 'number' ||
 			typeof value === 'boolean' ||
@@ -34,18 +34,17 @@ export interface StateHelpers {
 	allowsUndoRedo(): boolean;
 }
 export type StateNode<T> = (
-	[T] extends [Primitive] ? 		StateHelpers & WritableStateSignal<T> : 
+	[T] extends [Leaf] ? 			StateHelpers & WritableStateSignal<T> : 
 	[T] extends [Array<infer U>] ? 	StateHelpers & WritableStateSignal<StateNode<U>[]> & ArrayHelpers<U> :
 	[T] extends [object] ? 			StateHelpers & { [K in keyof T]: StateNode<T[K]> } : 
 	never
 );
 
 // Leaf nodes
-export function stateSignal<T extends Primitive>(
+export function leafSignal<T extends Leaf>(
 	initial: T,
-	stateService: StateService,
 	allowUndoRedo: boolean = true,
-	customMutate: SignalMutator<T, T>,
+	customMutate: SignalMutator<T, T> | null,
 	parent?: StateNode<any>,
 	key?: string | number,
 ): StateHelpers & WritableStateSignal<T> {
@@ -61,10 +60,10 @@ export function stateSignal<T extends Primitive>(
 	const internalUpdate = s.update.bind(s);
 
 	let mutate: SignalMutator<T, T> = ((internalFn: () => void, currentValue: T, newValue: T, stateNode: StateNode<T>) => {
-		const currentState = stateService.state.snapshot() as ProjectState;
+		const currentState = StateService.instance.state.snapshot() as ProjectState;
 		internalFn();
 		
-		if (allowUndoRedo && stateService.historyService) {
+		if (allowUndoRedo && StateService.instance.historyService) {
 			const path = s.getPath();
 			
 			const [_, patches, inversePatches] = produceWithPatches(currentState, (draft: any) => {
@@ -78,7 +77,7 @@ export function stateSignal<T extends Primitive>(
 			});
 
 			if (patches && patches.length > 0) {
-				stateService.historyService.recordPatch(patches, inversePatches, allowUndoRedo);
+				StateService.instance.historyService.recordPatch(patches, inversePatches, allowUndoRedo);
 			}
 		}
 	});
@@ -110,17 +109,16 @@ export function stateSignal<T extends Primitive>(
 }
 
 // Array nodes
-export function stateSignalArray<T extends Record<string,any>>(
+export function arraySignal<T extends Record<string,any>>(
 	initial: T[],
-	stateService: StateService,
 	allowUndoRedo = true,
-	customMutate: SignalMutator<StateNode<T>[], T>,
+	customMutate: SignalMutator<StateNode<T>[], T> | null,
 	parent?: StateNode<any>,
 	key?: string | number,
 ): StateHelpers & WritableStateSignal<StateNode<T>[]> & ArrayHelpers<T> {
 	const s = signal([] as StateNode<T>[]) as StateHelpers & WritableStateSignal<StateNode<T>[]> & ArrayHelpers<T>;
 
-	s.set(initial.map((v, idx) => stateNode(v, stateService, allowUndoRedo, s, idx)));
+	s.set(initial.map((v, idx) => stateNode(v, allowUndoRedo, s, idx)));
 
 	s.getParent = () => parent;
 	s.getKey = () => key;
@@ -132,10 +130,10 @@ export function stateSignalArray<T extends Record<string,any>>(
 	const internalUpdate = s.update.bind(s);
 
 	let mutate: SignalMutator<StateNode<T>[], T> = (internalFn: () => void, currentValue: StateNode<T>[], newValue: StateNode<T>[], stateNode: StateNode<T>) => {
-		const currentState = stateService.state.snapshot() as ProjectState;
+		const currentState = StateService.instance.state.snapshot() as ProjectState;
 		internalFn();
 		
-		if (allowUndoRedo && stateService.historyService) {
+		if (allowUndoRedo && StateService.instance.historyService) {
 			const path = s.getPath();
 			
 			const [_, patches, inversePatches] = produceWithPatches(currentState, (draft: any) => {
@@ -149,22 +147,23 @@ export function stateSignalArray<T extends Record<string,any>>(
 			});
 
 			if (patches && patches.length > 0) {
-				stateService.historyService.recordPatch(patches, inversePatches, allowUndoRedo);
+				StateService.instance.historyService.recordPatch(patches, inversePatches, allowUndoRedo);
 			}
 		}
 	};
 	mutate = customMutate ?? mutate;
 
 	s.push = function(...items: T[]) {
+		const current = s();
 		this.update(arr => {
-			let newNodes = items.map((v, idx) => stateNode(v, stateService, allowUndoRedo, s, s().length + idx));
+			let newNodes = items.map((v, idx) => stateNode(v, allowUndoRedo, s, current.length + idx));
 			return [...arr, ...newNodes]
 		});
 	};
 	s.splice = function(start: number, deleteCount = 0, ...items: T[]) {
 		let deleted: T[] = [];
 		this.update(arr => {
-			let newNodes = items.map((v, idx) => stateNode(v, stateService, allowUndoRedo, s, s().length + idx));
+			let newNodes = items.map((v, idx) => stateNode(v, allowUndoRedo, s, s().length + idx));
 			const copy = [...arr];
 			deleted = copy.splice(start, deleteCount, ...newNodes).map(n => n.snapshot());
 			copy.forEach((el, idx) => {
@@ -188,7 +187,6 @@ export function stateSignalArray<T extends Record<string,any>>(
 		set(newValue: StateNode<T>[]) {
 			const currentValue = s();
 			if (currentValue !== newValue) {
-				internalSet(newValue);
 				mutate(() => internalSet(newValue), currentValue, newValue, this as StateNode<T>);
 			}
 		},
@@ -196,7 +194,6 @@ export function stateSignalArray<T extends Record<string,any>>(
 			const currentValue = s();
 			const newValue = updateFn(currentValue);
 			if (currentValue !== newValue) {
-				internalUpdate(updateFn);
 				mutate(() => internalUpdate(updateFn), currentValue, newValue, this as StateNode<T>);
 			}
 		},
@@ -213,8 +210,7 @@ export function stateSignalArray<T extends Record<string,any>>(
 
 // Recursive builder
 export function stateNode<T extends Record<string, any>>(
-	initial: T,
-	stateService: StateService,
+	blueprint: T,
 	allowUndoRedo: boolean = true,
 	parent?: StateNode<any>,
 	key?: string | number
@@ -235,18 +231,24 @@ export function stateNode<T extends Record<string, any>>(
 		return result;
 	};
 
-	allowUndoRedo = (initial as DefaultState<any> | null | undefined)?._U ?? allowUndoRedo;
+	const { __M, ...defaults } = blueprint as Blueprint<T>;
 
-	for (const k in initial) {
-		const value = initial[k];
-		const customMutate = (initial as DefaultState<any>)?._M?.[k] ?? null;
+	for (const k in (defaults as T)) {
+		const value = blueprint[k];
 
-		if (isPrimitive(value)) {
-			obj[k] = stateSignal(value, stateService, allowUndoRedo, customMutate, obj, k);
+		const {
+			disallowUndoRedo = !allowUndoRedo,
+			customLeafMutator = null,
+			customArrayMutator = null,
+			asLeaf = false
+		} = __M?.[k as keyof T] ?? {};
+
+		if (isLeaf(value) || asLeaf) {
+			obj[k] = leafSignal(value, !disallowUndoRedo, customLeafMutator, obj, k);
 		} else if (Array.isArray(value)) {
-			obj[k] = stateSignalArray(value, stateService, allowUndoRedo, customMutate, obj, k);
+			obj[k] = arraySignal(value, !disallowUndoRedo, customArrayMutator, obj, k);
 		} else if (value !== null && typeof value === 'object') {
-			obj[k] = stateNode(value, stateService, allowUndoRedo, obj, k);
+			obj[k] = stateNode(value, !disallowUndoRedo, obj, k);
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { Region, Track, BaseFile } from '@shared/types';
+import { Region, Track, BaseFileRef } from '@shared/types';
 import { Schema } from 'mongoose';
 
 export enum RegionType { Audio="audio", Midi="midi" }
@@ -7,24 +7,15 @@ export enum MidiTrackType { Instrument="instrument", Drums="drums" }
 export type TrackType = AudioTrackType | MidiTrackType
 
 
-export const BaseFileSchema = new Schema<BaseFile>({
+export const BaseFileRefSchema = new Schema<BaseFileRef>({
 	fileId: { type: String, required: true },
-	originalName: { type: String, required: true },
-	format: { 
-		type: String, 
-		enum: ['wav', 'mp3', 'flac', 'aiff', 'midi', 'mid'], 
-		required: true 
-	},
-	type: { 
-		type: String, 
-		enum: ["audio", "midi"], 
-		required: true 
-	},
+	mimeType: { type: String, required: true },
+	type: { type: String, required: true },
 }, { _id: false });
 
 const BaseRegionSchema = new Schema<Region>({
 	trackIndex: { type: Number, required: true },
-	fileIndex: { type: Number, required: true },
+	fileId: { type: String},
 	start: { type: Number, required: true },
 	duration: { type: Number, required: true },
 	type: { 
@@ -38,6 +29,8 @@ const BaseRegionSchema = new Schema<Region>({
 });
 
 const AudioRegionSchema = BaseRegionSchema.discriminator('audio', new Schema({
+	fullStart: { type: Number, required: true },
+	fullDuration: { type: Number, required: true },
 	audioStartOffset: { type: Number, required: true },
 	audioEndOffset: { type: Number, required: true },
 	volume: { type: Number, required: true },

@@ -2,14 +2,13 @@ import { Injectable, signal } from "@angular/core";
 import { Author, ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
 import { HistoryService, PatchEntry } from "../services/history.service";
 
-import { stateNode, isPrimitive, StateNode, WritableStateSignal } from "./state.factory";
+import { stateNode, isLeaf, StateNode, WritableStateSignal } from "./state.factory";
 import { METADATA_DEFAULTS, STUDIO_DEFAULTS } from "./state.defaults";
 import { AppAuthService } from "@src/app/services/app-auth.service";
 import { ActivatedRoute, Router } from "@angular/router";
 import { combineLatest, filter, take } from "rxjs";
 import axios from "axios";
-import { applyPatches } from "immer";
-import { ViewportService } from "../services/viewport.service";
+import { AudioCacheService } from "../services/audio-cache.service";
 
 
 @Injectable()
@@ -28,6 +27,8 @@ export class StateService { // SINGLETON
 		private auth: AppAuthService,
 		private route: ActivatedRoute,
 		private router: Router,
+
+		private audioCacheService: AudioCacheService,
 	) {		
 		StateService._instance = this;
 				
@@ -69,6 +70,11 @@ export class StateService { // SINGLETON
 
 			this.createState(initialState);
 		}
+
+		// NOTIFY OTHER SERVICES
+
+		this.isStateReady.set(true);
+		this.audioCacheService.initialize();
 	}
 
 	async loadState(projectId: string, applyImmediately: boolean = false) {
@@ -150,8 +156,7 @@ export class StateService { // SINGLETON
 		this.state = stateNode<ProjectState>({
 			metadata: {...METADATA_DEFAULTS, ...state.metadata},
 			studio: {...STUDIO_DEFAULTS, ...state.studio},
-		}, this) as StateNode<ProjectState>;
-		this.isStateReady.set(true);
+		}) as StateNode<ProjectState>;
 	}
 
 	applyPatchEntry(patchEntry: PatchEntry, invert: boolean = false) {

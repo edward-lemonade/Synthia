@@ -1,20 +1,28 @@
-import { AudioRegion, AudioTrackType, Author, BaseFile, DefaultKey, DefaultTimeSignature, MidiRegion, MidiTrackType, ProjectMetadata, ProjectState, ProjectStudio, RegionType, Track } from "@shared/types";
+import { AudioRegion, AudioTrackType, Author, BaseFileRef, DefaultKey, DefaultTimeSignature, MidiRegion, MidiTrackType, ProjectMetadata, ProjectState, ProjectStudio, RegionType, Track } from "@shared/types";
 import { StateService } from "./state.service";
-import { StateNode } from "./state.factory";
+import { Leaf, StateNode } from "./state.factory";
 import { produceWithPatches } from "immer";
 
 import { SignalMutator } from "./state.mutators";
 import * as SetterOverrides from "./state.mutators";
 
-export type DefaultState<T extends Record<string, any>> = T & {
-	_M: { [K in keyof T]?: SignalMutator<T[K], T[K]> | SignalMutator<StateNode<T[K]>[], T[K]>; }; // mutator overrides
-	_U?: boolean; // allow undo/redo
-};
+// ==============================================================
+// Modifiers
+
+export interface BlueprintModifier<T> {
+	disallowUndoRedo?: boolean,
+	customLeafMutator?: SignalMutator<T, T>,
+	customArrayMutator?: SignalMutator<StateNode<T>[], T>,
+	asLeaf?: boolean,
+}
+export type Blueprint<T> = T & {
+	__M?: {[K in keyof T]?: BlueprintModifier<T[K]>}
+}
 
 // ==============================================================
 // Top Level
 
-export const METADATA_DEFAULTS: DefaultState<ProjectMetadata> = {
+export const METADATA_DEFAULTS: Blueprint<ProjectMetadata> = {
 	projectId: '',
 	title: 'Untitled',
 	authors: [] as Author[],
@@ -25,11 +33,20 @@ export const METADATA_DEFAULTS: DefaultState<ProjectMetadata> = {
 	isRemixOf: null,
 	isReleased: false,
 
-	_M: { },
-	_U: false,
+	__M: {
+		projectId: {disallowUndoRedo: true},
+		title: {disallowUndoRedo: true},
+		authors: {disallowUndoRedo: true},
+		createdAt: {disallowUndoRedo: true},
+		updatedAt: {disallowUndoRedo: true},
+		isCollaboration: {disallowUndoRedo: true},
+		isRemix: {disallowUndoRedo: true},
+		isRemixOf: {disallowUndoRedo: true},
+		isReleased: {disallowUndoRedo: true},
+	}
 };
 
-export const STUDIO_DEFAULTS: DefaultState<ProjectStudio> = {
+export const STUDIO_DEFAULTS: Blueprint<ProjectStudio> = {
 	bpm: 120,
 	key: DefaultKey,
 	centOffset: 0,
@@ -37,17 +54,18 @@ export const STUDIO_DEFAULTS: DefaultState<ProjectStudio> = {
 	masterVolume: 100,
 
 	tracks: [] as Track[],
-	files: [] as BaseFile[],
+	fileRefs: [] as BaseFileRef[],
 
-	_M: { 
-		bpm: SetterOverrides.studio_bpm_mutator,
+	__M: {
+		bpm: {customLeafMutator: SetterOverrides.studio_bpm_mutator},
+		fileRefs: {disallowUndoRedo: true, asLeaf: true}
 	}
-};
+}
 
 // ==============================================================
 // Track
 
-export const AUDIO_TRACK_DEFAULTS: DefaultState<Track> = {
+export const AUDIO_TRACK_DEFAULTS: Blueprint<Track> = {
 	index: -1,
 	name: "Track",
 	color: "#FFFFFF",
@@ -63,10 +81,10 @@ export const AUDIO_TRACK_DEFAULTS: DefaultState<Track> = {
 	effects: [],
 	regions: [],
 
-	_M: { }
+	
 };
 
-export const MIDI_TRACK_DEFAULTS: DefaultState<Track> = {
+export const MIDI_TRACK_DEFAULTS: Blueprint<Track> = {
 	index: -1,
 	name: "Track",
 	color: "#FFFFFF",
@@ -82,20 +100,21 @@ export const MIDI_TRACK_DEFAULTS: DefaultState<Track> = {
 
 	effects: [],
 	regions: [],
-
-	_M: { }
 };
 
 // ==============================================================
 // Region
 
-export const AUDIO_REGION_DEFAULTS: DefaultState<AudioRegion> = {
+export const AUDIO_REGION_DEFAULTS: Blueprint<AudioRegion> = {
 	trackIndex: -1,
-	fileIndex: -1,
+	fileId: '',
 	start: 0,
 	duration: 1,
 
 	type: RegionType.Audio,
+
+	fullStart: 0,
+	fullDuration: 0,
 
 	audioStartOffset: 0,
 	audioEndOffset: -1,
@@ -105,19 +124,15 @@ export const AUDIO_REGION_DEFAULTS: DefaultState<AudioRegion> = {
 	timeStretch: 0,
 	fadeIn: 0,
 	fadeOut: 0,
-
-	_M: { }
 };
 
-export const MIDI_REGION_DEFAULTS: DefaultState<MidiRegion> = {
+export const MIDI_REGION_DEFAULTS: MidiRegion = {
 	trackIndex: -1,
-	fileIndex: -1,
+	fileId: '',
 	start: 0,
 	duration: 1,
 
 	type: RegionType.Midi,
 
 	midiData: [],
-
-	_M: { }
 };
