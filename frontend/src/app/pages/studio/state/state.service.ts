@@ -214,7 +214,8 @@ export class StateService { // SINGLETON
 		const { target } = this.walkToSignal(path, 0);
 		
 		if (typeof target === 'function' && target.setSilent) {
-			target.setSilent(value);
+			console.log("REPLACE", path, value);
+			target.setSilent(stateNode(value));
 		}
 	}
 	private applyAdd(path: (string | number)[], value: any) {

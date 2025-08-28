@@ -187,6 +187,8 @@ export class RegionComponent implements OnInit, AfterViewInit {
 		const result = await this.waveformRenderService.renderSimple(
 			this.fileId,
 			this.waveformCanvas.nativeElement,
+			(this.region as StateNode<AudioRegion>).audioStartOffset(),
+			(this.region as StateNode<AudioRegion>).audioEndOffset(),
 		);
 		console.log(result);
 	}
@@ -265,12 +267,9 @@ export class RegionComponent implements OnInit, AfterViewInit {
 			const fullEnd = fullStart + fullDuration;
 			newStart = Math.max(newStart, fullStart); 
 			newEnd = Math.min(newEnd, fullEnd);
-			console.log("full", fullStart, fullDuration, fullEnd);
 		}
 		newDuration = Math.max(0.1, newEnd - newStart);
 
-		console.log(newStart, newDuration, newEnd);
-		
 		this.ghostRegion.set({
 			start: newStart,
 			duration: newDuration

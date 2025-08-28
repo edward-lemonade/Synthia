@@ -57,6 +57,7 @@ export class HistoryService {
 	
 		this.pendingEntries.push(entry); // for incremental save
 		this.isPending.set(this.pendingEntries.length != 0);
+		console.log("push", entry);
 	}
 
 	public undo(): boolean {
@@ -70,6 +71,7 @@ export class HistoryService {
 		this.pendingEntries.push(entry);
 		this.isPending.set(this.pendingEntries.length != 0);
 
+		console.log("undo", entry);
 		return true;
 	}
 

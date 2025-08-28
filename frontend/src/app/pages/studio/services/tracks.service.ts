@@ -113,6 +113,9 @@ export class TracksService {
 	// ========================================================
 	// Region Operations
 
+	getRegion(path: RegionPath) {
+		return this.tracks()[path.trackIndex].regions()[path.regionIndex];
+	}
 	addAudioRegion(trackIndex: number, overrides: Partial<AudioRegion> = {}) {
 		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
 
@@ -175,7 +178,7 @@ export class TracksService {
 		});
 	}
 	moveRegion(path: RegionPath, newStart: number) {
-		const region = this.tracks()[path.trackIndex].regions()[path.regionIndex];
+		const region = this.getRegion(path);
 		
 		region.start.set(newStart);
 		if (region.type() === RegionType.Audio) {
@@ -184,12 +187,12 @@ export class TracksService {
 	}
 	moveRegions(paths: RegionPath[], startOffset: number) {
 		paths.forEach(path => {
-			const region = this.tracks()[path.trackIndex].regions()[path.regionIndex];
+			const region = this.getRegion(path);
 			this.moveRegion(path, region.start() + startOffset);
 		});
 	}
 	resizeRegion(path: RegionPath, newStart: number, newDuration: number) {
-		const region = this.tracks()[path.trackIndex].regions()[path.regionIndex];
+		const region = this.getRegion(path);
 		region.start.set(newStart);
 		region.duration.set(newDuration);
 

@@ -10,6 +10,7 @@ export interface DragInfo { // in beat/measure units
 	currentPosX: number;
 	deltaPosX: number;
 	mouseOffsetPosX: number;
+	mouseOffsetMinPosX: number;
 	heldRegion: Region;
 }
 
@@ -36,6 +37,7 @@ export class RegionDragService {
 			currentPosX: startPosX,
 			deltaPosX: 0,
 			mouseOffsetPosX: startPosX - region.start,
+			mouseOffsetMinPosX: startPosX - this.selectService.leftmostSelectedRegion().start(),
 			heldRegion: region,
 		});
 	}
@@ -54,7 +56,8 @@ export class RegionDragService {
 			if (this.viewportService.snapToGrid()) { // snap finalPosX
 				const mouseOffsetPosX = dragInfo.mouseOffsetPosX;
 				finalPosX = this.viewportService.snap(mousePosX - mouseOffsetPosX) + mouseOffsetPosX;
-			}	
+			}
+			finalPosX = Math.max(0, finalPosX - this.dragInfo()!.mouseOffsetMinPosX) + this.dragInfo()!.mouseOffsetMinPosX;
 				
 			const deltaX = finalPosX - dragInfo.startPosX;
 

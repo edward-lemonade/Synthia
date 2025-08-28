@@ -47,6 +47,12 @@ export class RegionSelectService {
 	readonly selectedRegions = signal<RegionPath[]>([]);
   	readonly hasSelectedRegions = computed(() => this.selectedRegions().length > 0);
   	readonly selectedRegionsCount = computed(() => this.selectedRegions().length);
+	readonly leftmostSelectedRegion = computed(() => {
+		const selectedRegions = this.selectedRegions().map(path => this.tracksService.getRegion(path));
+		return selectedRegions.reduce((leftmost, current) => 
+			current.start() < leftmost.start() ? current : leftmost
+		);
+	});
 
 	readonly tracksWithSelectedRegions = computed(() => {
 		const trackIndices = new Set(this.selectedRegions().map(r => r.trackIndex));
