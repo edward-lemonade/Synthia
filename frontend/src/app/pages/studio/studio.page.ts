@@ -1,6 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-
-
 import { AppAuthService } from '@src/app/services/app-auth.service';
 
 import { StudioToolbarTopComponent } from './components/studio-toolbar-top/studio-toolbar-top.component';
@@ -9,17 +7,18 @@ import { StudioToolbarDetailsComponent } from './components/studio-toolbar-detai
 import { HistoryService } from './services/history.service';
 import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
 import { ViewportService } from './services/viewport.service';
-import { RegionSelectService } from './services/region-select.service';
+import { SelectService } from './services/select.service';
 import { RegionDragService } from './services/region-drag.service';
 import { AudioCacheService } from './services/audio-cache.service';
 import { StateService } from './state/state.service';
 import { TracksService } from './services/tracks.service';
 import { WaveformRenderService } from './services/waveform-render.service';
+import { RegionService } from './services/region.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionDragService, AudioCacheService, WaveformRenderService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, SelectService, RegionService, RegionDragService, AudioCacheService, WaveformRenderService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

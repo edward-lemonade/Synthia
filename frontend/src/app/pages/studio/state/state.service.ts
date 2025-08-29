@@ -1,14 +1,14 @@
 import { Injectable, signal } from "@angular/core";
 import { Author, ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
-import { HistoryService, PatchEntry } from "../services/history.service";
+import { Command, HistoryService } from "../services/history.service";
 
-import { stateNode, isLeaf, StateNode, WritableStateSignal } from "./state.factory";
-import { METADATA_DEFAULTS, STUDIO_DEFAULTS } from "./state.defaults";
 import { AppAuthService } from "@src/app/services/app-auth.service";
 import { ActivatedRoute, Router } from "@angular/router";
 import { combineLatest, filter, take } from "rxjs";
 import axios from "axios";
 import { AudioCacheService } from "../services/audio-cache.service";
+import { DeepPartial, ObjectStateNode, objectStateNode, propStateNode, StateNode } from "./state.factory";
+import { ObjectScaffold, Scaffold, STATE_SCAFFOLD } from "./state.scaffolds";
 
 
 @Injectable()
@@ -16,18 +16,18 @@ export class StateService { // SINGLETON
 	private static _instance: StateService;
 	static get instance(): StateService { return StateService._instance; }
 
-	declare state : StateNode<ProjectState>;
+	declare state : ObjectStateNode<ProjectState>;
+	public isStateReady = signal<boolean>(false);
 
 	declare projectId : string | null;
 	declare isNew : boolean;
-
-	public isStateReady = signal<boolean>(false);
 
 	constructor(
 		private auth: AppAuthService,
 		private route: ActivatedRoute,
 		private router: Router,
 
+		private historyService: HistoryService,
 		private audioCacheService: AudioCacheService,
 	) {		
 		StateService._instance = this;
@@ -51,24 +51,27 @@ export class StateService { // SINGLETON
 		});
 	}
 
-	get historyService() { return HistoryService.instance; }
+
 
 	// ==============================================================================================
 	// Methods
 
 	async initState(author: Author, projectId: string, isNew: boolean) {
 		if (isNew) {
-			const initialMetadata = METADATA_DEFAULTS;
-			initialMetadata.projectId = projectId;
-			initialMetadata.authors = [author];
+			const scaffold = STATE_SCAFFOLD;
+			const overrides = {
+				metadata: {
+					projectId: projectId,
+					authors: [author],
+				}
+			}
 
-			const initialStudio = STUDIO_DEFAULTS;
-
-			this.createState({metadata: initialMetadata, studio: initialStudio} as ProjectState)
+			this.createState(scaffold, overrides);
 		} else {
-			const initialState = await this.loadState(projectId);
+			const scaffold = STATE_SCAFFOLD;
+			const overrides = await this.loadState(projectId);
 
-			this.createState(initialState);
+			this.createState(scaffold, overrides);
 		}
 
 		// NOTIFY OTHER SERVICES
@@ -77,7 +80,7 @@ export class StateService { // SINGLETON
 		this.audioCacheService.initialize();
 	}
 
-	async loadState(projectId: string, applyImmediately: boolean = false) {
+	async loadState(projectId: string) {
 		try {
 			const token = await this.auth.getAccessToken();
 			console.log('Got JWT token:', token ? 'Token received' : 'No token');
@@ -93,10 +96,7 @@ export class StateService { // SINGLETON
 					}
 				}
 			);
-			
-			if (applyImmediately) {
-				this.createState(res.data.state);
-			}
+
 			return res.data.state;
 
 		} catch (err) {
@@ -105,13 +105,13 @@ export class StateService { // SINGLETON
 	}
 
 	async saveState() { 
-		const patchEntries: PatchEntry[] = this.historyService.getPendingEntriesAndClear();
+		const pendingCommands = this.historyService.getPendingCommandsAndClear();
 
 		try {
-			if (this.isNew) {
-				const token = await this.auth.getAccessToken();
-				console.log('Got JWT token:', token ? 'Token received' : 'No token');
-
+			const token = await this.auth.getAccessToken();
+			console.log('Got JWT token:', token ? 'Token received' : 'No token');
+			
+			if (this.isNew && token) {
 				const res = await axios.post<{ success: boolean }>(
 					'/api/projects/save_new', 
 					{state: this.state.snapshot() as ProjectState},
@@ -132,9 +132,6 @@ export class StateService { // SINGLETON
 				}
 				return res.data.success;
 			} else {
-				const token = await this.auth.getAccessToken();
-				console.log('Got JWT token:', token ? 'Token received' : 'No token');
-
 				const res = await axios.post<{ success: boolean }>(
 					'/api/projects/save_overwrite', 
 					{state: this.state.snapshot() as ProjectState},
@@ -147,98 +144,12 @@ export class StateService { // SINGLETON
 				return res.data.success;
 			}
 		} catch (err) {
-			this.historyService.fillPendingEntries(patchEntries);
+			this.historyService.fillPendingCommands(pendingCommands);
 			throw err;
 		}
 	}
 
-	createState(state: ProjectState) {
-		this.state = stateNode<ProjectState>({
-			metadata: {...METADATA_DEFAULTS, ...state.metadata},
-			studio: {...STUDIO_DEFAULTS, ...state.studio},
-		}) as StateNode<ProjectState>;
-	}
-
-	applyPatchEntry(patchEntry: PatchEntry, invert: boolean = false) {
-		const patches = invert ? patchEntry.inversePatches : patchEntry.patches;
-		if (!patches || patches.length === 0) return;
-
-		patches.forEach(patch => {
-           	const { op, path, value } = patch;
-        
-			switch (op) {
-				case 'replace':
-					this.applyReplace(path, value);
-					break;
-				case 'add':
-					this.applyAdd(path, value);
-					break;
-				case 'remove':
-					this.applyRemove(path);
-					break;
-			}
-        });
-	}
-	private walkToSignal(path: (string | number)[], stepsFromEnd: number = 0) {
-		let current: any = this.state;
-		const targetDepth = path.length - 1 - stepsFromEnd;
-		
-		// Navigate to the target depth
-		for (let i = 0; i <= targetDepth; i++) {
-			const key = path[i];
-			
-			if (i === targetDepth) {
-				// We're at the target depth, return current context and key
-				return {
-					parent: current,
-					key: key,
-					target: current[key]
-				};
-			}
-			
-			// Navigate deeper
-			if (typeof current === 'function') {
-				current = current(); // Call signal to get value
-			}
-			current = current[key];
-		}
-		
-		// Fallback (shouldn't reach here with proper usage)
-		return {
-			parent: null,
-			key: path[path.length - 1],
-			target: current
-		};
-	}
-	private applyReplace(path: (string | number)[], value: any) {
-		const { target } = this.walkToSignal(path, 0);
-		
-		if (typeof target === 'function' && target.setSilent) {
-			console.log("REPLACE", path, value);
-			target.setSilent(stateNode(value));
-		}
-	}
-	private applyAdd(path: (string | number)[], value: any) {
-		const { parent, key } = this.walkToSignal(path, 1);
-		
-		if (parent && typeof parent === 'function' && parent.updateSilent) {
-			parent.updateSilent((arr: any[]) => {
-				const newArr = [...arr];
-				newArr.splice(Number(key), 0, value);
-				return newArr;
-			});
-		}
-	}
-	private applyRemove(path: (string | number)[]) {
-		const { parent, key } = this.walkToSignal(path, 1);
-		
-		if (parent && typeof parent === 'function' && parent.updateSilent) {
-
-			parent.updateSilent((arr: any[]) => {
-				const newArr = [...arr];
-				newArr.splice(Number(key), 1);
-				return newArr;
-			});
-		}
+	createState(scaffold: ObjectScaffold<ProjectState>, state: DeepPartial<ProjectState>) {
+		this.state = objectStateNode<ProjectState>(scaffold, state) as ObjectStateNode<ProjectState>;
 	}
 }

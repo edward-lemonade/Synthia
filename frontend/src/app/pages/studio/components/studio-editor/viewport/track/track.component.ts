@@ -3,15 +3,16 @@ import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
 import { RegionType, Track } from '@shared/types';
 
-import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
+import { SelectService } from '@src/app/pages/studio/services/select.service';
 import { RegionComponent } from "./region/region.component";
 
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
-import { StateNode } from '@src/app/pages/studio/state/state.factory';
+import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
 import { StateService } from '@src/app/pages/studio/state/state.service';
+import { RegionService } from '@src/app/pages/studio/services/region.service';
 
 @Component({
 	selector: 'viewport-track',
@@ -52,23 +53,24 @@ import { StateService } from '@src/app/pages/studio/state/state.service';
 })
 
 export class TrackComponent{
-	@Input() track!: StateNode<Track>;
+	@Input() track!: ObjectStateNode<Track>;
 	@Input() index!: number;
 	@ViewChild('trackMenuTrigger', { static: true }) trackMenuTrigger!: MatMenuTrigger;
 
 	constructor (
 		public stateService : StateService,
 		public viewportService : ViewportService,
-		public trackSelectService : RegionSelectService,
+		public selectService : SelectService,
 		public dragService : RegionDragService,
 		public tracksService : TracksService,
+		public regionService : RegionService
 	) {}
 	
 	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color()));
-	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
+	colorSelectedBg = computed(() => this.selectService.selectedTrackBgColor(this.track.color()));
+	isSelected = computed(() => this.selectService.selectedTrack() == this.track._id);
 	onClick() { 
-		this.trackSelectService.setSelectedTrack(this.index); 
+		this.selectService.setSelectedTrack(this.track._id); 
 	}
 
 	mouseX = 0; 
@@ -87,9 +89,9 @@ export class TrackComponent{
 	createRegion() {
 		const pos = this.viewportService.pxToPos(this.mouseX);
 		if (this.track.regionType() == RegionType.Audio) {
-			this.tracksService.addAudioRegion(this.index, {start: pos});
+			this.regionService.addAudioRegion(this.track, {start: pos});
 		} else {
-			this.tracksService.addMidiRegion(this.index, {start: pos});
+			this.regionService.addMidiRegion(this.track, {start: pos});
 		}
 	}
 }

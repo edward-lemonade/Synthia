@@ -4,17 +4,18 @@ import { AudioRegion, MidiRegion, Region, RegionType, Track } from '@shared/type
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 
-import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
+import { SelectService } from '@src/app/pages/studio/services/select.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { DragGhostComponent } from './ghosts/drag-ghost.component';
 import { ResizeGhostComponent } from "./ghosts/resize-ghost.component";
-import { RegionPath, TracksService } from '@src/app/pages/studio/services/tracks.service';
+import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
 
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
 import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-render.service';
+import { RegionPath, RegionService } from '@src/app/pages/studio/services/region.service';
 type ResizeHandle = 'left' | 'right' | null;
 
 @Component({
@@ -101,23 +102,25 @@ export class RegionComponent implements OnInit, AfterViewInit {
 	constructor (
 		public stateService: StateService,
 		public tracksService: TracksService,
-		public selectionService: RegionSelectService,
+		public selectionService: SelectService,
 		public dragService: RegionDragService,
 		public viewportService: ViewportService,
 		public audioCacheService: AudioCacheService,
 		public waveformRenderService: WaveformRenderService,
+		public regionService: RegionService,
 	) {}
 
 	ngOnInit(): void {
 		this.regionPath = {
-			trackIndex: this.trackIndex,
-			regionIndex: this.regionIndex
+			trackId: this.track._id,
+			regionId: this.region._id
 		};
 		this.fileId = this.region.fileId();
 	}
 
 	ngAfterViewInit(): void {
 		this.type = this.region.type();
+		console.log(this.type);
 		if (this.region.type() == RegionType.Audio) {
 			this.renderWaveform();
 		}
@@ -182,8 +185,10 @@ export class RegionComponent implements OnInit, AfterViewInit {
 	}
 
 	async renderWaveform() {
+		console.log("waitng")
 		await this.waitForAudioToLoad()
 
+		console.log(this.stateService.state.snapshot());
 		const result = await this.waveformRenderService.renderSimple(
 			this.fileId,
 			this.waveformCanvas.nativeElement,
@@ -280,7 +285,7 @@ export class RegionComponent implements OnInit, AfterViewInit {
 		// Commit the final size from ghost to actual region
 		const ghost = this.ghostRegion();
 		if (ghost) {
-			this.tracksService.resizeRegion(this.regionPath, ghost.start, ghost.duration);
+			this.regionService.resizeRegion(this.regionPath, ghost.start, ghost.duration);
 		}
 		
 		// Clean up resize state
@@ -307,7 +312,7 @@ export class RegionComponent implements OnInit, AfterViewInit {
 			if (event.ctrlKey || event.metaKey) {
 				this.selectionService.toggleSelectedRegion(this.regionPath);
 			} else {
-				this.selectionService.setSelectedRegion(this.regionPath.trackIndex, this.regionPath.regionIndex);
+				this.selectionService.setSelectedRegion(this.regionPath.trackId, this.regionPath.regionId);
 			}
 		}
 	}
@@ -366,11 +371,11 @@ export class RegionComponent implements OnInit, AfterViewInit {
 
 	duplicateRegion() {
 		const duplicatedRegion = { ...this.region };
-		this.tracksService.duplicateRegion(this.regionPath);
+		this.regionService.duplicateRegion(this.regionPath);
 	}
 
 	deleteRegion() {
-		this.tracksService.deleteRegion(this.regionPath);
+		this.regionService.deleteRegion(this.regionPath);
 	}
 }
 

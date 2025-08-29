@@ -147,6 +147,7 @@ export class AudioCacheService {
 			if (res.data.success) {
 				 // only leave persistent reference if everything succeeds
 				this.audioFileRefs.update(files => [...files, ...audioFileRefs]);
+
 				return cachedAudioFiles;
 			} else {
 				throw Error("Error saving audio file to backend");

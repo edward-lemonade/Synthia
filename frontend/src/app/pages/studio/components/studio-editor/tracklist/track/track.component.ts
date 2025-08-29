@@ -12,7 +12,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { RotaryKnobComponent } from '@src/app/components/rotary-knob/rotary-knob.component';
 import { MatDivider } from "@angular/material/divider";
 import { MatMenuModule } from '@angular/material/menu';
-import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
+import { SelectService } from '@src/app/pages/studio/services/select.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
@@ -125,7 +125,7 @@ export class TrackComponent implements OnInit {
 		public stateService : StateService,
 		public tracksService : TracksService,
 		public viewportService : ViewportService,
-		public regionSelectService : RegionSelectService,
+		public selectService : SelectService,
 	) {
 		effect(() => {
 			this.volumeInput.set(this.track.volume());
@@ -146,9 +146,9 @@ export class TrackComponent implements OnInit {
 	}
 
 	color = computed(() => this.track.color());
-	colorSelectedBg = computed(() => this.regionSelectService.selectedTrackBgColor(this.track.color()));
-	isSelected = computed(() => this.regionSelectService.selectedTrack() == this.index);
-	select() { this.regionSelectService.setSelectedTrack(this.index); }
+	colorSelectedBg = computed(() => this.selectService.selectedTrackBgColor(this.track.color()));
+	isSelected = computed(() => this.selectService.selectedTrack() == this.track._id);
+	select() { this.selectService.setSelectedTrack(this.track._id); }
 
 	trackNameInput = signal('');
 	updateTrackName() {

@@ -1,15 +1,11 @@
 import { computed, Injectable, Injector, Signal } from "@angular/core";
 import { AudioRegion, AudioTrackType, MidiRegion, Region, RegionType, regionTypeFromTrack, Track, TrackType } from "@shared/types";
 import { StateService } from "../state/state.service";
-import { AUDIO_REGION_DEFAULTS, AUDIO_TRACK_DEFAULTS, MIDI_REGION_DEFAULTS, MIDI_TRACK_DEFAULTS } from "../state/state.defaults";
-import { StateNode, stateNode } from "../state/state.factory";
+
 import { AudioCacheService } from "./audio-cache.service";
 import { ViewportService } from "./viewport.service";
-
-export interface RegionPath {
-	trackIndex: number;
-	regionIndex: number;
-}
+import { RegionService } from "./region.service";
+import { ObjectStateNode } from "../state/state.factory";
 
 @Injectable()
 export class TracksService {
@@ -27,6 +23,9 @@ export class TracksService {
 
 	get stateService() { return StateService.instance }
 
+	get tracks() { return this.stateService.state.studio.tracks; }
+	declare readonly numTracks : Signal<number>;
+	
 	readonly COLORS = [
 		'#d7e166ff',
 		'#e19f66ff',
@@ -37,31 +36,28 @@ export class TracksService {
 		'#8de166ff',
 	]
 
-	get tracks() { return this.stateService.state.studio.tracks; }
-	declare readonly numTracks : Signal<number>;
-
 	// ========================================================
 	// Track Operations
 
-	addTrack(type: TrackType, overrides: Partial<Track> = {}) {
-		let regionType = regionTypeFromTrack(type);
-		let newIndex = this.numTracks();
-
-		let baseTrack: Track =
-			regionType === RegionType.Audio
-			? { ...AUDIO_TRACK_DEFAULTS, color: this.nextTrackColor() }
-			: { ...MIDI_TRACK_DEFAULTS, color: this.nextTrackColor() };
-
-		let newTrack: Track = {
-			...baseTrack,
+	getTrack(key: string | number): ObjectStateNode<Track> | undefined {
+		if (typeof key === 'string') {
+			return this.tracks.getById(key);
+		} else {
+			return this.tracks.get(key);
+		}
+	}
+	addTrack(type: TrackType, overrides: Partial<Track> = {}): ObjectStateNode<Track> {
+		const newIndex = this.numTracks();
+		let newTrack: Partial<Track> = {
+			index: newIndex, // always enforce index last
+			color: this.nextTrackColor(),
 			...overrides,
 			trackType: type,
-			index: newIndex, // always enforce index last
+			regionType: regionTypeFromTrack(type),
 		};
-
-		this.tracks.push(newTrack);
+		return this.tracks.insertValue(newTrack, newIndex);
 	}
-	async addNewAudioTrack(file: File) {
+	async addNewAudioTrack(file: File): Promise<ObjectStateNode<Track>> {
 		const cachedAudioFile = await AudioCacheService.instance.addAudioFile(file);
 		const name = file.name.replace(/\.[^/.]+$/, "");
 
@@ -70,7 +66,7 @@ export class TracksService {
 		const trackProps : Partial<Track> = {
 			name: name
 		}
-		this.addTrack(AudioTrackType.Audio, trackProps);
+		const trackNode = this.addTrack(AudioTrackType.Audio, trackProps);
 		
 		// New Audio Region
 		const durationInMeasures = ViewportService.instance.timeToPos(cachedAudioFile.duration);
@@ -83,135 +79,25 @@ export class TracksService {
 			audioStartOffset: 0,
 			audioEndOffset: cachedAudioFile.duration,
 		}
-		this.addAudioRegion(trackIndex, regionProps);
+		RegionService.instance.addAudioRegion(trackNode, regionProps);
+		return trackNode;
 	}
 	deleteTrack(index: number) {
-		this.tracks.update(tracks => {
-			const newTracks = tracks.filter((_, i) => i !== index);
-			newTracks.forEach((track, idx) => {
-				track.getKey = () => idx;
-			});
-			return newTracks;
-		});
+		this.tracks.remove(index);
 	}
 	moveTrack(index: number, newIndex: number) {
 		if (index < 0 || index >= this.numTracks() || newIndex < 0 || newIndex >= this.numTracks()) { return; }
-
-		const [moved] = this.tracks.splice(index, 1);
-		this.tracks.splice(newIndex, 0, moved);
+		this.tracks.move(index, newIndex);
 	}
 	duplicateTrack(index: number) {
 		if (index < 0 || index >= this.tracks().length) return;
 
-		const trackToDuplicate = { ...this.tracks()[index].snapshot() };
-		this.tracks.push(trackToDuplicate); 
+		const duped = { ...this.tracks()[index].snapshot() };
+		this.tracks.insertValue(duped, index+1);
 	}
 	nextTrackColor() {
 		return this.COLORS[this.numTracks() % this.COLORS.length];
 	}
 
-	// ========================================================
-	// Region Operations
-
-	getRegion(path: RegionPath) {
-		return this.tracks()[path.trackIndex].regions()[path.regionIndex];
-	}
-	addAudioRegion(trackIndex: number, overrides: Partial<AudioRegion> = {}) {
-		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
-
-		const region: AudioRegion = {
-			...AUDIO_REGION_DEFAULTS,
-			...overrides,
-			trackIndex, 
-		};
-
-		this.tracks()[trackIndex].regions.push(region);
-	}
-	addMidiRegion(trackIndex: number, overrides: Partial<MidiRegion> = {}) {
-		if (trackIndex < 0 || trackIndex >= this.tracks().length) return;
-
-		const region: MidiRegion = {
-			...MIDI_REGION_DEFAULTS,
-			...overrides,
-			trackIndex, 
-		};
-
-		this.tracks()[trackIndex].regions.push(region);
-	}
-	deleteRegion(path: RegionPath) {
-		this.tracks()[path.trackIndex].regions.update(regions => 
-			regions.filter((_, i) => i !== path.regionIndex)
-		);
-	}
-	deleteRegions(paths: RegionPath[]) {
-		const byTrack = new Map<number, number[]>();
-		for (const p of paths) {
-			if (!byTrack.has(p.trackIndex)) byTrack.set(p.trackIndex, []);
-			byTrack.get(p.trackIndex)!.push(p.regionIndex);
-		}
-
-		byTrack.forEach((indices, trackIndex) => {
-			this.tracks()[trackIndex].regions.update(regions =>
-				regions.filter((_, i) => !indices.includes(i))
-			);
-		});
-	}
-	transferRegionToTrack(path: RegionPath, newTrackIndex: number) {
-		const sourceTrack = this.tracks()[path.trackIndex];
-		const targetTrack = this.tracks()[newTrackIndex];
-		const region = sourceTrack.regions()[path.regionIndex];
-
-		sourceTrack.regions.update(regions => { // pop out
-			const updated = [...regions];
-			updated.splice(path.regionIndex, 1);
-			return updated;
-		});
-
-		const regionData = region.snapshot();
-		regionData.trackIndex = newTrackIndex;
-
-		targetTrack.regions.push(regionData);
-	}
-	transferRegionsToTrack(paths: RegionPath[], trackIndexOffset: number) {
-		paths.forEach(path => {
-			this.transferRegionToTrack(path, path.trackIndex + trackIndexOffset);
-		});
-	}
-	moveRegion(path: RegionPath, newStart: number) {
-		const region = this.getRegion(path);
-		
-		region.start.set(newStart);
-		if (region.type() === RegionType.Audio) {
-			(region as StateNode<AudioRegion>).fullStart.set(newStart);
-		}
-	}
-	moveRegions(paths: RegionPath[], startOffset: number) {
-		paths.forEach(path => {
-			const region = this.getRegion(path);
-			this.moveRegion(path, region.start() + startOffset);
-		});
-	}
-	resizeRegion(path: RegionPath, newStart: number, newDuration: number) {
-		const region = this.getRegion(path);
-		region.start.set(newStart);
-		region.duration.set(newDuration);
-
-		if (region.type() == RegionType.Audio) {
-			const audioRegion = (region as StateNode<AudioRegion>);
-			audioRegion.audioStartOffset.set(ViewportService.instance.posToTime(newStart - audioRegion.fullStart()));
-			audioRegion.audioEndOffset.set(ViewportService.instance.posToTime(newStart + newDuration));
-		}
-	}
-	duplicateRegion(path: RegionPath) {
-		const track = this.tracks()[path.trackIndex];
-		const region = track.regions()[path.regionIndex];
-
-		const copy = { ...region }; 
-
-		track.regions.update(regions => {
-			const updated = [...regions];
-			updated.splice(path.regionIndex + 1, 0, copy); 
-			return updated;
-		});
-	}
+	
 }

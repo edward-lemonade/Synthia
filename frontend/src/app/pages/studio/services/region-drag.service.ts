@@ -1,9 +1,10 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
 import { ViewportService } from './viewport.service';
-import { RegionSelectService } from './region-select.service';
+import { SelectService } from './select.service';
 import { Region } from '@shared/types';
 import { StateService } from '../state/state.service';
 import { TracksService } from './tracks.service';
+import { RegionService } from './region.service';
 
 export interface DragInfo { // in beat/measure units
 	startPosX: number;
@@ -22,7 +23,8 @@ export class RegionDragService {
 	constructor() { RegionDragService._instance = this; }
 
 	get tracksService() { return TracksService.instance }
-	get selectService() { return RegionSelectService.instance }
+	get regionService() { return RegionService.instance }
+	get selectService() { return SelectService.instance }
 	get viewportService() { return ViewportService.instance }
 
 	// Drag state
@@ -71,7 +73,7 @@ export class RegionDragService {
 
 	public completeDrag() { // mouse off
 		const deltaPosX = this.getDragDelta();
-		this.tracksService.moveRegions(this.selectService.selectedRegions(), deltaPosX);
+		this.regionService.moveRegions(this.selectService.selectedRegions(), deltaPosX);
 
 		this.isDragReady.set(false);
 		this.isDragging.set(false);

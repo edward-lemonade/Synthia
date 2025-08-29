@@ -2,10 +2,11 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, El
 import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { TrackComponent } from "./track/track.component";
-import { BoxSelectBounds, RegionSelectService } from '../../../services/region-select.service';
+import { BoxSelectBounds, SelectService } from '../../../services/select.service';
 import { RegionDragService } from '../../../services/region-drag.service';
-import { RegionPath, TracksService } from '../../../services/tracks.service';
 import { StateService } from '../../../state/state.service';
+import { RegionPath, RegionService } from '../../../services/region.service';
+import { TracksService } from '../../../services/tracks.service';
 
 @Component({
 	selector: 'studio-editor-viewport',
@@ -70,7 +71,8 @@ export class ViewportComponent implements AfterViewInit {
 		public viewportService: ViewportService,
 		public stateService: StateService,
 		public tracksService: TracksService,
-		public selectService: RegionSelectService,
+		public regionService: RegionService,
+		public selectService: SelectService,
 		public dragService: RegionDragService,
 	) {}
 
@@ -219,7 +221,10 @@ export class ViewportComponent implements AfterViewInit {
 						normalizedBounds.left, normalizedBounds.right,
 						regionLeft, regionRight
 					)) {
-						selectedRegions.push({ trackIndex, regionIndex });
+						selectedRegions.push({ 
+							trackId: this.tracksService.getTrack(trackIndex)!._id, 
+							regionId: this.tracksService.getTrack(trackIndex)!.regions._ids()[regionIndex] 
+						});
 					}
 				});
 			}
@@ -270,7 +275,7 @@ export class ViewportComponent implements AfterViewInit {
 		
 		if (event.key === 'Delete' || event.key === 'Backspace') {
 			if (this.selectService.hasSelectedRegions()) {
-				this.tracksService.deleteRegions(this.selectService.selectedRegions());
+				this.regionService.deleteRegions(this.selectService.selectedRegions());
 				this.selectService.clearSelection();
 			}
 		}
