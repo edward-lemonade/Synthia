@@ -28,6 +28,7 @@ export class ViewportService { // SINGLETON
 	measureWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor());
 	beatWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor() / this.studioState.timeSignature().N)
 	totalWidth = computed(() => this.measureWidth() * this.lastMeasure() );
+	viewportWidth = signal(0);
 	measurePosX = computed(() => this.windowPosX() / this.measureWidth() );
 
 	snapToGrid = signal(false);
@@ -76,8 +77,14 @@ export class ViewportService { // SINGLETON
 	posToTime(pos: number) {
 		return pos * this.studioState.timeSignature().N  / this.studioState.bpm() * 60; // in seconds
 	}
+	pxToTime(x: number) {
+		return this.posToTime(this.pxToPos(x))
+	}
 	timeToPos(time: number) {
 		return time/60 * this.studioState.bpm() / this.studioState.timeSignature().N; // in measures
+	}
+	timeToPx(time: number) {
+		return this.posToPx(this.timeToPos(time));
 	}
 	posToPx(pos: number) {
 		return pos * this.measureWidth();
@@ -135,6 +142,7 @@ export class ViewportService { // SINGLETON
 		this.VPHeaderCtx = ctx;	
 
 		this.setupCanvas(canvas, ctx, width, height, "header");
+		this.viewportWidth.set(container.clientWidth);
 
 		runInInjectionContext(this.injector, () => { // horizontal scroll sync
 			effect(() => {

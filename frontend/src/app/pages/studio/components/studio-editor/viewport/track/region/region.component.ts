@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AudioRegion, MidiRegion, Region, RegionType, Track } from '@shared/types';
 import { MatMenuModule } from '@angular/material/menu';
@@ -17,6 +17,13 @@ import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.se
 import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-render.service';
 import { RegionPath, RegionService } from '@src/app/pages/studio/services/region.service';
 type ResizeHandle = 'left' | 'right' | null;
+
+interface ViewportBounds {
+	startTime: number;
+	endTime: number;
+	startPx: number;
+	endPx: number;
+}
 
 @Component({
 	selector: 'viewport-track-region',
@@ -85,7 +92,7 @@ type ResizeHandle = 'left' | 'right' | null;
 	styleUrl: './region.component.scss'
 })
 
-export class RegionComponent implements OnInit, AfterViewInit {
+export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	@Input() track!: StateNode<Track>;
 	@Input() region!: StateNode<AudioRegion | MidiRegion>;
 	@Input() trackIndex!: number;
@@ -98,6 +105,10 @@ export class RegionComponent implements OnInit, AfterViewInit {
 	declare regionPath: RegionPath;
 
 	currentAudioFile: any = null;
+	private animationFrameId?: number;
+	private lastViewportBounds?: ViewportBounds;
+	private lastZoomLevel?: number;
+	private resizeObserver?: ResizeObserver;
 
 	constructor (
 		public stateService: StateService,
@@ -108,7 +119,17 @@ export class RegionComponent implements OnInit, AfterViewInit {
 		public audioCacheService: AudioCacheService,
 		public waveformRenderService: WaveformRenderService,
 		public regionService: RegionService,
-	) {}
+	) {
+		effect(() => {
+			const scrollX = this.viewportService.measurePosX();
+			const measureWidth = this.viewportService.measureWidth();
+			const totalWidth = this.viewportService.totalWidth();
+			
+			if (this.type === RegionType.Audio && this.waveformCanvas?.nativeElement) {
+				this.scheduleWaveformRender();
+			}
+		});
+	}
 
 	ngOnInit(): void {
 		this.regionPath = {
@@ -120,9 +141,19 @@ export class RegionComponent implements OnInit, AfterViewInit {
 
 	ngAfterViewInit(): void {
 		this.type = this.region.type();
-		console.log(this.type);
-		if (this.region.type() == RegionType.Audio) {
-			this.renderWaveform();
+		
+		if (this.region.type() === RegionType.Audio) {
+			this.setupCanvasObserver();
+			this.scheduleWaveformRender();
+		}
+	}
+
+	ngOnDestroy(): void {
+		if (this.animationFrameId) {
+			cancelAnimationFrame(this.animationFrameId);
+		}
+		if (this.resizeObserver) {
+			this.resizeObserver.disconnect();
 		}
 	}
 
@@ -184,18 +215,111 @@ export class RegionComponent implements OnInit, AfterViewInit {
 		});
 	}
 
-	async renderWaveform() {
-		console.log("waitng")
-		await this.waitForAudioToLoad()
+	private setupCanvasObserver(): void {
+		// Observe canvas size changes
+		this.resizeObserver = new ResizeObserver(() => {
+			this.scheduleWaveformRender();
+		});
+		
+		if (this.waveformCanvas?.nativeElement) {
+			this.resizeObserver.observe(this.waveformCanvas.nativeElement);
+		}
+	}
 
-		console.log(this.stateService.state.snapshot());
-		const result = await this.waveformRenderService.renderSimple(
-			this.fileId,
-			this.waveformCanvas.nativeElement,
-			(this.region as StateNode<AudioRegion>).audioStartOffset(),
-			(this.region as StateNode<AudioRegion>).audioEndOffset(),
-		);
-		console.log(result);
+	private scheduleWaveformRender(): void {
+		// Cancel any pending render
+		if (this.animationFrameId) {
+			cancelAnimationFrame(this.animationFrameId);
+		}
+
+		// Schedule new render
+		this.animationFrameId = requestAnimationFrame(() => {
+			this.renderWaveformViewport();
+			this.animationFrameId = undefined;
+		});
+	}
+
+	private getViewportBounds(): ViewportBounds {
+		const startPx = this.viewportService.posToPx(this.viewportService.measurePosX());
+		const endPx = startPx + this.viewportService.viewportWidth();
+		
+		const startTime = this.viewportService.posToTime(this.viewportService.pxToPos(startPx));
+		const endTime = this.viewportService.posToTime(this.viewportService.pxToPos(endPx));
+		
+		return {
+			startTime,
+			endTime,
+			startPx,
+			endPx
+		};
+	}
+
+	private shouldRerenderWaveform(newBounds: ViewportBounds): boolean {
+		if (!this.lastViewportBounds || !this.lastZoomLevel) {
+			return true;
+		}
+
+		const zoomChanged = this.lastZoomLevel !== this.viewportService.measureWidth();
+		const viewportChanged = 
+			Math.abs(this.lastViewportBounds.startTime - newBounds.startTime) > 0.1 ||
+			Math.abs(this.lastViewportBounds.endTime - newBounds.endTime) > 0.1;
+
+		return zoomChanged || viewportChanged;
+	}
+
+	async renderWaveformViewport() {
+		if (!this.waveformCanvas?.nativeElement || this.type !== RegionType.Audio) {
+			return;
+		}
+
+		try {
+			await this.waitForAudioToLoad();
+
+			const viewportBounds = this.getViewportBounds();
+			
+			if (!this.shouldRerenderWaveform(viewportBounds)) {
+				return;
+			}
+
+			const canvas = this.waveformCanvas.nativeElement;
+
+			const regionStartTime = this.viewportService.posToTime(this.region.start());
+			const regionDurationTime = this.viewportService.posToTime(this.region.duration());
+			
+			const relativeVisibleStartTime = Math.max(viewportBounds.startTime, regionStartTime) - regionStartTime;
+			const relativeVisibleEndTime = Math.min(viewportBounds.endTime, regionStartTime + regionDurationTime) - regionStartTime;
+			const startPx = this.viewportService.timeToPx(relativeVisibleStartTime);
+			const endPx = this.viewportService.timeToPx(relativeVisibleEndTime);
+
+			if (startPx >= endPx) {
+				const ctx = canvas.getContext('2d');
+				if (ctx) { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+				return;
+			}
+			
+			const audioRegion = this.region as StateNode<AudioRegion>;
+			const audioStartTime = audioRegion.audioStartOffset() + relativeVisibleStartTime;
+			const audioEndTime = audioRegion.audioStartOffset() + relativeVisibleEndTime;
+
+			// Render only the visible portion - now passing region bounds
+			const result = await this.waveformRenderService.createWaveformViewport(
+				this.fileId,
+				canvas,
+				audioStartTime,
+				audioEndTime,
+				startPx,
+				endPx,
+			);
+
+			// Update tracking variables
+			this.lastViewportBounds = viewportBounds;
+			this.lastZoomLevel = this.viewportService.measureWidth();
+			
+			//console.log(`Rendered waveform viewport: ${relativeVisibleStartTime.toFixed(2)}s - ${relativeVisibleEndTime.toFixed(2)}s`);
+			
+		} catch (error) {
+			console.error('Failed to render waveform viewport:', error);
+		}
 	}
 
 	// ====================================================================================================
@@ -298,7 +422,7 @@ export class RegionComponent implements OnInit, AfterViewInit {
 		document.removeEventListener('mousemove', this.onResizeMove);
 		document.removeEventListener('mouseup', this.onResizeFinish);
 
-		this.renderWaveform(); // rerender waveform
+		this.scheduleWaveformRender();  // rerender waveform
 	};
 
 	// ====================================================================================================

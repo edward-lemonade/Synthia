@@ -25,7 +25,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 				</button>
 			</div>
 			<div #scrollContainer class="scroll-container">
-				<div class="scroll-content" [style.width.px]="viewportService.totalWidth()"> 
+				<div class="scroll-content" [style.width.px]="viewportService.viewportWidth()"> 
 					
 				</div>
 			</div>
