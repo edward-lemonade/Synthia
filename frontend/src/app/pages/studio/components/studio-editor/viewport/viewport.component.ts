@@ -125,7 +125,7 @@ export class ViewportComponent implements AfterViewInit {
 			this.isProgrammaticScroll = false; // reset flag
 			return; 
 		}
-
+		
 		const scrollLeft = this.scrollContainerRef.nativeElement.scrollLeft;
 		const scrollTop = this.scrollContainerRef.nativeElement.scrollTop;
 

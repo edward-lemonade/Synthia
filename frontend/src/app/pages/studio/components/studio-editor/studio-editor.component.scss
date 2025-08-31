@@ -2,90 +2,95 @@
 @use "../../studio-vars" as *;
 
 :host {
-  	display: flex;
+	display: flex;
+	flex-direction: row;
+	flex: 1;        /* fills remaining parent space */
+	min-height: 0;  /* prevents children from expanding host */
+	min-width: 0;
+
+}
+
+.tracklist {
+	display: flex;
 	flex-direction: column;
-	flex: 1;         /* Take up remaining parent space */
-  	min-height: 0;
-}
 
-.container {
-	height: 100%; 
-	width: 100%;
+	width: $tracklist-width;   /* fixed */
+	flex: 0 0 $tracklist-width; /* lock it to this width */
+	min-height: 0;
+	height: 100%;	
+
 	box-sizing: border-box;
-}
 
-.headers {
-	background: $appbar-bg;
-	color: $appbar-text;
-	position: sticky;
-	top: 0;
-	width: 100%;
-	height: $viewport-header-height;
-
-	display: flex;
-	flex-direction: row;
-	
-	padding: 0px !important;
-
-	border-bottom: $border-width solid $border-color;
-
-	.headers-tracklist-container {
-		padding-left: 16px;
-		padding-right: 16px;
-		padding-top: 0px;
-		padding-bottom: 0px;
-
-		width: $tracklist-width;
-
-		display: flex;
-		justify-content: left;
-		align-items: center;
-	}
-	.headers-viewport-container {
-		flex: 1;
-		flex-direction: row;
-		display: flex;
-		justify-content: left;
-		align-items: center;
-
-		height: 100%;
+	.headers-tracklist {
+		padding: 0 16px;
 		width: 100%;
-		
-		border-left: $border-width solid $border-color;
-		overflow-x: hidden;
-		overflow-y: hidden;
+
+		display: flex;
+		justify-content: left;
+		align-items: center;
+		box-sizing: border-box;
+		flex-shrink: 0;   /* header never shrinks */
 	}
-}
-
-.body {
-	background: $appbar-bg;
-	color: $appbar-text;
-
-	flex: 1 1 0; 
-	display: flex;
-	flex-direction: row;
-	width: 100%;
-
-    min-height: 0;
-
-	padding: 0px !important;
-	border-bottom: $border-width solid $border-color;
-
 	.body-tracklist {
-		height: 100%;
-		width: $tracklist-width;
+		flex: 1;          /* takes remaining height */
+		min-height: 0;    /* prevents content growth */
+		width: 100%;
 
+		display: flex;
 		justify-content: left;
 		align-items: start;
+
+		box-sizing: border-box;
+		overflow: auto;   /* scroll instead of growing */
+	}
+}
+.viewport {
+	display: flex;
+	flex-direction: column;
+
+	flex: 1;           /* fill remaining width */
+	min-width: 0;
+	min-height: 0;     /* prevents vertical growth */
+	height: 100%;
+
+	box-sizing: border-box;
+
+	.headers-viewport {
+		display: flex;
+		flex-shrink: 0;
+		flex-direction: row;
+		justify-content: left;
+		align-items: center;
+
+		border-left: $border-width solid $border-color;
 
 		box-sizing: border-box;
 		overflow: hidden;
 	}
 	.body-viewport {
+		display: flex;
 		flex: 1;
 		min-height: 0;
+		align-self: stretch;
 
 		border-left: $border-width solid $border-color;
+
+		box-sizing: border-box;
 		overflow: hidden;
 	}
+}
+
+.header {
+	background: $appbar-bg;
+	color: $appbar-text;
+	position: sticky;
+	top: 0;
+	width: 100%;
+	height: $viewport-header-height !important;
+
+	display: flex;
+	flex-direction: row;
+
+	border-bottom: $border-width solid $border-color;
+	flex-shrink: 0; /* prevents header from collapsing */
 }

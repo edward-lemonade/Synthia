@@ -7,16 +7,16 @@ import { ViewportComponent } from "./viewport/viewport.component";
 
 @Component({
 	selector: 'app-studio-editor',
-	imports: [MatToolbar, TracklistHeaderComponent, ViewportHeaderComponent, TracklistComponent, ViewportComponent],
+	imports: [TracklistHeaderComponent, ViewportHeaderComponent, TracklistComponent, ViewportComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<mat-toolbar class="headers">
-			<studio-editor-tracklist-header class="container headers-tracklist-container"/>
-			<studio-editor-viewport-header class="container headers-viewport-container"/>
-		</mat-toolbar>
-
-		<div class="body">
+		<div class="tracklist">
+			<studio-editor-tracklist-header class="container header headers-tracklist"/>
 			<studio-editor-tracklist class="container body-tracklist"/>
+		</div>
+
+		<div class="viewport">
+			<studio-editor-viewport-header class="container header headers-viewport"/>
 			<studio-editor-viewport class="container body-viewport"/>
 		</div>
 	`,

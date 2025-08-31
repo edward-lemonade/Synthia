@@ -124,6 +124,8 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			const scrollX = this.viewportService.measurePosX();
 			const measureWidth = this.viewportService.measureWidth();
 			const totalWidth = this.viewportService.totalWidth();
+			const regionDuration = this.region.duration();
+			const regionStart = this.region.start();
 			
 			if (this.type === RegionType.Audio && this.waveformCanvas?.nativeElement) {
 				this.scheduleWaveformRender();
@@ -254,19 +256,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		};
 	}
 
-	private shouldRerenderWaveform(newBounds: ViewportBounds): boolean {
-		if (!this.lastViewportBounds || !this.lastZoomLevel) {
-			return true;
-		}
-
-		const zoomChanged = this.lastZoomLevel !== this.viewportService.measureWidth();
-		const viewportChanged = 
-			Math.abs(this.lastViewportBounds.startTime - newBounds.startTime) > 0.1 ||
-			Math.abs(this.lastViewportBounds.endTime - newBounds.endTime) > 0.1;
-
-		return zoomChanged || viewportChanged;
-	}
-
 	async renderWaveformViewport() {
 		if (!this.waveformCanvas?.nativeElement || this.type !== RegionType.Audio) {
 			return;
@@ -276,11 +265,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			await this.waitForAudioToLoad();
 
 			const viewportBounds = this.getViewportBounds();
-			
-			if (!this.shouldRerenderWaveform(viewportBounds)) {
-				return;
-			}
-
 			const canvas = this.waveformCanvas.nativeElement;
 
 			const regionStartTime = this.viewportService.posToTime(this.region.start());
