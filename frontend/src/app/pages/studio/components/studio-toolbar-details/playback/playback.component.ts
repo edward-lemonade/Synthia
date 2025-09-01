@@ -14,13 +14,15 @@ import { PlaybackService } from '../../../services/playback.service';
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button 
-				class="btn back">
+				class="btn back"
+				(click)="playbackService.moveBackward()">
 				<mat-icon>fast_rewind</mat-icon>
 			</button>
 			
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				class="btn forward">
+				class="btn forward"
+				(click)="playbackService.moveForward()">
 				<mat-icon>fast_forward</mat-icon>
 			</button>
 
@@ -40,7 +42,8 @@ import { PlaybackService } from '../../../services/playback.service';
 
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				class="btn beginning">
+				class="btn beginning"
+				(click)="playbackService.moveBeginning()">
 				<mat-icon>skip_previous</mat-icon>
 			</button>
 

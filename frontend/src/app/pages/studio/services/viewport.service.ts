@@ -96,7 +96,7 @@ export class ViewportService { // SINGLETON
 	}
 	mouseXToPx(x: number, snap = this.snapToGrid()) {
 		let pos = (x - this.VPContainer!.getBoundingClientRect().left + this.windowPosX());
-		if (snap) { pos = this.snap(pos) }
+		if (snap) { pos = this.snap(this.posToPx(this.pxToPos(pos))) }
 		return pos;
 	}
 	mouseYToPx(y: number) {
@@ -105,7 +105,7 @@ export class ViewportService { // SINGLETON
 	}
 
 	snap(pos: number) {
-		return Math.floor(pos / this.smallestUnit()) * this.smallestUnit();
+		return Math.max(Math.round(pos / this.smallestUnit()) * this.smallestUnit(), 0);
 	}
 
 	// ==============================================================================================

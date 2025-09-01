@@ -31,6 +31,13 @@ export class RegionService {
 	// ========================================================
 	// Region Operations
 
+	getAllRegions(snapshot: boolean = false): Region[] | ObjectStateNode<Region>[] {
+		if (snapshot) {
+			return this.tracks().flatMap(track => track.regions.snapshot());
+		} else {
+			return this.tracks().flatMap(track => track.regions());
+		}
+	}
 	getRegions(trackId: string): ArrayStateNode<Region> {
 		return this.tracks.getById(trackId)!.regions;
 	}

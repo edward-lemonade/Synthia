@@ -2,6 +2,8 @@ import { v4 as uuid } from "uuid";
 import { ArrayStateNode, ObjectStateNode, PropStateNode } from "./state.factory";
 import { HistoryService } from "../services/history.service";
 import { AudioRegion, Author, BaseFileRef, Key, Region, RegionType, TimeSignature, Track, TrackType } from "@shared/types";
+import { StateService } from "./state.service";
+import { RegionService } from "../services/region.service";
 
 export type Mutator<T> = ( 
 	newValue: T, 
@@ -48,6 +50,10 @@ export const setBpm: Mutator<number> = (val: number, node: PropStateNode<number>
 	const reverse = () => { node._set(initial); }
 	forward();
 	HistoryService.instance.recordCommand(actionId, forward, reverse);
+
+	RegionService.instance.getAllRegions().forEach((regionNode) => {
+		(regionNode.duration as PropStateNode<number>).update(og => og / initial * val, actionId);
+	})
 }
 export const setKey: Mutator<Key> = (val: Key, node: PropStateNode<Key>, actionId) => { // simple change 
 	const initial = node();

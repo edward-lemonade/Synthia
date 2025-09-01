@@ -36,7 +36,6 @@ export class ViewportOverlayComponent implements AfterViewInit {
 			effect(() => {
 				const posX = this.viewportService.windowPosX();
 
-				console.log(posX);
 				if (this.scrollContainerRef?.nativeElement && this.scrollContainerRef.nativeElement.scrollLeft !== posX) {
 					this.scrollContainerRef.nativeElement.scrollLeft = posX;
 				}

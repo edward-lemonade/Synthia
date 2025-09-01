@@ -27,9 +27,6 @@ export class PlaybackMarkerComponent {
 	@ViewChild("marker", {static: true}) markerRef!: ElementRef<HTMLDivElement>;
 
 	public isDragging = false;
-	private startX = 0;
-	private startScrollLeft = 0;
-	private startPlaybackPx = 0;
 	
 	constructor(
 		private injector: Injector,
@@ -52,7 +49,6 @@ export class PlaybackMarkerComponent {
 	}
 
 	ngOnDestroy(): void {
-		// Clean up any remaining event listeners
 		this.stopDragging();
 	}
 
@@ -73,20 +69,12 @@ export class PlaybackMarkerComponent {
 
 	private startDragging(clientX: number): void {
 		this.isDragging = true;
-		this.startX = clientX;
-		this.startPlaybackPx = this.playbackService.playbackPx();
-		
-		// Get scroll container from parent component
-		const scrollContainer = this.getScrollContainer();
-		this.startScrollLeft = scrollContainer?.scrollLeft || 0;
 
-		// Add global event listeners
 		document.addEventListener('mousemove', this.onMouseMove);
 		document.addEventListener('mouseup', this.onMouseUp);
 		document.addEventListener('touchmove', this.onTouchMove);
 		document.addEventListener('touchend', this.onTouchEnd);
 
-		// Add dragging class to marker
 		this.markerRef.nativeElement.classList.add('dragging');
 	}
 
@@ -112,26 +100,12 @@ export class PlaybackMarkerComponent {
 	}
 
 	private updatePosition(clientX: number): void {
-		const deltaX = clientX - this.startX;
-		const scrollContainer = this.getScrollContainer();
-		const currentScrollLeft = scrollContainer?.scrollLeft || 0;
-		const scrollDelta = currentScrollLeft - this.startScrollLeft;
-		
-		// Calculate new position accounting for scroll changes
-		const newPlaybackPx = this.startPlaybackPx + deltaX + scrollDelta;
-		
-		// Constrain to valid bounds
-		const constrainedPx = Math.max(0, Math.min(newPlaybackPx, this.viewportService.totalWidth()));
-		
-		// Update the marker position immediately for smooth dragging
-		this.markerRef.nativeElement.style.left = constrainedPx + 'px';
-		
-		// Update the playback service (convert px to time/position as needed)
-		this.updatePlaybackPosition(constrainedPx);
-	}
+		const newPlaybackPx = this.viewportService.mouseXToPx(clientX, true);
+		let constrainedPx = Math.max(0, Math.min(newPlaybackPx, this.viewportService.totalWidth()));
 
-	private updatePlaybackPosition(pixelPosition: number): void {
-		this.playbackService.setPlaybackPx(pixelPosition);
+		this.markerRef.nativeElement.style.left = constrainedPx + 'px';
+
+		this.playbackService.setPlaybackPx(constrainedPx);
 	}
 
 	private stopDragging(): void {
@@ -139,25 +113,12 @@ export class PlaybackMarkerComponent {
 
 		this.isDragging = false;
 
-		// Remove global event listeners
 		document.removeEventListener('mousemove', this.onMouseMove);
 		document.removeEventListener('mouseup', this.onMouseUp);
 		document.removeEventListener('touchmove', this.onTouchMove);
 		document.removeEventListener('touchend', this.onTouchEnd);
 
-		// Remove dragging class
 		this.markerRef.nativeElement.classList.remove('dragging');
 	}
 
-	private getScrollContainer(): HTMLDivElement | null {
-		// Navigate up the DOM to find the scroll container
-		let element = this.markerRef.nativeElement.parentElement;
-		while (element) {
-			if (element.classList.contains('scroll-container')) {
-				return element as HTMLDivElement;
-			}
-			element = element.parentElement;
-		}
-		return null;
-	}
 }

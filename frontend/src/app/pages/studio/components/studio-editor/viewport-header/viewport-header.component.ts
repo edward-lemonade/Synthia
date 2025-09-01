@@ -14,15 +14,15 @@ import { PlaybackService } from '../../../services/playback.service';
 		<div #container class="container" (wheel)="onWheel($event)" (click)="onClick($event)">
 			<canvas #canvas class="canvas"></canvas>
 			<div class="controls">
-				<button class="control-btn" (click)="onButtonZoomIn()">
+				<button class="control-btn" (click)="onButtonZoomIn($event)">
 					<mat-icon>zoom_in</mat-icon>
 				</button>
-				<button class="control-btn" (click)="onButtonZoomOut()">
+				<button class="control-btn" (click)="onButtonZoomOut($event)">
 					<mat-icon>zoom_out</mat-icon>
 				</button>
 				<button class="control-btn" 
 					[class.active]="this.viewportService.snapToGrid()" 
-					(click)="toggleSnap()">
+					(click)="toggleSnap($event)">
 					<mat-icon class="custom-icon" svgIcon="snap-to-grid"></mat-icon>
 				</button>
 			</div>
@@ -108,9 +108,17 @@ export class ViewportHeaderComponent implements AfterViewInit {
 		}
 	}
 
-	onButtonZoomIn() { this.viewportService.adjustZoom(1, this.scrollContainerRef.nativeElement!.clientWidth/2, 0.5); }
-	onButtonZoomOut() { this.viewportService.adjustZoom(-1, this.scrollContainerRef.nativeElement!.clientWidth/2, 0.5); }
-
-	toggleSnap() { this.viewportService.snapToGrid.set( !this.viewportService.snapToGrid() )}
+	onButtonZoomIn(event: MouseEvent) { 
+		this.viewportService.adjustZoom(1, this.scrollContainerRef.nativeElement!.clientWidth/2, 0.5); 
+		event.stopPropagation();
+	}
+	onButtonZoomOut(event: MouseEvent) { 
+		this.viewportService.adjustZoom(-1, this.scrollContainerRef.nativeElement!.clientWidth/2, 0.5); 
+		event.stopPropagation();
+	}
+	toggleSnap(event: MouseEvent) { 
+		this.viewportService.snapToGrid.set(!this.viewportService.snapToGrid())
+		event.stopPropagation();
+	}
 
 }

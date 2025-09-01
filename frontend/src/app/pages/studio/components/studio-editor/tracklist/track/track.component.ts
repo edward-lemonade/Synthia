@@ -16,6 +16,7 @@ import { SelectService } from '@src/app/pages/studio/services/select.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
+import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
 
 @Component({
 	selector: 'tracklist-track',
@@ -126,6 +127,7 @@ export class TrackComponent implements OnInit {
 		public tracksService : TracksService,
 		public viewportService : ViewportService,
 		public selectService : SelectService,
+		public playbackService : PlaybackService,
 	) {
 		effect(() => {
 			this.volumeInput.set(this.track.volume());
@@ -158,15 +160,17 @@ export class TrackComponent implements OnInit {
 	volumeInput = signal(100);
 	updateVolume() {
 		this.track.volume.set(this.volumeInput());
+		this.playbackService.updateNodeVolumeMute(this.track._id, this.volumeInput(), this.mute());
 	}
 
 	panInput = signal(0);
 	updatePan() {
 		this.track.pan.set(this.panInput());
+		this.playbackService.updateNodePan(this.track._id, this.panInput());
 	}
 
 	mute = computed(() => this.track.mute());
-	toggleMute() { this.track.mute.update(m => !m) }
+	toggleMute() { this.track.mute.update(m => !m);this.playbackService.updateNodeVolumeMute(this.track._id, this.volumeInput(), this.mute()); }
 	solo = computed(() => this.track.solo());
 	toggleSolo() { this.track.solo.update(s => !s) }
 

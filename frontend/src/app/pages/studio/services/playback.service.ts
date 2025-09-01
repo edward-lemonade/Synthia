@@ -1,6 +1,17 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
 import { StateService } from '../state/state.service';
 import { ViewportService } from './viewport.service';
+import { AudioCacheService } from './audio-cache.service';
+import { AudioRegion, Region, RegionType } from '@shared/types';
+import { RegionService } from './region.service';
+import { TracksService } from './tracks.service';
+import { ObjectStateNode } from '../state/state.factory';
+
+export interface TrackNodes {
+	gainNode: GainNode,
+	pannerNode: StereoPannerNode,
+	trackId: string,
+}
 
 @Injectable()
 export class PlaybackService { // SINGLETON
@@ -9,44 +20,96 @@ export class PlaybackService { // SINGLETON
 
 	constructor(private injector: Injector) {
 		PlaybackService._instance = this;
+		this.audioContext = new AudioContext();
+		this.masterGainNode = this.audioContext.createGain();
+		this.masterGainNode.connect(this.audioContext.destination);
 	}
 
 	get viewportService() { return ViewportService.instance }
+	get audioCache() { return AudioCacheService.instance }
+	get tracks() { return TracksService.instance.tracks }
+	get regions() { return RegionService.instance.getAllRegions(true) }
 
 	// ==============================================================================================
 	// Fields
+
+	private audioContext: AudioContext;
+	private masterGainNode: GainNode;
+	private activeSources: AudioBufferSourceNode[] = [];
 
 	playbackPos = signal(0);
 	playbackTime = computed(() => ViewportService.instance.posToTime(this.playbackPos()));
 	playbackPx = computed(() => ViewportService.instance.posToPx(this.playbackPos()));
 
-	setPlaybackPos(pos: number) { this.playbackPos.set(pos); }
-	setPlaybackTime(time: number) { this.playbackPos.set(this.viewportService.timeToPos(time)); }
-	setPlaybackPx(px: number) { this.playbackPos.set(this.viewportService.pxToPos(px)); }
+	setPlaybackPos(pos: number, dontSnap = false) { 
+		const wasPlaying = this.isPlaying();
+
+		if (wasPlaying) this.pause();
+
+		let finalPos = dontSnap ? pos : (this.viewportService.snapToGrid() ? this.viewportService.snap(pos) : pos);
+		finalPos = Math.max(0, finalPos);
+		this.playbackPos.set(finalPos); 
+
+		if (wasPlaying) this.play();
+	}
+	setPlaybackTime(time: number, dontSnap = false) { this.setPlaybackPos(this.viewportService.timeToPos(time), dontSnap); }
+	setPlaybackPx(px: number, dontSnap = false) { this.setPlaybackPos(this.viewportService.pxToPos(px, false), dontSnap); }
 
 	isPlaying = signal(false);
 	playbackLineRef?: HTMLDivElement;
 
-	private startTime = 0;
+	private startClockTime = 0;
+	private startAudioTime = 0;
 	private basePos = 0;
 
 	registerPlaybackLine(div: HTMLDivElement) {
 		this.playbackLineRef = div;
 	}
 
-	play() {
-		if (!this.playbackLineRef) return;
-		if (this.isPlaying()) return; // already playing
+	// ==============================================================================================
+	// Control
 
+	async play() {
+		//if (this.isPlaying()) return;
 		this.isPlaying.set(true);
+		this.startPlaybackLineAnim();
+		this.startAudioPlayback();
+		await this.audioContext.resume();
+	}
 
-		this.startTime = performance.now();
+	async pause() {
+		//if (!this.isPlaying()) return;
+		this.isPlaying.set(false);
+		this.stopPlaybackLineAnim();
+		this.stopAudioPlayback();
+		await this.audioContext.suspend()
+	}
+
+	moveForward() {
+		this.setPlaybackPos(this.playbackPos() + 2*this.viewportService.smallestUnit());
+	}
+	moveBackward() {
+		this.setPlaybackPos(this.playbackPos() - 2*this.viewportService.smallestUnit());
+	}
+	moveBeginning() {
+		this.setPlaybackPos(0);
+		this.viewportService.setWindowPosX(0);
+	}
+
+	// ==============================================================================================
+	// Line Anim
+
+	private async startPlaybackLineAnim() {
+		if (!this.playbackLineRef) return;
+
+		this.startClockTime = performance.now();
+		this.startAudioTime = this.audioContext.currentTime;
 		this.basePos = this.playbackPos();
 
 		const step = (now: number) => {
 			if (!this.isPlaying()) return;
 
-			const elapsedSec = (now - this.startTime) / 1000;
+			const elapsedSec = (now - this.startClockTime) / 1000;
 			const pos = this.viewportService.timeToPos(elapsedSec);
 			const px = this.viewportService.posToPx(pos);
 
@@ -58,15 +121,116 @@ export class PlaybackService { // SINGLETON
 		requestAnimationFrame(step);
 	}
 
-	pause() {
-		if (!this.isPlaying()) return;
-		this.isPlaying.set(false);
-
+	private async stopPlaybackLineAnim() {
 		const now = performance.now();
-		const elapsedSec = (now - this.startTime) / 1000;
+		const elapsedSec = (now - this.startClockTime) / 1000;
 		const pos = this.basePos + this.viewportService.timeToPos(elapsedSec);
 
-		this.setPlaybackPos(pos);
+		this.setPlaybackPos(pos, true);
 		this.playbackLineRef!.style.transform = `translateX(${0}px)`;
 	}
+
+	// ==============================================================================================
+	// Audio Playback
+
+	private startAudioPlayback() {
+		const playbackTime = this.playbackTime();
+		
+		this.trackNodes.clear();
+		
+		this.tracks().forEach(track => {
+			const trackId = track._id;
+			const volume = track.volume();
+			const pan = track.pan();
+			const mute = track.mute();
+
+			const trackGainNode = this.audioContext.createGain();
+			const trackPannerNode = this.audioContext.createStereoPanner();
+			
+			const volumeLevel = mute ? 0 : volume / 100;
+			trackGainNode.gain.value = volumeLevel;
+			trackPannerNode.pan.value = pan / 100;
+			
+			// gain -> panner -> master
+			trackGainNode.connect(trackPannerNode);
+			trackPannerNode.connect(this.masterGainNode);
+			
+			// Store references
+			this.trackNodes.set(trackId, {
+				gainNode: trackGainNode,
+				pannerNode: trackPannerNode,
+				trackId: trackId,
+			});
+
+			track.regions().forEach(region => {
+				if (region.type() != RegionType.Audio) {return}
+				const audioRegion = region as ObjectStateNode<AudioRegion>
+
+				const audioBuffer = this.audioCache.getAudioBuffer(audioRegion.fileId());
+				if (!audioBuffer) return;
+
+				const source = this.audioContext.createBufferSource();
+				source.buffer = audioBuffer;
+
+				source.connect(trackGainNode);
+
+				// Calculate timing 
+				const regionStart = this.viewportService.posToTime(audioRegion.start());
+				const audioStart = audioRegion.audioStartOffset();
+				const audioEnd = audioRegion.audioEndOffset();
+				const duration = audioEnd - audioStart;
+
+				const scheduleTime = this.startAudioTime + (regionStart - playbackTime);
+				
+				if (scheduleTime >= this.audioContext.currentTime) {
+					source.start(scheduleTime, audioStart, duration);
+				} else {
+					const playOffset = playbackTime - regionStart;
+					const audioOffset = audioStart + playOffset;
+					
+					if (audioOffset < audioEnd && playOffset >= 0) {
+						const remainingDuration = audioEnd - audioOffset;
+						source.start(this.audioContext.currentTime, audioOffset, remainingDuration);
+					}
+				}
+
+				this.activeSources.push(source);
+			});
+		});
+	}
+
+	private stopAudioPlayback() {
+		this.activeSources.forEach(source => {
+			try {
+				source.stop();
+			} catch (e) {
+				// Source may already be stopped
+			}
+		});
+		this.activeSources = [];
+		this.trackNodes.clear();
+	}
+
+	// ==============================================================================================
+	// Realtime Updates
+
+	private trackNodes = new Map<string, TrackNodes>();
+
+	public updateNodeVolumeMute(trackId: string, volume: number, mute: boolean) {
+		const trackNodes = this.trackNodes.get(trackId);
+		if (!trackNodes) return;
+	
+		const currentVolume = volume ?? 100; 
+		const volumeLevel = mute ? 0 : currentVolume / 100;
+		trackNodes.gainNode.gain.setTargetAtTime(volumeLevel, this.audioContext.currentTime, 0.01);
+	}
+
+	public updateNodePan(trackId: string, pan: number) {
+		const trackNodes = this.trackNodes.get(trackId);
+		if (!trackNodes) return;
+
+		const panValue = pan / 100;
+		trackNodes.pannerNode.pan.setTargetAtTime(panValue, this.audioContext.currentTime, 0.01);
+	}
+
 }

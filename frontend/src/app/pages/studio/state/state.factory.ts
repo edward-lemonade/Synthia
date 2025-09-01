@@ -191,7 +191,6 @@ export function arrayStateNode<T extends Record<string, any>>(
 	s.push = (obj: ObjectStateNode<T>, actionId = uuid()) => {s.update((arr) => [...arr, obj], actionId)};	
 	s.insertValue = (value: Partial<T>, index = s().length, actionId = uuid()) => {
 		const obj = objectStateNode(scaffold(value), value);
-		console.log(value, scaffold(value), scaffold)
 		s.update((arr) => {
 			const newArr = [...arr];
 			newArr.splice(index, 0, obj);

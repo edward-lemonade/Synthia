@@ -15,7 +15,8 @@ export interface WaveformData {
 
 export interface CachedAudioFile {
 	fileId: string;
-	buffer: ArrayBuffer;
+	arrayBuffer: ArrayBuffer;
+	audioBuffer?: AudioBuffer;
 	blob: Blob;
 	url: string;
 
@@ -166,11 +167,15 @@ export class AudioCacheService {
 		const arrayBuffer = this.base64ToArrayBuffer(audioFileData.buffer64);
 		const blob = new Blob([arrayBuffer], { type: audioFileData.mimeType });
 		const url = URL.createObjectURL(blob);
+
+		const audioContext = new AudioContext();
+		const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice());
 		const waveformData = await this.generateAudioWaveform(arrayBuffer);
 
 		const cachedFile: CachedAudioFile = {
 			fileId: audioFileData.fileId,
-			buffer: arrayBuffer,
+			arrayBuffer: arrayBuffer,
+			audioBuffer: audioBuffer,
 			blob,
 			url,
 			duration: waveformData.duration,
@@ -200,6 +205,10 @@ export class AudioCacheService {
 	public getWaveformData(fileId: string): WaveformData | null {
 		return this.cache.get(fileId)?.waveformData ?? null;
 	};
+
+	public getAudioBuffer(fileId: string): AudioBuffer | undefined {
+		return this.cache.get(fileId)?.audioBuffer;
+	}
 
 	async generateAudioWaveform(audioBuffer: ArrayBuffer): Promise<WaveformData> {
         const audioContext = new AudioContext();

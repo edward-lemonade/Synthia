@@ -31,7 +31,9 @@ import { PlaybackService } from '../../../services/playback.service';
 				class="canvas"
 				></canvas>
 
-			<div #scrollContainer class="scroll-container" (scroll)="onScroll()">
+			<div #scrollContainer class="scroll-container" 
+				(scroll)="onScroll()"
+				>
 				<div #tracks class="tracks" [style.width.px]="viewportService.totalWidth()">
 					<viewport-track 
 						*ngFor="let track of this.tracks(); let i = index"
