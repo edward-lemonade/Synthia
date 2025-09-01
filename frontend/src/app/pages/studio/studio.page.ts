@@ -14,11 +14,12 @@ import { StateService } from './state/state.service';
 import { TracksService } from './services/tracks.service';
 import { WaveformRenderService } from './services/waveform-render.service';
 import { RegionService } from './services/region.service';
+import { PlaybackService } from './services/playback.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, SelectService, RegionService, RegionDragService, AudioCacheService, WaveformRenderService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, SelectService, RegionService, RegionDragService, AudioCacheService, WaveformRenderService, PlaybackService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

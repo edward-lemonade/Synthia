@@ -7,6 +7,8 @@ import { RegionDragService } from '../../../services/region-drag.service';
 import { StateService } from '../../../state/state.service';
 import { RegionPath, RegionService } from '../../../services/region.service';
 import { TracksService } from '../../../services/tracks.service';
+import { PlaybackMarkerComponent } from "../viewport-overlay/playback-marker/playback-marker.component";
+import { PlaybackService } from '../../../services/playback.service';
 
 @Component({
 	selector: 'studio-editor-viewport',
@@ -74,6 +76,7 @@ export class ViewportComponent implements AfterViewInit {
 		public regionService: RegionService,
 		public selectService: SelectService,
 		public dragService: RegionDragService,
+		public playbackService: PlaybackService,
 	) {}
 
 	get tracks() { return this.stateService.state.studio.tracks }
@@ -150,8 +153,7 @@ export class ViewportComponent implements AfterViewInit {
 
 			if (!event.ctrlKey && !event.metaKey) { this.selectService.clearSelection(); }
 
-			this.selectService.startBoxSelect(startX, startY);			
-			//event.preventDefault();
+			this.selectService.startBoxSelect(startX, startY);	
 		}
 	}
 
@@ -184,6 +186,9 @@ export class ViewportComponent implements AfterViewInit {
 		} else if (this.dragService.isDragReady()) {
 			this.dragService.cancelDrag();	
 		} else if (this.selectService.isBoxSelecting()) {
+			if (this.selectService.shouldNullifyBoxSelect()) {
+				this.playbackService.setPlaybackPx(this.viewportService.mouseXToPx(event.clientX));
+			}
 			this.selectService.completeBoxSelect((bounds) => {
 				return this.getRegionsInBounds(bounds);
 			});

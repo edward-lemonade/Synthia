@@ -157,9 +157,19 @@ export class SelectService {
 		}
 	}
 
+	public shouldNullifyBoxSelect() {
+		const bounds = this.boxSelectBounds();
+		if (!bounds) {return false}
+		const boxWidth = Math.abs(bounds.startX - bounds.endX);
+		const boxHeight = Math.abs(bounds.startY - bounds.endY);
+		
+		const MIN_BOX_SIZE = 5;
+		return (boxWidth < MIN_BOX_SIZE && boxHeight < MIN_BOX_SIZE);		
+	}
+
   	public completeBoxSelect(getRegionsInBounds: (bounds: BoxSelectBounds) => RegionPath[]) {
 		const bounds = this.boxSelectBounds();
-		if (bounds) {
+		if (bounds && !this.shouldNullifyBoxSelect()) {
 			const regionsInBounds = getRegionsInBounds(bounds);
 			this.setSelectedRegions(regionsInBounds);
 		}

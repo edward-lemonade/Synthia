@@ -7,77 +7,7 @@
 	flex: 1;        /* fills remaining parent space */
 	min-height: 0;  /* prevents children from expanding host */
 	min-width: 0;
-
-}
-
-.tracklist {
-	display: flex;
-	flex-direction: column;
-
-	width: $tracklist-width;   /* fixed */
-	flex: 0 0 $tracklist-width; /* lock it to this width */
-	min-height: 0;
-	height: 100%;	
-
-	box-sizing: border-box;
-
-	.headers-tracklist {
-		padding: 0 16px;
-		width: 100%;
-
-		display: flex;
-		justify-content: left;
-		align-items: center;
-		box-sizing: border-box;
-		flex-shrink: 0;   /* header never shrinks */
-	}
-	.body-tracklist {
-		flex: 1;          /* takes remaining height */
-		min-height: 0;    /* prevents content growth */
-		width: 100%;
-
-		display: flex;
-		justify-content: left;
-		align-items: start;
-
-		box-sizing: border-box;
-		overflow: auto;   /* scroll instead of growing */
-	}
-}
-.viewport {
-	display: flex;
-	flex-direction: column;
-
-	flex: 1;           /* fill remaining width */
-	min-width: 0;
-	min-height: 0;     /* prevents vertical growth */
-	height: 100%;
-
-	box-sizing: border-box;
-
-	.headers-viewport {
-		display: flex;
-		flex-shrink: 0;
-		flex-direction: row;
-		justify-content: left;
-		align-items: center;
-
-		border-left: $border-width solid $border-color;
-
-		box-sizing: border-box;
-		overflow: hidden;
-	}
-	.body-viewport {
-		display: flex;
-		flex: 1;
-		min-height: 0;
-		align-self: stretch;
-
-		border-left: $border-width solid $border-color;
-
-		box-sizing: border-box;
-		overflow: hidden;
-	}
+	overflow-y: visible;
 }
 
 .header {
@@ -93,4 +23,75 @@
 
 	border-bottom: $border-width solid $border-color;
 	flex-shrink: 0; /* prevents header from collapsing */
+}
+
+
+.tracklist {
+	display: flex;
+	flex-direction: column;
+
+	width: $tracklist-width;   /* fixed */
+	flex: 0 0 $tracklist-width; /* lock it to this width */
+	min-height: 0;
+	height: 100%;	
+
+	box-sizing: border-box;
+
+	.tracklist-header {
+		padding: 0 16px;
+		width: 100%;
+
+		display: flex;
+		justify-content: left;
+		align-items: center;
+		box-sizing: border-box;
+		flex-shrink: 0;   /* header never shrinks */
+	}
+	.tracklist-body {
+		flex: 1;          /* takes remaining height */
+		min-height: 0;    /* prevents content growth */
+		width: 100%;
+
+		display: flex;
+		justify-content: left;
+		align-items: start;
+
+		box-sizing: border-box;
+		overflow: auto;   /* scroll instead of growing */
+	}
+}
+.viewport {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+
+	flex: 1;           /* fill remaining width */
+	min-width: 0;
+	min-height: 0;     /* prevents vertical growth */
+	height: 100%;
+
+	box-sizing: border-box;
+
+	.viewport-header {
+		display: flex;
+		flex-shrink: 0;
+		flex-direction: row;
+		justify-content: left;
+		align-items: center;
+
+		border-left: $border-width solid $border-color;
+
+		box-sizing: border-box;
+	}
+	.viewport-body {
+		display: flex;
+		flex: 1;
+		min-height: 0;
+		align-self: stretch;
+
+		border-left: $border-width solid $border-color;
+
+		box-sizing: border-box;
+		overflow-x: hidden;
+	}
 }

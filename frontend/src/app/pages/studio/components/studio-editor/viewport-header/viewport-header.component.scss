@@ -4,14 +4,13 @@
 .container {
 	position: relative;
 	height: $viewport-header-height;
-
 	width: 100%;
 	overflow: hidden;
 	
 	.canvas {
 		position: absolute;
 		top: 0;
-    	left: 0;
+			left: 0;
 
 		z-index: 1;
 		pointer-events: none;
@@ -20,7 +19,7 @@
 	.controls {
 		position: absolute;
 		top: 0;
-    	right: 0;
+			right: 0;
 		width: 120px;
 		height: 100%;
 
@@ -70,19 +69,23 @@
 	}
 
 	.scroll-container {
-		width: 100%;
-		height: 100%;
+		display: flex;
+
+		height: $viewport-header-height;
 
 		z-index: 2;
-		overflow: scroll;
+		background: none;
 
-		.scrollContent {
-			height: 100%;
-		}
+		overflow-x: auto;
 
-		overflow: scroll;
 		&::-webkit-scrollbar { display: none; }
 		scrollbar-width: none;
 		-ms-overflow-style: none;
+
+		.scroll-content {
+			position: relative;
+			height: 100%;
+			flex: none;
+		}
 	}
 }

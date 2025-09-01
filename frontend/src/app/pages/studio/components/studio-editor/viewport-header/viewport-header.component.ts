@@ -1,15 +1,17 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
 import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
+import { PlaybackMarkerComponent } from '../viewport-overlay/playback-marker/playback-marker.component';
+import { PlaybackService } from '../../../services/playback.service';
 
 @Component({
 	selector: 'studio-editor-viewport-header',
 	imports: [CommonModule, MatIconModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<div #container class="container" (wheel)="onWheel($event)">
+		<div #container class="container" (wheel)="onWheel($event)" (click)="onClick($event)">
 			<canvas #canvas class="canvas"></canvas>
 			<div class="controls">
 				<button class="control-btn" (click)="onButtonZoomIn()">
@@ -25,11 +27,13 @@ import { DomSanitizer } from '@angular/platform-browser';
 				</button>
 			</div>
 			<div #scrollContainer class="scroll-container">
-				<div class="scroll-content" [style.width.px]="viewportService.viewportWidth()"> 
-					
+				<div #scrollContent class="scroll-content" [style.width.px]="viewportService.totalWidth()">
+
 				</div>
 			</div>
+			
 		</div>
+		
 	`,
 	styleUrl: './viewport-header.component.scss'
 })
@@ -37,15 +41,18 @@ import { DomSanitizer } from '@angular/platform-browser';
 export class ViewportHeaderComponent implements AfterViewInit {
 	@ViewChild("canvas", {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
 	@ViewChild("scrollContainer", {static: true}) scrollContainerRef!: ElementRef<HTMLDivElement>;
+	@ViewChild("scrollContent", {static: true}) scrollContentRef!: ElementRef<HTMLDivElement>;
 
 	public DPR = window.devicePixelRatio || 1;
 
 	iconPath = '/assets/icons/magnet.svg';
 
 	constructor(
+		private injector: Injector,
 		private matIconRegistry: MatIconRegistry,
     	private domSanitizer: DomSanitizer,
 		public viewportService: ViewportService,
+		public playbackService: PlaybackService,
 	) {
 		this.matIconRegistry.addSvgIcon(
 			'snap-to-grid',
@@ -72,6 +79,20 @@ export class ViewportHeaderComponent implements AfterViewInit {
 				}
 			}
 		});
+
+		runInInjectionContext(this.injector, () => {
+			effect(() => {
+				const posX = this.viewportService.windowPosX();
+
+				if (this.scrollContainerRef?.nativeElement && this.scrollContainerRef.nativeElement.scrollLeft !== posX) {
+					this.scrollContainerRef.nativeElement.scrollLeft = posX;
+				}
+			});
+		});
+	}
+
+	onClick(event: MouseEvent) {
+		this.playbackService.setPlaybackPx(this.viewportService.mouseXToPx(event.clientX));
 	}
 
 	onWheel(event: WheelEvent) {
