@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDivider } from '@angular/material/divider';
 import { MatIcon } from '@angular/material/icon';
+import { PlaybackService } from '../../../services/playback.service';
 
 @Component({
 	selector: 'studio-toolbar-details-playback',
@@ -16,21 +17,33 @@ import { MatIcon } from '@angular/material/icon';
 				class="btn back">
 				<mat-icon>fast_rewind</mat-icon>
 			</button>
+			
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
 				class="btn forward">
 				<mat-icon>fast_forward</mat-icon>
 			</button>
+
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
-			<button  
-				class="btn play">
+			<button 
+				class="btn play"
+				*ngIf="!playbackService.isPlaying()" 
+				(click)="playbackService.play()">
 				<mat-icon>play_arrow</mat-icon>
 			</button>
+			<button 
+				class="btn pause"
+				*ngIf="playbackService.isPlaying()" 
+				(click)="playbackService.pause()">
+				<mat-icon>pause</mat-icon>
+			</button>
+
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
 				class="btn beginning">
 				<mat-icon>skip_previous</mat-icon>
 			</button>
+
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
 				class="btn record">
@@ -41,5 +54,7 @@ import { MatIcon } from '@angular/material/icon';
 	styleUrl: './playback.component.scss'
 })
 export class PlaybackComponent {
-
+	constructor(
+		public playbackService: PlaybackService,
+	) {}
 }

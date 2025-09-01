@@ -9,7 +9,7 @@ import { ViewportOverlayComponent } from "./viewport-overlay/viewport-overlay.co
 
 @Component({
 	selector: 'app-studio-editor',
-	imports: [TracklistHeaderComponent, ViewportHeaderComponent, TracklistComponent, ViewportComponent, PlaybackMarkerComponent, ViewportOverlayComponent],
+	imports: [TracklistHeaderComponent, ViewportHeaderComponent, TracklistComponent, ViewportComponent, ViewportOverlayComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="tracklist">

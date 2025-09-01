@@ -32,7 +32,6 @@ export class ViewportOverlayComponent implements AfterViewInit {
 	}
 
 	ngAfterViewInit(): void {
-
 		runInInjectionContext(this.injector, () => {
 			effect(() => {
 				const posX = this.viewportService.windowPosX();

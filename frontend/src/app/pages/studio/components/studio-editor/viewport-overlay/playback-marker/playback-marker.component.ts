@@ -41,8 +41,9 @@ export class PlaybackMarkerComponent {
 	}
 
 	ngAfterViewInit(): void {
+		this.playbackService.registerPlaybackLine(this.markerRef.nativeElement);
+		
 		runInInjectionContext(this.injector, () => {
-			
 			effect(() => {
 				const playbackPx = this.playbackService.playbackPx();
 				this.markerRef.nativeElement.style.left = playbackPx + 'px';
