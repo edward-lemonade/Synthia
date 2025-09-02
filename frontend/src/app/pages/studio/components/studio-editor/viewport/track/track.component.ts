@@ -87,7 +87,11 @@ export class TrackComponent{
 
 	getRegions() { return this.track.regions; }
 	createRegion() {
-		const pos = this.viewportService.pxToPos(this.mouseX);
+		let pos = this.viewportService.pxToPos(this.mouseX, false);
+		if (this.viewportService.snapToGrid()) {
+			pos = this.viewportService.snapFloor(pos);
+		}
+
 		if (this.track.regionType() == RegionType.Audio) {
 			this.regionService.addAudioRegion(this.track, {start: pos});
 		} else {

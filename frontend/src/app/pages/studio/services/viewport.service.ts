@@ -6,13 +6,18 @@ export class ViewportService { // SINGLETON
 	private static _instance: ViewportService;
 	static get instance(): ViewportService { return ViewportService._instance; }
 
+	static snapToGrid = signal(false);
+
 	constructor(
 		private injector: Injector,
 	) {
-		ViewportService._instance = this;
+		if (!ViewportService._instance) {
+			ViewportService._instance = this;
+		}
 	}
 
 	get studioState() { return StateService.instance.state.studio; }
+	get snapToGrid() { return ViewportService.snapToGrid }
  
 	// ==============================================================================================
 	// Fields
@@ -31,7 +36,6 @@ export class ViewportService { // SINGLETON
 	viewportWidth = signal(0);
 	measurePosX = computed(() => this.windowPosX() / this.measureWidth() );
 
-	snapToGrid = signal(false);
 	smallestUnit = signal(1);
 
 	CANVAS_PADDING = 30;
@@ -107,6 +111,9 @@ export class ViewportService { // SINGLETON
 	snap(pos: number) {
 		return Math.max(Math.round(pos / this.smallestUnit()) * this.smallestUnit(), 0);
 	}
+	snapFloor(pos: number) {
+		return Math.max(Math.floor(pos / this.smallestUnit()) * this.smallestUnit(), 0);
+	}
 
 	// ==============================================================================================
 	// Tracklist Scroll Sync (vertical)
@@ -177,11 +184,11 @@ export class ViewportService { // SINGLETON
 	}
 
 	// ==============================================================================================
-	// Line Deawing
+	// Line Drawing
 
 	private onViewportChanged = effect(() => {
 		const startPos = this.windowPosX() - this.CANVAS_PADDING;
-		const endPos = this.windowPosX() + this.VPHeaderCanvas!.width + this.CANVAS_PADDING;
+		const endPos = this.windowPosX() + (this.VPHeaderCanvas?.width ?? 0) + this.CANVAS_PADDING;
 		const measureWidth = this.measureWidth();
 		const beatWidth = this.beatWidth();
 		const zoom = this.zoomFactor();

@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, Input, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
 import { ViewportService } from '../../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
@@ -12,17 +12,17 @@ import { SelectService } from '@src/app/pages/studio/services/select.service';
 	template: `
 		<div #marker class="marker">
 			<div class="marker-handle" [style.pointer-events]="selectService.isBoxSelecting() ? 'none' : null"
-				(mousedown)="onMouseDown($event)"
-				(touchstart)="onTouchStart($event)"></div>
+				(mousedown)="onMouseDown($event)"></div>
 			<div class="marker-line" [style.pointer-events]="selectService.isBoxSelecting() ? 'none' : null"
-				(mousedown)="onMouseDown($event)"
-				(touchstart)="onTouchStart($event)"></div>
+				(mousedown)="onMouseDown($event)"></div>
 		</div>
 	`,
 	styleUrl: './playback-marker.component.scss'
 })
 
 export class PlaybackMarkerComponent {
+	@Input() localViewportService?: ViewportService;
+	@Input() viewportType?: string;
 	@ViewChild("container", {static: true}) containerRef!: ElementRef<HTMLDivElement>;
 	@ViewChild("marker", {static: true}) markerRef!: ElementRef<HTMLDivElement>;
 
@@ -33,16 +33,30 @@ export class PlaybackMarkerComponent {
 		public viewportService: ViewportService,
 		public playbackService: PlaybackService,
 		public selectService: SelectService,
-	) {
+	) {}
 
-	}
+	get playbackPx() { 
+		let px = this.playbackService.playbackPx();
+		if (this.localViewportService) {
+			px = this.playbackService.localizePlaybackPx(px, this.localViewportService);
+		}
+		return px;
+	};
+
+	// ==============================================================================================
+	// Ng
 
 	ngAfterViewInit(): void {
-		this.playbackService.registerPlaybackLine(this.markerRef.nativeElement);
+		console.log(this.viewportType);
+		if (this.viewportType == "midi-editor") {
+			this.playbackService.registerPlaybackLineMidiEditor(this);
+		} else {
+			this.playbackService.registerPlaybackLine(this);
+		}
 		
 		runInInjectionContext(this.injector, () => {
 			effect(() => {
-				const playbackPx = this.playbackService.playbackPx();
+				const playbackPx = this.playbackPx;
 				this.markerRef.nativeElement.style.left = playbackPx + 'px';
 			})
 		});
@@ -52,19 +66,30 @@ export class PlaybackMarkerComponent {
 		this.stopDragging();
 	}
 
+	// ==============================================================================================
+	// Update Methods
+
+	updatePosition(clientX: number): void {
+		const newPlaybackPx = this.viewportService.mouseXToPx(clientX, true);
+		let constrainedPx = Math.max(0, Math.min(newPlaybackPx, this.viewportService.totalWidth()));
+
+		this.markerRef.nativeElement.style.left = constrainedPx + 'px';
+
+		this.playbackService.setPlaybackPx(constrainedPx, undefined, this.viewportService);
+	}
+
+	updateTransform(pos: number): void {
+		const px = this.viewportService.posToPx(pos);
+		this.markerRef.nativeElement.style.transform = `translateX(${px}px)`;
+	}
+
+	// ==============================================================================================
+	// Mouse Events
+
 	onMouseDown(event: MouseEvent): void {
 		event.preventDefault();
 		//event.stopPropagation();
 		this.startDragging(event.clientX);
-	}
-
-	onTouchStart(event: TouchEvent): void {
-		console.log("TOUCH")
-		event.preventDefault();
-		event.stopPropagation();
-		if (event.touches.length === 1) {
-			this.startDragging(event.touches[0].clientX);
-		}
 	}
 
 	private startDragging(clientX: number): void {
@@ -99,15 +124,6 @@ export class PlaybackMarkerComponent {
 		this.stopDragging();
 	}
 
-	private updatePosition(clientX: number): void {
-		const newPlaybackPx = this.viewportService.mouseXToPx(clientX, true);
-		let constrainedPx = Math.max(0, Math.min(newPlaybackPx, this.viewportService.totalWidth()));
-
-		this.markerRef.nativeElement.style.left = constrainedPx + 'px';
-
-		this.playbackService.setPlaybackPx(constrainedPx);
-	}
-
 	private stopDragging(): void {
 		if (!this.isDragging) return;
 
@@ -120,5 +136,4 @@ export class PlaybackMarkerComponent {
 
 		this.markerRef.nativeElement.classList.remove('dragging');
 	}
-
-}
+}	

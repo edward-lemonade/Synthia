@@ -28,7 +28,4 @@ import { ViewportOverlayComponent } from "./viewport-overlay/viewport-overlay.co
 })
 export class StudioEditorComponent {
 	constructor () {}
-
-
-
 }

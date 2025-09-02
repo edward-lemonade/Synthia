@@ -6,6 +6,7 @@ import { AudioRegion, Region, RegionType } from '@shared/types';
 import { RegionService } from './region.service';
 import { TracksService } from './tracks.service';
 import { ObjectStateNode } from '../state/state.factory';
+import { PlaybackMarkerComponent } from '../components/studio-editor/viewport-overlay/playback-marker/playback-marker.component';
 
 export interface TrackNodes {
 	gainNode: GainNode,
@@ -41,30 +42,35 @@ export class PlaybackService { // SINGLETON
 	playbackTime = computed(() => ViewportService.instance.posToTime(this.playbackPos()));
 	playbackPx = computed(() => ViewportService.instance.posToPx(this.playbackPos()));
 
-	setPlaybackPos(pos: number, dontSnap = false) { 
+	setPlaybackPos(pos: number, dontSnap = false, viewportService: ViewportService = ViewportService.instance) { 
 		const wasPlaying = this.isPlaying();
 
 		if (wasPlaying) this.pause();
 
-		let finalPos = dontSnap ? pos : (this.viewportService.snapToGrid() ? this.viewportService.snap(pos) : pos);
+		let finalPos = dontSnap ? pos : (viewportService.snapToGrid() ? viewportService.snap(pos) : pos);
 		finalPos = Math.max(0, finalPos);
 		this.playbackPos.set(finalPos); 
 
 		if (wasPlaying) this.play();
 	}
-	setPlaybackTime(time: number, dontSnap = false) { this.setPlaybackPos(this.viewportService.timeToPos(time), dontSnap); }
-	setPlaybackPx(px: number, dontSnap = false) { this.setPlaybackPos(this.viewportService.pxToPos(px, false), dontSnap); }
+	setPlaybackTime(time: number, dontSnap = false, viewportService: ViewportService = ViewportService.instance) { this.setPlaybackPos(viewportService.timeToPos(time), dontSnap, viewportService); }
+	setPlaybackPx(px: number, dontSnap = false, viewportService: ViewportService = ViewportService.instance) { this.setPlaybackPos(viewportService.pxToPos(px, false), dontSnap, viewportService); }
+
+	localizePlaybackPx(px: number, viewportService: ViewportService) {
+		const pos = ViewportService.instance.pxToPos(px);
+		return viewportService.posToPx(pos);
+	}
 
 	isPlaying = signal(false);
-	playbackLineRef?: HTMLDivElement;
+
+	playbackLineRef?: WeakRef<PlaybackMarkerComponent>;
+	playbackLineMidiEditorRef?: WeakRef<PlaybackMarkerComponent>;
+	registerPlaybackLine(comp: PlaybackMarkerComponent) { this.playbackLineRef = new WeakRef(comp) }
+	registerPlaybackLineMidiEditor(comp: PlaybackMarkerComponent) { this.playbackLineMidiEditorRef = new WeakRef(comp) }
 
 	private startClockTime = 0;
 	private startAudioTime = 0;
 	private basePos = 0;
-
-	registerPlaybackLine(div: HTMLDivElement) {
-		this.playbackLineRef = div;
-	}
 
 	// ==============================================================================================
 	// Control
@@ -106,14 +112,17 @@ export class PlaybackService { // SINGLETON
 		this.startAudioTime = this.audioContext.currentTime;
 		this.basePos = this.playbackPos();
 
+		const playbackLine = this.playbackLineRef?.deref(); 
+		const playbackLineMidiEditor = this.playbackLineMidiEditorRef?.deref(); 
+
 		const step = (now: number) => {
 			if (!this.isPlaying()) return;
 
 			const elapsedSec = (now - this.startClockTime) / 1000;
 			const pos = this.viewportService.timeToPos(elapsedSec);
-			const px = this.viewportService.posToPx(pos);
 
-			this.playbackLineRef!.style.transform = `translateX(${px}px)`;
+			if (playbackLine) {playbackLine.updateTransform(pos)};
+			if (playbackLineMidiEditor) {playbackLineMidiEditor.updateTransform(pos)};
 
 			requestAnimationFrame(step);
 		};
@@ -127,7 +136,11 @@ export class PlaybackService { // SINGLETON
 		const pos = this.basePos + this.viewportService.timeToPos(elapsedSec);
 
 		this.setPlaybackPos(pos, true);
-		this.playbackLineRef!.style.transform = `translateX(${0}px)`;
+
+		const playbackLine = this.playbackLineRef?.deref(); 
+		const playbackLineMidiEditor = this.playbackLineMidiEditorRef?.deref(); 
+		if (playbackLine) {playbackLine.updateTransform(0)};
+		if (playbackLineMidiEditor) {playbackLineMidiEditor.updateTransform(0)};
 	}
 
 	// ==============================================================================================

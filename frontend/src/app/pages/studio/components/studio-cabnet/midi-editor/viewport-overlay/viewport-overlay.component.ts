@@ -1,18 +1,19 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
-import { ViewportService } from '../../../services/viewport.service';
+import { ViewportService } from '../../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { PlaybackMarkerComponent } from "./playback-marker/playback-marker.component";
+import { PlaybackMarkerComponent } from "../../../studio-editor/viewport-overlay/playback-marker/playback-marker.component";
 
 @Component({
-	selector: 'studio-editor-viewport-overlay',
+	selector: 'midi-editor-viewport-overlay',
 	imports: [CommonModule, MatIconModule, PlaybackMarkerComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #scrollContainer class="scroll-container">
-			<div #scrollContent class="scroll-content"[style.width.px]="viewportService.totalWidth()">
-				<studio-editor-playback-marker/>
+			<div #scrollContent class="scroll-content" [style.width.px]="viewportService.totalWidth()">
+				<studio-editor-playback-marker 
+				[localViewportService]="this.viewportService"
+				[viewportType]="'midi-editor'"/>
 			</div>
 		</div>
 	`,

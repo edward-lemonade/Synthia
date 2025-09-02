@@ -15,17 +15,21 @@ import { TracksService } from './services/tracks.service';
 import { WaveformRenderService } from './services/waveform-render.service';
 import { RegionService } from './services/region.service';
 import { PlaybackService } from './services/playback.service';
+import { StudioCabnetComponent } from "./components/studio-cabnet/studio-cabnet.component";
+import { CabnetService } from './services/cabnet.service';
+import { MidiService } from './services/midi.service';
 
 @Component({
 	selector: 'app-studio',
-	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, SelectService, RegionService, RegionDragService, AudioCacheService, WaveformRenderService, PlaybackService],
+	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, SelectService, RegionService, RegionDragService, AudioCacheService, WaveformRenderService, PlaybackService, CabnetService, MidiService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {
 				<app-studio-toolbar-top></app-studio-toolbar-top>
 				<app-studio-toolbar-details></app-studio-toolbar-details>
 				<app-studio-editor></app-studio-editor>
+				<app-studio-cabnet/>
 			} @else {
 				<div class="loading-container">
 					<div class="loading-spinner"></div>
@@ -38,8 +42,7 @@ import { PlaybackService } from './services/playback.service';
 		.page-container {
 			display: flex;
 			flex-direction: column;
-			position: absolute;
-			height: 100%;
+			height: 100vh;
 			width: 100%;
 		}
 		.loading-container {
@@ -65,6 +68,21 @@ import { PlaybackService } from './services/playback.service';
 			}
 		}
 
+		app-studio-toolbar-top {
+			flex-shrink: 0;
+		}
+
+		app-studio-toolbar-details {
+			flex-shrink: 0;
+		}
+
+		app-studio-editor {
+			flex: 1;
+		}
+
+		app-studio-cabnet {
+			flex-shrink: 0;
+		}
 	`
 })
 export class StudioPage implements OnInit {

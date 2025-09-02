@@ -16,6 +16,8 @@ import { StateNode } from '@src/app/pages/studio/state/state.factory';
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
 import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-render.service';
 import { RegionPath, RegionService } from '@src/app/pages/studio/services/region.service';
+import { MidiService } from '@src/app/pages/studio/services/midi.service';
+import { CabnetService, MidiTabs } from '@src/app/pages/studio/services/cabnet.service';
 type ResizeHandle = 'left' | 'right' | null;
 
 interface ViewportBounds {
@@ -119,6 +121,8 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		public audioCacheService: AudioCacheService,
 		public waveformRenderService: WaveformRenderService,
 		public regionService: RegionService,
+		public midiService: MidiService,
+		public cabnetService: CabnetService,
 	) {
 		effect(() => {
 			const scrollX = this.viewportService.measurePosX();
@@ -469,11 +473,12 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	// ====================================================================================================
+	
 	// Region Actions
 
 	openMidiEditor() {
 		if (this.isMidi()) {
-			//this.midiService.openEditor(this.trackIndex, this.regionIndex);
+			this.cabnetService.openCabnet(MidiTabs['MIDI Editor']);
 		}
 	}
 
