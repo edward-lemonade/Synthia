@@ -28,6 +28,8 @@
 		height: 100%;
 		overflow: auto;
 
+		// rows
+
 		.row {
 			border-bottom: $border-width solid $border-color;
 			box-sizing: border-box;
@@ -38,6 +40,18 @@
 		.black-row {
 			background: rgb(37, 37, 37)
 		}
+
+		// region
+
+		.region {
+			position: absolute;
+			height: 100%;
+			border: 2px solid;
+			top: 0px;
+			bottom: 0px;
+		}
+
+		// scrollbar
 
 		&::-webkit-scrollbar {
 			width: 8px; // Width of the scrollbar
@@ -58,6 +72,8 @@
 		&::-webkit-scrollbar-corner {
 			background: transparent; // Corner where scrollbars meet
 		}
+
+		// box select
 
 		.box-selection-overlay {
 			position: absolute;

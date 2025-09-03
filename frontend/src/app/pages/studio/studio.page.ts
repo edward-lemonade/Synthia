@@ -7,7 +7,7 @@ import { StudioToolbarDetailsComponent } from './components/studio-toolbar-detai
 import { HistoryService } from './services/history.service';
 import { StudioEditorComponent } from "./components/studio-editor/studio-editor.component";
 import { ViewportService } from './services/viewport.service';
-import { SelectService } from './services/select.service';
+import { RegionSelectService } from './services/region-select.service';
 import { RegionDragService } from './services/region-drag.service';
 import { AudioCacheService } from './services/audio-cache.service';
 import { StateService } from './state/state.service';
@@ -22,7 +22,7 @@ import { MidiService } from './services/midi.service';
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, SelectService, RegionService, RegionDragService, AudioCacheService, WaveformRenderService, PlaybackService, CabnetService, MidiService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, WaveformRenderService, PlaybackService, CabnetService, MidiService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 import { ArrayStateNode, ObjectStateNode, PropStateNode } from "./state.factory";
 import { HistoryService } from "../services/history.service";
-import { AudioRegion, Author, BaseFileRef, Key, Region, RegionType, TimeSignature, Track, TrackType } from "@shared/types";
+import { AudioRegion, Author, BaseFileRef, Key, MidiNote, Region, RegionType, TimeSignature, Track, TrackType } from "@shared/types";
 import { StateService } from "./state.service";
 import { RegionService } from "../services/region.service";
 
@@ -94,14 +94,20 @@ export const setTracks: ArrayMutator<Track> = (val: ObjectStateNode<Track>[], no
 	const initial = node.getAll();
 	const forward = () => { 
 		node._ids.set(val.map(el => el._id));
-		val.forEach((el) => { node._items.set(el._id, el); });
+		val.forEach((el) => { 
+			node._items.set(el._id, el); 
+			el._parent = node;
+		});
 	}
 	const reverse = () => { 
 		node._ids.set(initial.map(el => el._id));
-		initial.forEach((el) => { node._items.set(el._id, el); });
+		initial.forEach((el) => { 
+			node._items.set(el._id, el); 
+			el._parent = node;
+		});
 	}
 	forward();
-	HistoryService.instance.recordCommand(actionId, forward, reverse) 
+	HistoryService.instance.recordCommand(actionId, forward, reverse)
 }
 
 // Track
@@ -177,11 +183,17 @@ export const setTrackRegions: ArrayMutator<Region> = (val: any[], node: ArraySta
 	const initial = node.getAll();
 	const forward = () => { 
 		node._ids.set(val.map(el => el._id));
-		val.forEach((el) => { node._items.set(el._id, el); });
+		val.forEach((el) => { 
+			node._items.set(el._id, el); 
+			el._parent = node;
+		});
 	}
 	const reverse = () => { 
 		node._ids.set(initial.map(el => el._id));
-		initial.forEach((el) => { node._items.set(el._id, el); });
+		initial.forEach((el) => { 
+			node._items.set(el._id, el); 
+			el._parent = node;
+		});
 	}
 	forward();
 	HistoryService.instance.recordCommand(actionId, forward, reverse)
@@ -307,7 +319,54 @@ export const setRegionFadeOut: Mutator<number> = (val: number, node: PropStateNo
 }
 
 // MIDI Region specific mutators
-export const setMidiData: Mutator<any[]> = (val: any[], node: PropStateNode<any[]>, actionId) => {
+export const setMidiNotes: ArrayMutator<MidiNote> = (val: ObjectStateNode<MidiNote>[], node: ArrayStateNode<MidiNote>, actionId) => { // simple change 
+	const initial = node.getAll();
+	const forward = () => { 
+		node._ids.set(val.map(el => el._id));
+		val.forEach((el) => { 
+			node._items.set(el._id, el); 
+			el._parent = node;
+		});
+	}
+	const reverse = () => { 
+		node._ids.set(initial.map(el => el._id));
+		initial.forEach((el) => { 
+			node._items.set(el._id, el); 
+			el._parent = node;
+		});
+	}
+	forward();
+	HistoryService.instance.recordCommand(actionId, forward, reverse)
+}
+export const setMidiNoteTime: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
+	const initial = node();
+	const forward = () => { node._set(val); }
+	const reverse = () => { node._set(initial); }
+	forward();
+	HistoryService.instance.recordCommand(actionId, forward, reverse);
+}
+export const setMidiNoteNote: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
+	const initial = node();
+	const forward = () => { node._set(val); }
+	const reverse = () => { node._set(initial); }
+	forward();
+	HistoryService.instance.recordCommand(actionId, forward, reverse);
+}
+export const setMidiNoteVelocity: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
+	const initial = node();
+	const forward = () => { node._set(val); }
+	const reverse = () => { node._set(initial); }
+	forward();
+	HistoryService.instance.recordCommand(actionId, forward, reverse);
+}
+export const setMidiNoteDuration: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
+	const initial = node();
+	const forward = () => { node._set(val); }
+	const reverse = () => { node._set(initial); }
+	forward();
+	HistoryService.instance.recordCommand(actionId, forward, reverse);
+}
+export const setMidiNoteChannel: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
 	const initial = node();
 	const forward = () => { node._set(val); }
 	const reverse = () => { node._set(initial); }

@@ -123,7 +123,6 @@ export class ViewportService { // SINGLETON
 		this.tracklistScrollable = el; 
 		runInInjectionContext(this.injector, () => {
 			effect(() => {
-				console.log(this.windowPosY());
 				this.tracklistScrollable!.scrollTop = this.windowPosY();
 			})
 		});

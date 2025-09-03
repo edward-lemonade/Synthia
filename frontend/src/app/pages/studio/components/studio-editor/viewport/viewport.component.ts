@@ -2,7 +2,7 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, El
 import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { TrackComponent } from "./track/track.component";
-import { BoxSelectBounds, SelectService } from '../../../services/select.service';
+import { BoxSelectBounds, RegionSelectService } from '../../../services/region-select.service';
 import { RegionDragService } from '../../../services/region-drag.service';
 import { StateService } from '../../../state/state.service';
 import { RegionPath, RegionService } from '../../../services/region.service';
@@ -76,7 +76,7 @@ export class ViewportComponent implements AfterViewInit {
 		public stateService: StateService,
 		public tracksService: TracksService,
 		public regionService: RegionService,
-		public selectService: SelectService,
+		public selectService: RegionSelectService,
 		public dragService: RegionDragService,
 		public playbackService: PlaybackService,
 	) {}

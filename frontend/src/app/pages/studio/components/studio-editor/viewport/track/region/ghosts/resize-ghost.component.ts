@@ -4,6 +4,7 @@ import { Region, Track } from '@shared/types';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
+import { getRegionGhostColor } from '@src/app/utils/color';
 
 @Component({
 	selector: 'resize-ghost',
@@ -15,7 +16,7 @@ import { StateNode } from '@src/app/pages/studio/state/state.factory';
 			class="region-ghost"
 			[style.left.px]="viewportService.posToPx(ghost!.start)"
 			[style.width.px]="viewportService.posToPx(ghost!.duration)"
-			[style.background-color]="getRegionGhostColor()">
+			[style.background-color]="ghostColor">
 		</div>
 	`,
 	styleUrl: './ghost.component.scss'
@@ -30,21 +31,5 @@ export class ResizeGhostComponent {
 		public dragService: RegionDragService,
 	) {}
 
-	getRegionGhostColor(): string {
-		const baseColor = this.track.color() || '#007bff';
-		
-		if (baseColor.startsWith('#')) {
-			const r = parseInt(baseColor.slice(1, 3), 16);
-			const g = parseInt(baseColor.slice(3, 5), 16);
-			const b = parseInt(baseColor.slice(5, 7), 16);
-			return `rgba(${r}, ${g}, ${b}, 0.4)`;
-		}
-
-		const rgbMatch = baseColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-		if (rgbMatch) {
-			return `rgba(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]}, 0.4)`;
-		}
-		
-		return 'rgba(0, 123, 255, 0.4)';
-	}
+	get ghostColor() { return getRegionGhostColor(this.track.color()) }
 }

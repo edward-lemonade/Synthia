@@ -1,4 +1,4 @@
-import { AudioFileRef, AudioRegion, AudioTrackType, Author, BaseFileRef, DefaultKey, DefaultTimeSignature, Key, MidiRegion, MidiTrackType, ProjectMetadata, ProjectState, ProjectStudio, RegionType, TimeSignature, Track } from "@shared/types";
+import { AudioFileRef, AudioRegion, AudioTrackType, Author, BaseFileRef, DefaultKey, DefaultTimeSignature, Key, MidiNote, MidiRegion, MidiTrackType, ProjectMetadata, ProjectState, ProjectStudio, RegionType, TimeSignature, Track } from "@shared/types";
 import { NodeType } from "./state.factory";
 import { ArrayMutator, Mutator } from "./state.mutators";
 import * as M from "./state.mutators"
@@ -115,5 +115,17 @@ export const AUDIO_REGION_SCAFFOLD = {
 export const MIDI_REGION_SCAFFOLD = {
 	...REGION_SCAFFOLD,
 	type: 				{_type: NodeType.Prop, value: RegionType.Midi} as PropScaffold<RegionType>,
-	midiData: 			{_type: NodeType.Prop, value: [], mutator: M.setMidiData} as PropScaffold<string[]>,
+	midiData: 			{_type: NodeType.Array, value: [], mutator: M.setMidiNotes, scaffold: (el: MidiNote) => MIDI_NOTE_SCAFFOLD} as ArrayScaffold<MidiNote>,
 } as ObjectScaffold<MidiRegion>;
+
+// ==============================================================
+// Midi note
+
+export const MIDI_NOTE_SCAFFOLD = {
+	_type: NodeType.Object,
+	time: 		{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteTime} as PropScaffold<number>,
+	note: 		{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteNote} as PropScaffold<number>,
+	velocity: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteVelocity} as PropScaffold<number>,
+	duration: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteDuration} as PropScaffold<number>,
+	channel: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteChannel} as PropScaffold<number>,
+} as ObjectScaffold<MidiNote>;

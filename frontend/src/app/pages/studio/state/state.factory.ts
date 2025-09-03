@@ -19,6 +19,7 @@ interface Node<T> {
 	_id: string; // UUID
 	_this: Node<T>;
 	_type: NodeType;
+	_parent?: ObjectStateNode<any> | ArrayStateNode<any> | any;
 	snapshot: () => T;
 }
 
@@ -26,12 +27,12 @@ interface PropNode<T> extends Node<T> {
 	_type: NodeType.Prop
 	_set: (value: T) => void; // signal "set"
 	_update: (updateFn: (value: T) => T) => void; // signal "update"
-	_parent?: ObjectStateNode<any>;
 	set: (value: T, actionId?: string) => void;
 	update: (updateFn: (obj: T) => T, actionId?: string) => void;
 }
 interface ObjectNode<T extends Record<string, any>> extends Node<T> {
 	_type: NodeType.Object;
+	gp: () => any; // grandparent (for nested arrays)
 }
 interface ArrayNode<T extends Record<string, any>> extends Node<T[]> { // ArrayNode() is obsolete, use ArrayNode.get() instead
 	_type: NodeType.Array;
@@ -87,13 +88,15 @@ export function propStateNode<T>(value: T, parent: ObjectStateNode<any>, mutator
 }
 export function objectStateNode<T extends Record<string,any>>(
 	scaffold: ObjectScaffold<T>, 
-	overrides?: DeepPartial<T>
+	overrides?: DeepPartial<T>,
+	parent?: any,
 ): ObjectStateNode<T> {
 	const s = {} as any;
 	
 	s._id = uuid();
 	s._this = s;
 	s._type = NodeType.Object;
+	s._parent = parent;
 	s.snapshot = () => {
 		const result: any = {};
 		for (const k in s) {
@@ -104,6 +107,7 @@ export function objectStateNode<T extends Record<string,any>>(
 		}
 		return result;
 	};
+	s.gp = () => { return s._parent?._parent ?? undefined }
 
 	const scaffoldObj = scaffold as any;
 	for (const k in scaffoldObj) {
@@ -119,7 +123,7 @@ export function objectStateNode<T extends Record<string,any>>(
 		} else if (childType === NodeType.Object) {
 			const objScaffold = childScaffold as ObjectScaffold<any>;
 			const childOverrides = overrides?.[k];
-			s[k] = objectStateNode(objScaffold, childOverrides);
+			s[k] = objectStateNode(objScaffold, childOverrides, s);
 		} else if (childType === NodeType.Array) {
 			const arrayScaffold = childScaffold as ArrayScaffold<T[keyof T]>;
 			const childOverrides = overrides?.[k];
@@ -132,9 +136,10 @@ export function objectStateNode<T extends Record<string,any>>(
 					)
 					: arrayScaffold.value;
 
-				s[k] = arrayStateNode<T[keyof T]>(objs, arrayScaffold.mutator, arrayScaffold.scaffold);
+				s[k] = arrayStateNode<T[keyof T]>(objs, arrayScaffold.mutator, arrayScaffold.scaffold, s);
+				objs.forEach(el => el._parent = s[k]);
 			} else {
-				s[k] = arrayStateNode<T[keyof T]>([], arrayScaffold.mutator, arrayScaffold.scaffold);
+				s[k] = arrayStateNode<T[keyof T]>([], arrayScaffold.mutator, arrayScaffold.scaffold, s);
 			}
 		}
 	}
@@ -145,6 +150,7 @@ export function arrayStateNode<T extends Record<string, any>>(
 	value: ObjectStateNode<T>[], 
 	mutator: ArrayMutator<T>,
 	scaffold: (el: Partial<T>) => ObjectScaffold<T>,
+	parent: any,
 ): ArrayStateNode<T> {
 	const idsSignal = signal<string[]>([]);
 	const itemsMap = new Map<string, ObjectStateNode<T>>();
@@ -167,6 +173,7 @@ export function arrayStateNode<T extends Record<string, any>>(
 	s._type = NodeType.Array;
 	s._ids = idsSignal as WritableSignal<string[]>;
 	s._items = itemsMap;
+	s._parent = parent;
 
 	s.snapshot = () => {
 		return idsSignal().map(id => {

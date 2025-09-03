@@ -3,7 +3,7 @@ import { ViewportService } from '../../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { PlaybackService } from '../../../../services/playback.service';
-import { SelectService } from '@src/app/pages/studio/services/select.service';
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 
 @Component({
 	selector: 'studio-editor-playback-marker',
@@ -32,7 +32,7 @@ export class PlaybackMarkerComponent {
 		private injector: Injector,
 		public viewportService: ViewportService,
 		public playbackService: PlaybackService,
-		public selectService: SelectService,
+		public selectService: RegionSelectService,
 	) {}
 
 	get playbackPx() { 

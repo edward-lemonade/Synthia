@@ -4,7 +4,7 @@ import { AudioRegion, MidiRegion, Region, RegionType, Track } from '@shared/type
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 
-import { SelectService } from '@src/app/pages/studio/services/select.service';
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { DragGhostComponent } from './ghosts/drag-ghost.component';
@@ -18,6 +18,7 @@ import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-r
 import { RegionPath, RegionService } from '@src/app/pages/studio/services/region.service';
 import { MidiService } from '@src/app/pages/studio/services/midi.service';
 import { CabnetService, MidiTabs } from '@src/app/pages/studio/services/cabnet.service';
+import { hexToHsl, hslToCss } from '@src/app/utils/color';
 type ResizeHandle = 'left' | 'right' | null;
 
 interface ViewportBounds {
@@ -115,7 +116,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	constructor (
 		public stateService: StateService,
 		public tracksService: TracksService,
-		public selectionService: SelectService,
+		public selectionService: RegionSelectService,
 		public dragService: RegionDragService,
 		public viewportService: ViewportService,
 		public audioCacheService: AudioCacheService,
@@ -490,39 +491,4 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	deleteRegion() {
 		this.regionService.deleteRegion(this.regionPath);
 	}
-}
-
-// COLOR HELPERS
-
-function hexToHsl(hex: string): { h: number; s: number; l: number } {
-	hex = hex.replace('#', '');
-	const bigint = parseInt(hex.substring(0, 6), 16);
-	const r = (bigint >> 16) & 255;
-	const g = (bigint >> 8) & 255;
-	const b = bigint & 255;
-
-	const rNorm = r / 255;
-	const gNorm = g / 255;
-	const bNorm = b / 255;
-
-	const max = Math.max(rNorm, gNorm, bNorm);
-	const min = Math.min(rNorm, gNorm, bNorm);
-	let h = 0, s = 0;
-	let l = (max + min) / 2;
-
-	if (max !== min) {
-		const d = max - min;
-		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-		switch (max) {
-			case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break;
-			case gNorm: h = (bNorm - rNorm) / d + 2; break;
-			case bNorm: h = (rNorm - gNorm) / d + 4; break;
-		}
-		h /= 6;
-	}	
-
-	return { h: h * 360, s: s * 100, l: l * 100 };
-}
-function hslToCss(h: number, s: number, l: number): string {
-	return `hsl(${h}, ${s}%, ${l}%)`;
 }

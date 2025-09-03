@@ -5,7 +5,7 @@ import { ArrayStateNode, ObjectStateNode } from "../state/state.factory";
 import { AudioRegion, MidiRegion, Region, RegionType, Track } from "@shared/types";
 import { v4 as uuid } from "uuid";
 import { ViewportService } from "./viewport.service";
-import { SelectService } from "./select.service";
+import { RegionSelectService } from "./region-select.service";
 
 export interface RegionPath {
 	trackId: string;
@@ -59,7 +59,7 @@ export class RegionService {
 		trackNode.regions.insertValue(props);
 	}
 	deleteRegion(path: RegionPath) {
-		SelectService.instance.removeSelectedRegion(path);
+		RegionSelectService.instance.removeSelectedRegion(path);
 		this.tracks.getById(path.trackId)?.regions.remove(path.regionId);
 	}
 	deleteRegions(paths: RegionPath[]) {

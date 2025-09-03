@@ -12,14 +12,14 @@ export interface BoxSelectBounds {
 }
 
 @Injectable()
-export class SelectService {
-	private static _instance: SelectService;
-	static get instance(): SelectService { return SelectService._instance; }
+export class RegionSelectService {
+	private static _instance: RegionSelectService;
+	static get instance(): RegionSelectService { return RegionSelectService._instance; }
 
 	constructor(
 		private injector: Injector,
 	) {
-		SelectService._instance = this;
+		RegionSelectService._instance = this;
 
 		runInInjectionContext(injector, () => {
 			effect(() => {

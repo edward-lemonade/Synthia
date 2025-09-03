@@ -1,8 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, Injector, Input, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
-import { MidiService } from '@src/app/pages/studio/services/midi.service';
+import { MidiNote, MidiRegion } from '@shared/types';
+import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
+import { MidiService, NotePath } from '@src/app/pages/studio/services/midi.service';
 import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
+import { RegionService } from '@src/app/pages/studio/services/region.service';
+import { BoxSelectBounds } from '@src/app/pages/studio/services/region-select.service';
+import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
+import { ObjectStateNode } from '@src/app/pages/studio/state/state.factory';
+import { getRegionGhostColor } from '@src/app/utils/color';
+import { MidiSelectService } from '@src/app/pages/studio/services/midi-select.service';
+import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.service';
 
 @Component({
 	selector: 'midi-editor-viewport',
@@ -40,9 +49,20 @@ import { ViewportService } from '@src/app/pages/studio/services/viewport.service
 					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
 				</div>
 
+				<div class="region"
+					*ngFor="let regionNode of regions; let regionIndex = index"
+					[style.background-color]="ghostColor"
+					[style.border-color]="ghostColor"
+					[style.left.px]="viewportService.posToPx(regionNode.start())"
+					[style.width.px]="viewportService.posToPx(regionNode.duration())"
+					[style.height.px]="SCALE_HEIGHT * SCALES"
+					> 
+
+				</div>
+
 				<!-- Box selection overlay -->
 				<div 
-					*ngIf="midiService.isBoxSelecting()"
+					*ngIf="selectService.isBoxSelecting()"
 					class="box-selection-overlay"
 					[style.left.px]="boxOverlayStyle().left"
 					[style.top.px]="boxOverlayStyle().top"
@@ -74,9 +94,15 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 		public viewportService: ViewportService,
 		public playbackService: PlaybackService,
 		public midiService: MidiService,
+		public selectService: MidiSelectService,
+		public dragService: MidiDragService,
+		public tracksService: TracksService,
+		public regionService: RegionService,
+		public cabnetService: CabnetService,
 	) {}
 
 	get totalWidth() { return ViewportService.instance.totalWidth() }
+	get notes() { return CabnetService.instance.currentTrackNode()?.regions().flatMap((region) => {return {...(region as ObjectStateNode<MidiRegion>).midiData()}})}
 
 	ngOnInit(): void {
 		this.ROW_HEIGHT = this.SCALE_HEIGHT / 12;
@@ -125,35 +151,27 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 		this.viewportService.windowPosY.set(scrollTop);
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// MOUSE EVENTS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==========================================================================================
+	// Region / Note Render
+
+	get track() { return this.cabnetService.currentTrackNode() }
+	get regions() { return this.track?.regions() }
+
+	get ghostColor() { return getRegionGhostColor(this.track!.color()) }
+
+	// ==========================================================================================
+	// Mouse Events
 
 	onMouseDown(event: MouseEvent) {}
 	onMouseUp(event: MouseEvent) {}
 	onMouseMove(event: MouseEvent) {}
-	
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// BOX SELECTION
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	boxOverlayStyle() {
-		const bounds = this.midiService.getNormalizedBoxBounds();
-		if (!bounds) return { left: 0, top: 0, width: 0, height: 0 };
-		
-		const left = bounds.startX;
-		const top = bounds.startY;
-		const width = bounds.endX - bounds.startX;
-		const height = bounds.endY - bounds.startY;
-		
-		return { left, top, width, height };
-	}
-	
+	// ==========================================================================================
+	// Box Selection
 
-	/*
-	private getRegionsInBounds(bounds: BoxSelectBounds): RegionPath[] {
-		const selectedRegions: RegionPath[] = [];
-		const tracks = this.tracks();
+	private getNotesInBounds(bounds: BoxSelectBounds): NotePath[] {
+		const selectedRegions: NotePath[] = [];
+		const notes = this.notes!;
 		
 		const normalizedBounds = {
 			left: Math.min(bounds.startX, bounds.endX),
@@ -162,28 +180,23 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 			bottom: Math.max(bounds.startY, bounds.endY)
 		};
 
-		tracks.forEach((track, trackIndex) => {
-			const trackTop = this.getTrackTopPosition(trackIndex);
-			const trackBottom = trackTop + this.trackHeight;
+		notes.forEach((note, noteIndex) => {
+			const noteTop = this.getNoteTop(note);
+			const noteBottom = this.getNoteBottom(note);
+			const noteLeft = this.getNoteLeft(note);
+			const noteRight = this.getNoteRight(note);
 
 			if (this.boundsIntersect(
+				normalizedBounds.left, normalizedBounds.right,
+				noteLeft, noteRight
+			) && this.boundsIntersect(
 				normalizedBounds.top, normalizedBounds.bottom,
-				trackTop, trackBottom
+				noteTop, noteBottom
 			)) {
-				track.regions().forEach((region, regionIndex) => {
-					const regionLeft = region.start() * this.viewportService.measureWidth();
-					const regionRight = regionLeft + (region.duration() * this.viewportService.measureWidth());
-					
-					if (this.boundsIntersect(
-						normalizedBounds.left, normalizedBounds.right,
-						regionLeft, regionRight
-					)) {
-						selectedRegions.push({ 
-							trackId: this.tracksService.getTrack(trackIndex)!._id, 
-							regionId: this.tracksService.getTrack(trackIndex)!.regions._ids()[regionIndex] 
-						});
-					}
-				});
+				selectedRegions.push({ 
+					regionId: this.midiService.getRegionOfNote(note)!._id!,
+					noteId: note._id,
+				});		
 			}
 		});
 
@@ -194,9 +207,10 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 		return start1 <= end2 && end1 >= start2;
 	}
 
-	private getTrackTopPosition(trackIndex: number): number {
-		return trackIndex * this.trackHeight;
-	}
+	private getNoteLeft(note: ObjectStateNode<MidiNote>): number { return this.viewportService.timeToPx(note.time()); }
+	private getNoteRight(note: ObjectStateNode<MidiNote>): number { return this.viewportService.timeToPx(note.time()+note.duration()); }
+	private getNoteBottom(note: ObjectStateNode<MidiNote>): number { return this.SCALE_HEIGHT/12 * note.note(); }
+	private getNoteTop(note: ObjectStateNode<MidiNote>): number { return this.SCALE_HEIGHT/12 * (note.note()+1); }
 
 	boxOverlayStyle() {
 		const bounds = this.selectService.getNormalizedBoxBounds();
@@ -210,9 +224,8 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 		return { left, top, width, height };
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// EVENT HANDLERS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==========================================================================================
+	// Event Handlers
 
 	@HostListener('document:keydown', ['$event'])
 	onKeyDown(event: KeyboardEvent) {
@@ -231,16 +244,11 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 		}
 		
 		if (event.key === 'Delete' || event.key === 'Backspace') {
-			if (this.selectService.hasSelectedRegions()) {
-				this.regionService.deleteRegions(this.selectService.selectedRegions());
+			if (this.selectService.hasSelectedNotes()) {
+				this.midiService.deleteNotes(this.selectService.selectedNotes());
 				this.selectService.clearSelection();
 			}
 		}
-
-		if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
-			event.preventDefault();
-			this.selectService.selectAllRegions();
-		}
 	}
-		*/
+		
 }

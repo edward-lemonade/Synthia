@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
 import { RegionType, Track } from '@shared/types';
 
-import { SelectService } from '@src/app/pages/studio/services/select.service';
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { RegionComponent } from "./region/region.component";
 
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
@@ -60,7 +60,7 @@ export class TrackComponent{
 	constructor (
 		public stateService : StateService,
 		public viewportService : ViewportService,
-		public selectService : SelectService,
+		public selectService : RegionSelectService,
 		public dragService : RegionDragService,
 		public tracksService : TracksService,
 		public regionService : RegionService

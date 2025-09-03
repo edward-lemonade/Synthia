@@ -12,7 +12,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { RotaryKnobComponent } from '@src/app/components/rotary-knob/rotary-knob.component';
 import { MatDivider } from "@angular/material/divider";
 import { MatMenuModule } from '@angular/material/menu';
-import { SelectService } from '@src/app/pages/studio/services/select.service';
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
@@ -126,7 +126,7 @@ export class TrackComponent implements OnInit {
 		public stateService : StateService,
 		public tracksService : TracksService,
 		public viewportService : ViewportService,
-		public selectService : SelectService,
+		public selectService : RegionSelectService,
 		public playbackService : PlaybackService,
 	) {
 		effect(() => {

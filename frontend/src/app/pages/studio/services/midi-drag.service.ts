@@ -5,6 +5,8 @@ import { Region } from '@shared/types';
 import { StateService } from '../state/state.service';
 import { TracksService } from './tracks.service';
 import { RegionService } from './region.service';
+import { MidiService } from './midi.service';
+import { MidiSelectService } from './midi-select.service';
 
 export interface DragInfo { // in beat/measure units
 	startPosX: number;
@@ -16,16 +18,16 @@ export interface DragInfo { // in beat/measure units
 }
 
 @Injectable()
-export class RegionDragService {
-	private static _instance: RegionDragService;
-	static get instance(): RegionDragService { return RegionDragService._instance; }
+export class MidiDragService {
+	private static _instance: MidiDragService;
+	static get instance(): MidiDragService { return MidiDragService._instance; }
 
-	constructor() { RegionDragService._instance = this; }
+	constructor(private viewportService: ViewportService) { 
+		MidiDragService._instance = this; 
+	}
 
-	get tracksService() { return TracksService.instance }
-	get regionService() { return RegionService.instance }
-	get selectService() { return RegionSelectService.instance }
-	get viewportService() { return ViewportService.instance }
+	get midiService() { return MidiService.instance }
+	get selectService() { return MidiSelectService.instance }
 
 	// Drag state
 	readonly isDragReady = signal<boolean>(false);
@@ -39,7 +41,7 @@ export class RegionDragService {
 			currentPosX: startPosX,
 			deltaPosX: 0,
 			mouseOffsetPosX: startPosX - region.start,
-			mouseOffsetMinPosX: startPosX - this.selectService.leftmostSelectedRegion().start(),
+			mouseOffsetMinPosX: startPosX - this.selectService.leftmostSelectedNote().time(),
 			heldRegion: region,
 		});
 	}
@@ -73,7 +75,7 @@ export class RegionDragService {
 
 	public completeDrag() { // mouse off
 		const deltaPosX = this.getDragDelta();
-		this.regionService.moveRegions(this.selectService.selectedRegions(), deltaPosX);
+		this.midiService.moveNotes(this.selectService.selectedNotes(), deltaPosX);
 
 		this.isDragReady.set(false);
 		this.isDragging.set(false);
@@ -96,6 +98,6 @@ export class RegionDragService {
 	}
 
 	public getSelectedRegions() {
-		return this.selectService.selectedRegions();
+		return this.selectService.selectedNotes();
 	}
 }

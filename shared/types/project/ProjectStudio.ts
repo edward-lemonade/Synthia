@@ -11,6 +11,17 @@ export function isTrackMidi(value: any): value is MidiTrackType { return Object.
 export function regionTypeFromTrack(value: any): RegionType { return isTrackAudio(value) ? RegionType.Audio : RegionType.Midi }
 
 // ==============================================================
+// Midi data
+
+export interface MidiNote {
+	time: number;
+	note: number;
+	velocity: number;
+	duration: number;
+	channel?: number;
+}
+
+// ==============================================================
 // Audio file
 
 export interface BaseFileRef {
@@ -58,7 +69,7 @@ export interface AudioRegion extends BaseRegion {
 export interface MidiRegion extends BaseRegion {
 	readonly type: RegionType.Midi
 	
-	midiData: []
+	midiData: MidiNote[]
 }
 
 export type Region = AudioRegion | MidiRegion;

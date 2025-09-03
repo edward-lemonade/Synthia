@@ -12,13 +12,15 @@ import { ViewportComponent } from "./viewport/viewport.component";
 import { ViewportOverlayComponent } from "./viewport-overlay/viewport-overlay.component";
 import { ViewportHeaderComponent } from "./viewport-header/viewport-header.component";
 import { MidiEditorKeyboardComponent } from "./keyboard/keyboard.component";
+import { MidiSelectService } from "../../../services/midi-select.service";
+import { MidiDragService } from "../../../services/midi-drag.service";
 
 
 @Component({
 	selector: 'midi-editor',
 	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiEditorKeyboardComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [ViewportService],
+	providers: [ViewportService, MidiService, MidiSelectService, MidiDragService],
 	template: `
 		<div class="container">
 			<div class="info"></div>
