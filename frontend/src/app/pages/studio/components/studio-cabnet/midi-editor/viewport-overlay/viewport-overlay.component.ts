@@ -10,7 +10,7 @@ import { PlaybackMarkerComponent } from "../../../studio-editor/viewport-overlay
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #scrollContainer class="scroll-container">
-			<div #scrollContent class="scroll-content" [style.width.px]="viewportService.totalWidth()">
+			<div class="scroll-content" [style.width.px]="viewportService.totalWidth()">
 				<studio-editor-playback-marker 
 				[localViewportService]="this.viewportService"
 				[viewportType]="'midi-editor'"/>
@@ -22,7 +22,6 @@ import { PlaybackMarkerComponent } from "../../../studio-editor/viewport-overlay
 
 export class ViewportOverlayComponent implements AfterViewInit {
 	@ViewChild("scrollContainer", {static: true}) scrollContainerRef!: ElementRef<HTMLDivElement>;
-	@ViewChild("scrollContent", {static: true}) scrollContentRef!: ElementRef<HTMLDivElement>;
 
 	public DPR = window.devicePixelRatio || 1;
 

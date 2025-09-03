@@ -22,7 +22,29 @@
 		border-right: $border-width solid $border-color;
 	}
 
-	.editor {
+	.keyboard-container {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+
+		flex: none;        /* Changed from flex: 1 - don't fill remaining width */
+		width: fit-content; /* Width fits content */
+		min-width: 0;
+		min-height: 0;     /* prevents vertical growth */
+		height: 100%;      /* Height still fills parent */
+
+		.keyboard-header {
+			position: relative;
+			display: flex;
+			flex-shrink: 0; 
+
+			height: $viewport-header-height;
+			width: 100%;
+			min-width: 0;
+		}
+	}
+
+	.viewport-container {
 		position: relative;
 		display: flex;
 		flex-direction: column;

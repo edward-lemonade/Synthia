@@ -69,17 +69,6 @@ export class ViewportHeaderComponent implements AfterViewInit {
 			this.scrollContainerRef.nativeElement.clientWidth, this.scrollContainerRef.nativeElement.clientHeight
 		);
 
-		this.scrollContainerRef.nativeElement.addEventListener('wheel', (event: WheelEvent) => {
-			if (!event.ctrlKey) {
-				const scrollPos = 
-					Math.min(this.scrollContainerRef.nativeElement.clientWidth, 
-					Math.max(0, this.scrollContainerRef.nativeElement.scrollLeft + event.deltaY));
-				if (scrollPos != this.viewportService.windowPosX()) {
-					this.viewportService.setWindowPosX(scrollPos);
-				}
-			}
-		});
-
 		runInInjectionContext(this.injector, () => {
 			effect(() => {
 				const posX = this.viewportService.windowPosX();
@@ -105,6 +94,13 @@ export class ViewportHeaderComponent implements AfterViewInit {
 
 			const direction = event.deltaY > 0 ? -1 : 1;
 			this.viewportService.adjustZoom(direction, mouseX);
+		} else {
+			const scrollPos = 
+				Math.min(this.scrollContainerRef.nativeElement.clientWidth, 
+				Math.max(0, this.scrollContainerRef.nativeElement.scrollLeft + event.deltaY));
+			if (scrollPos != this.viewportService.windowPosX()) {
+				this.viewportService.setWindowPosX(scrollPos);
+			}
 		}
 	}
 

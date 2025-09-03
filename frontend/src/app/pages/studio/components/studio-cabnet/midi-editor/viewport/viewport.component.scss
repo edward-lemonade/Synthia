@@ -28,14 +28,15 @@
 		height: 100%;
 		overflow: auto;
 
-		.tracks {
-			width: 100%;
-			height: auto;
-			display: grid;
-			grid-template-columns: 1fr;
-			grid-auto-rows: min-content;
-
-			align-items: start;
+		.row {
+			border-bottom: $border-width solid $border-color;
+			box-sizing: border-box;
+		}
+		.white-row {
+			background: rgb(52, 52, 52)
+		}
+		.black-row {
+			background: rgb(37, 37, 37)
 		}
 
 		&::-webkit-scrollbar {

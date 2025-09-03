@@ -11,19 +11,30 @@ import { ViewportService } from "../../../services/viewport.service";
 import { ViewportComponent } from "./viewport/viewport.component";
 import { ViewportOverlayComponent } from "./viewport-overlay/viewport-overlay.component";
 import { ViewportHeaderComponent } from "./viewport-header/viewport-header.component";
+import { MidiEditorKeyboardComponent } from "./keyboard/keyboard.component";
 
 
 @Component({
 	selector: 'midi-editor',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent],
+	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiEditorKeyboardComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [ViewportService],
 	template: `
 		<div class="container">
 			<div class="info"></div>
-			<div class="editor">
+			<div class="keyboard-container">
+				<div class="keyboard-header"></div>
+				<midi-editor-keyboard 
+					class="keyboard"
+					[SCALES]="SCALES"
+					[SCALE_HEIGHT]="SCALE_HEIGHT"/>
+			</div>
+			<div class="viewport-container">
 				<midi-editor-viewport-header class="viewport-header"/>
-				<midi-editor-viewport class="viewport-body"/>
+				<midi-editor-viewport 
+					class="viewport-body"
+					[SCALES]="SCALES"
+					[SCALE_HEIGHT]="SCALE_HEIGHT"/>
 				<midi-editor-viewport-overlay/>
 			</div>
 		</div>
@@ -32,4 +43,7 @@ import { ViewportHeaderComponent } from "./viewport-header/viewport-header.compo
 })
 
 export class MidiEditorComponent {
+	SCALES = 9;
+	SCALE_HEIGHT = 200;
+	
 }

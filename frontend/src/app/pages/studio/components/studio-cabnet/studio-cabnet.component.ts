@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { TrackType, MidiTrackType, AudioTrackType, Track } from "@shared/types";
-import { ChangeDetectionStrategy, Component, Injector } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, Injector, runInInjectionContext } from "@angular/core";
 import { MidiService } from "../../services/midi.service";
 import { CabnetService, MidiTabs } from "../../services/cabnet.service";
 
@@ -16,16 +16,16 @@ import { MidiEditorComponent } from "./midi-editor/midi-editor.component";
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="cabnet-container" [style.height.px]="cabnetService.isOpen() ? openHeight : closedHeight">
-			<ng-container *ngIf="cabnetService.selectedTab() == MidiTabs['MIDI Editor']">
+			<ng-container *ngIf="selectedTab == MidiTabs['MIDI Editor']">
 				<midi-editor></midi-editor>
 			</ng-container>
 
 			<div class="tabs-row">
 				<mat-button-toggle-group class='btn-group'>
-					<ng-container *ngFor="let tab of tabEntries; let i = index">
+					<ng-container *ngFor="let tab of tabEntries(); let i = index">
 						<button 
 							class="btn"
-							[class.selected]="cabnetService.selectedTab() === i"
+							[class.selected]="selectedTab === i"
 							(click)="onTabClick(i)">
 							{{ tab.value }}
 						</button>
@@ -59,17 +59,18 @@ export class StudioCabnetComponent {
 	openHeight = 400;
 	closedHeight = 40;
 
+	get selectedTab() {return this.cabnetService.selectedTab()}
+
 	get tabOptions() {return this.cabnetService.tabOptions()}
-	get tabEntries() {
-		const tabsEnum = this.tabOptions;
-		return Object.keys(tabsEnum)
+	tabEntries = computed(
+		() => Object.keys(this.tabOptions)
 			.filter(key => isNaN(Number(key)))
 			.map((key, index) => ({ 
 				key, 
 				value: key,
 				index 
-			}));
-	}
+			})));
+
 
 	onTabClick(tabIndex: number) {
 		if (this.cabnetService.selectedTab() === tabIndex && this.cabnetService.isOpen()) {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, Injector, Input, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
 import { MidiService } from '@src/app/pages/studio/services/midi.service';
 import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
@@ -22,6 +22,23 @@ import { ViewportService } from '@src/app/pages/studio/services/viewport.service
 			<div #scrollContainer class="scroll-container" 
 				(scroll)="onScroll()"
 				>
+				<div 
+					*ngFor="let scale of [].constructor(SCALES); let scaleIndex = index"
+					class="scale">
+					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row black-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row black-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row black-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+
+					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row black-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row black-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+					<div class="row white-row" [style.height.px]="ROW_HEIGHT" [style.width.px]="totalWidth"></div>
+				</div>
 
 				<!-- Box selection overlay -->
 				<div 
@@ -38,10 +55,14 @@ import { ViewportService } from '@src/app/pages/studio/services/viewport.service
 	styleUrl: './viewport.component.scss'
 })
 
-export class ViewportComponent implements AfterViewInit {
+export class ViewportComponent implements AfterViewInit, OnInit {
 	@ViewChild("container", {static: true}) containerRef!: ElementRef<HTMLDivElement>;
 	@ViewChild("canvas", {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
 	@ViewChild("scrollContainer", {static: true}) scrollContainerRef!: ElementRef<HTMLDivElement>;
+
+	@Input() SCALES: number = 0;
+	@Input() SCALE_HEIGHT: number = 0;
+	declare ROW_HEIGHT: number;
 
 	public DPR = window.devicePixelRatio || 1;
 
@@ -54,6 +75,12 @@ export class ViewportComponent implements AfterViewInit {
 		public playbackService: PlaybackService,
 		public midiService: MidiService,
 	) {}
+
+	get totalWidth() { return ViewportService.instance.totalWidth() }
+
+	ngOnInit(): void {
+		this.ROW_HEIGHT = this.SCALE_HEIGHT / 12;
+	}
 	
 	ngAfterViewInit(): void {
 		const canvas = this.canvasRef.nativeElement;
@@ -90,7 +117,7 @@ export class ViewportComponent implements AfterViewInit {
 			this.isProgrammaticScroll = false; // reset flag
 			return; 
 		}
-		
+
 		const scrollLeft = this.scrollContainerRef.nativeElement.scrollLeft;
 		const scrollTop = this.scrollContainerRef.nativeElement.scrollTop;
 

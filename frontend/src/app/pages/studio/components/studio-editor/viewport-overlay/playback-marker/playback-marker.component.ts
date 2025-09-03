@@ -47,7 +47,6 @@ export class PlaybackMarkerComponent {
 	// Ng
 
 	ngAfterViewInit(): void {
-		console.log(this.viewportType);
 		if (this.viewportType == "midi-editor") {
 			this.playbackService.registerPlaybackLineMidiEditor(this);
 		} else {
