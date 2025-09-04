@@ -179,7 +179,7 @@ export const setTrackEffects: Mutator<any[]> = (val: any[], node: PropStateNode<
 	forward();
 	HistoryService.instance.recordCommand(actionId, forward, reverse);
 }
-export const setTrackRegions: ArrayMutator<Region> = (val: any[], node: ArrayStateNode<Region>, actionId) => {
+export const setTrackRegions: ArrayMutator<Region> = (val: ObjectStateNode<Region>[], node: ArrayStateNode<Region>, actionId) => {
 	const initial = node.getAll();
 	const forward = () => { 
 		node._ids.set(val.map(el => el._id));

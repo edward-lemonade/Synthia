@@ -5,10 +5,12 @@ import { TrackComponent } from "./track/track.component";
 import { BoxSelectBounds, RegionSelectService } from '../../../services/region-select.service';
 import { RegionDragService } from '../../../services/region-drag.service';
 import { StateService } from '../../../state/state.service';
-import { RegionPath, RegionService } from '../../../services/region.service';
+import { RegionService } from '../../../services/region.service';
 import { TracksService } from '../../../services/tracks.service';
 import { PlaybackMarkerComponent } from "../viewport-overlay/playback-marker/playback-marker.component";
 import { PlaybackService } from '../../../services/playback.service';
+import { ObjectStateNode } from '../../../state/state.factory';
+import { Region } from '@shared/types';
 
 @Component({
 	selector: 'studio-editor-viewport',
@@ -201,8 +203,8 @@ export class ViewportComponent implements AfterViewInit {
 	// BOX SELECTION
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	private getRegionsInBounds(bounds: BoxSelectBounds): RegionPath[] {
-		const selectedRegions: RegionPath[] = [];
+	private getRegionsInBounds(bounds: BoxSelectBounds): ObjectStateNode<Region>[] {
+		const selectedRegions: ObjectStateNode<Region>[] = [];
 		const tracks = this.tracks();
 		
 		const normalizedBounds = {
@@ -228,10 +230,7 @@ export class ViewportComponent implements AfterViewInit {
 						normalizedBounds.left, normalizedBounds.right,
 						regionLeft, regionRight
 					)) {
-						selectedRegions.push({ 
-							trackId: this.tracksService.getTrack(trackIndex)!._id, 
-							regionId: this.tracksService.getTrack(trackIndex)!.regions._ids()[regionIndex] 
-						});
+						selectedRegions.push(region);
 					}
 				});
 			}

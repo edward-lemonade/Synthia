@@ -15,7 +15,7 @@ import { StateNode } from '@src/app/pages/studio/state/state.factory';
 
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
 import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-render.service';
-import { RegionPath, RegionService } from '@src/app/pages/studio/services/region.service';
+import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { MidiService } from '@src/app/pages/studio/services/midi.service';
 import { CabnetService, MidiTabs } from '@src/app/pages/studio/services/cabnet.service';
 import { hexToHsl, hslToCss } from '@src/app/utils/color';
@@ -105,7 +105,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	declare type: RegionType;
 	declare fileId: string;
-	declare regionPath: RegionPath;
 
 	currentAudioFile: any = null;
 	private animationFrameId?: number;
@@ -139,10 +138,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	ngOnInit(): void {
-		this.regionPath = {
-			trackId: this.track._id,
-			regionId: this.region._id
-		};
 		this.fileId = this.region.fileId();
 	}
 
@@ -194,7 +189,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	});
 
 	isSelected = computed(() => {
-		const selected = this.selectionService.isRegionSelected(this.regionPath);
+		const selected = this.selectionService.isRegionSelected(this.region);
 		return selected;
 	});
 
@@ -398,7 +393,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		// Commit the final size from ghost to actual region
 		const ghost = this.ghostRegion();
 		if (ghost) {
-			this.regionService.resizeRegion(this.regionPath, ghost.start, ghost.duration);
+			this.regionService.resizeRegion(this.region, ghost.start, ghost.duration);
 		}
 		
 		// Clean up resize state
@@ -423,9 +418,9 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		if (!this.dragService.isDragging()) {
 			if (event.ctrlKey || event.metaKey) {
-				this.selectionService.toggleSelectedRegion(this.regionPath);
+				this.selectionService.toggleSelectedRegion(this.region);
 			} else {
-				this.selectionService.setSelectedRegion(this.regionPath.trackId, this.regionPath.regionId);
+				this.selectionService.setSelectedRegion(this.region);
 			}
 		}
 	}
@@ -457,7 +452,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		if (this.canResize() && this.resizeHandle()) {
 			this.startResize(event, this.resizeHandle()!);
-		} else if (this.selectionService.isRegionSelected(this.regionPath)) {
+		} else if (this.selectionService.isRegionSelected(this.region)) {
 			const target = event.currentTarget as HTMLElement;
 			const rect = target.closest("viewport-track")!.getBoundingClientRect();
 			const mousePosX = this.viewportService.pxToPos(event.clientX - rect.left, false);
@@ -485,10 +480,10 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	duplicateRegion() {
 		const duplicatedRegion = { ...this.region };
-		this.regionService.duplicateRegion(this.regionPath);
+		this.regionService.duplicateRegion(this.region);
 	}
 
 	deleteRegion() {
-		this.regionService.deleteRegion(this.regionPath);
+		this.regionService.deleteRegion(this.region);
 	}
 }

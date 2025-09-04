@@ -68,9 +68,9 @@ export class TrackComponent{
 	
 	color = computed(() => this.track.color);
 	colorSelectedBg = computed(() => this.selectService.selectedTrackBgColor(this.track.color()));
-	isSelected = computed(() => this.selectService.selectedTrack() == this.track._id);
+	isSelected = computed(() => this.selectService.selectedTrack()?._id == this.track._id);
 	onClick() { 
-		this.selectService.setSelectedTrack(this.track._id); 
+		this.selectService.setSelectedTrack(this.track); 
 	}
 
 	mouseX = 0; 

@@ -32,7 +32,7 @@ interface PropNode<T> extends Node<T> {
 }
 interface ObjectNode<T extends Record<string, any>> extends Node<T> {
 	_type: NodeType.Object;
-	gp: () => any; // grandparent (for nested arrays)
+	gp: () => ObjectStateNode<any> | ArrayStateNode<any> | any; // grandparent (for nested arrays)
 }
 interface ArrayNode<T extends Record<string, any>> extends Node<T[]> { // ArrayNode() is obsolete, use ArrayNode.get() instead
 	_type: NodeType.Array;
@@ -100,7 +100,7 @@ export function objectStateNode<T extends Record<string,any>>(
 	s.snapshot = () => {
 		const result: any = {};
 		for (const k in s) {
-			if ((typeof s[k] === 'function' || typeof s[k] === 'object') && !k.startsWith('_') && !k.startsWith('snapshot')) {
+			if ((typeof s[k] === 'function' || typeof s[k] === 'object') && !k.startsWith('_') && !k.startsWith('snapshot') && !k.startsWith('gp')) {
 				const node = s[k];
 				result[k] = node?.snapshot ? node.snapshot() : node();
 			}

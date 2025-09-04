@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, Injector, Input, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
 import { MidiNote, MidiRegion } from '@shared/types';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
-import { MidiService, NotePath } from '@src/app/pages/studio/services/midi.service';
+import { MidiService } from '@src/app/pages/studio/services/midi.service';
 import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { BoxSelectBounds } from '@src/app/pages/studio/services/region-select.service';
@@ -169,8 +169,8 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 	// ==========================================================================================
 	// Box Selection
 
-	private getNotesInBounds(bounds: BoxSelectBounds): NotePath[] {
-		const selectedRegions: NotePath[] = [];
+	private getNotesInBounds(bounds: BoxSelectBounds): ObjectStateNode<MidiNote>[] {
+		const selectedNotes: ObjectStateNode<MidiNote>[] = [];
 		const notes = this.notes!;
 		
 		const normalizedBounds = {
@@ -193,14 +193,11 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 				normalizedBounds.top, normalizedBounds.bottom,
 				noteTop, noteBottom
 			)) {
-				selectedRegions.push({ 
-					regionId: this.midiService.getRegionOfNote(note)!._id!,
-					noteId: note._id,
-				});		
+				selectedNotes.push(note);		
 			}
 		});
 
-		return selectedRegions;
+		return selectedNotes;
 	}
 
 	private boundsIntersect(start1: number, end1: number, start2: number, end2: number): boolean {

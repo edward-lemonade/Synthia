@@ -1,19 +1,11 @@
 import { computed, effect, Injectable, Injector, runInInjectionContext, signal } from "@angular/core";
-import { RegionService } from "./region.service";
 import { BoxSelectBounds } from "./region-select.service";
 import { CabnetService } from "./cabnet.service";
 import { MidiNote, MidiRegion } from "@shared/types";
 import { ObjectStateNode } from "../state/state.factory";
-import { v4 as uuid } from "uuid";
 import { MidiService } from "./midi.service";
-import { TracksService } from "./tracks.service";
 
 export enum EditingMode {Select, Draw, Velocity, Erase}
-
-export interface NotePath {
-	regionId: string,
-	noteId: string,
-}
 
 @Injectable()
 export class MidiSelectService { // SINGLETON
@@ -36,13 +28,12 @@ export class MidiSelectService { // SINGLETON
 	// ========================================================
 	// FIELDS
 
-	readonly selectedNotes = signal<NotePath[]>([]);
+	readonly selectedNotes = signal<ObjectStateNode<MidiNote>[]>([]);
   	readonly hasSelectedNotes = computed(() => this.selectedNotes().length > 0);
   	readonly selectedNotesCount = computed(() => this.selectedNotes().length);
 
 	readonly leftmostSelectedNote = computed(() => {
-		const selectedNotes = this.selectedNotes().map(path => MidiService.instance.getNote(path));
-		return selectedNotes.reduce((leftmost, current) => 
+		return this.selectedNotes().reduce((leftmost, current) => 
 			current.time() < leftmost.time() ? current : leftmost
 		);
 	});
@@ -50,46 +41,43 @@ export class MidiSelectService { // SINGLETON
 	readonly isBoxSelecting = signal<boolean>(false);
   	readonly boxSelectBounds = signal<BoxSelectBounds | null>(null);
 
-	public setSelectedNote(regionId: string, noteId: string | null) {
-		if (noteId === null) {
+	public setSelectedNote(note: ObjectStateNode<MidiNote>) {
+		if (note === null) {
 			this.selectedNotes.set([]);
 			return;
 		}
 
-		const newSelection: NotePath = { regionId, noteId };
-		this.selectedNotes.set([newSelection]);
+		this.selectedNotes.set([note]);
 	}
-	public setSelectedNotes(notes: NotePath[]) {
+	public setSelectedNotes(notes: ObjectStateNode<MidiNote>[]) {
 		this.selectedNotes.set([...notes]);
 	}
-	public addSelectedNote(notePath: NotePath) {
-		const alreadySelected = this.isNoteSelected(notePath);
+	public addSelectedNote(note: ObjectStateNode<MidiNote>) {
+		const alreadySelected = this.isNoteSelected(note);
 		
 		if (!alreadySelected) {
 			const current = this.selectedNotes();
-			const updated = [...current, notePath];
+			const updated = [...current, note];
 			this.selectedNotes.set(updated);
 		}
 	}
-	public removeSelectedNote(notePath: NotePath) {
+	public removeSelectedNote(note: ObjectStateNode<MidiNote>) {
 		const current = this.selectedNotes();
 		const filtered = current.filter(r => 
-			!(r.regionId === notePath.regionId && r.noteId === notePath.noteId)
+			!(this.isNoteSelected(note))
 		);
 		this.selectedNotes.set(filtered);
 	}
-	public toggleSelectedNote(notePath: NotePath) {
-		const isSelected = this.isNoteSelected(notePath);
+	public toggleSelectedNote(note: ObjectStateNode<MidiNote>) {
+		const isSelected = this.isNoteSelected(note);
 		if (isSelected) {
-			this.removeSelectedNote(notePath);
+			this.removeSelectedNote(note);
 		} else {
-			this.addSelectedNote(notePath);
+			this.addSelectedNote(note);
 		}
 	}
-	public isNoteSelected(notePath: NotePath): boolean {
-		return this.selectedNotes().some(r => 
-			r.regionId === notePath.regionId && r.noteId === notePath.noteId
-		);
+	public isNoteSelected(note: ObjectStateNode<MidiNote>): boolean {
+		return this.selectedNotes().some(r => (r._id === note._id));
 	}
 	public clearSelection() {
 		this.selectedNotes.set([]);
@@ -129,7 +117,7 @@ export class MidiSelectService { // SINGLETON
 		return (boxWidth < MIN_BOX_SIZE && boxHeight < MIN_BOX_SIZE);		
 	}
 
-	public completeBoxSelect(getNotesInBounds: (bounds: BoxSelectBounds) => NotePath[]) {
+	public completeBoxSelect(getNotesInBounds: (bounds: BoxSelectBounds) => ObjectStateNode<MidiNote>[]) {
 		const bounds = this.boxSelectBounds();
 		if (bounds && !this.shouldNullifyBoxSelect()) {
 			const regionsInBounds = getNotesInBounds(bounds);
@@ -160,9 +148,9 @@ export class MidiSelectService { // SINGLETON
 	private cleanupSelectedRegions() {
 		const current = this.selectedNotes();
 		
-		const validSelections = current.filter(selection => {
-			const region = this.track()!.regions.getById(selection.regionId) as ObjectStateNode<MidiRegion>;
-			return region && region.midiData.getById(selection.noteId);
+		const validSelections = current.filter(note => {
+			const region = note.gp() as ObjectStateNode<MidiRegion>;
+			return region && region.midiData.getById(note._id);
 		});
 
 		if (validSelections.length !== current.length) {
@@ -173,16 +161,6 @@ export class MidiSelectService { // SINGLETON
 	// ========================================================
 	// UTILITY
 
-	getSelectedNotesForRegion(regionId: string): string[] {
-		return this.selectedNotes()
-		.filter(r => r.regionId === regionId)
-		.map(r => r.noteId);
-	}
-	hasSelectedNotesInRegion(regionId: string): boolean {
-		return this.selectedNotes().some(r => r.regionId === regionId);
-	}
-
-	// color
 	selectedTrackBgColor(color: string) { 
 		return color.slice(0, 7) + '10';
 	}

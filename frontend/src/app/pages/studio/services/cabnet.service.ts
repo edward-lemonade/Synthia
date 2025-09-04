@@ -24,14 +24,12 @@ export class CabnetService { // SINGLETON
 
 	isOpen = signal(false);
 	trackType = computed<TrackType|null>(() => {
-		const trackId = RegionSelectService.instance.selectedTrack();
-		if (!trackId) {return null}
-		return TracksService.instance.getTrack(trackId)!.trackType();
+		return RegionSelectService.instance.selectedTrack()?.trackType() ?? null;
 	});
 	selectedTab = signal<MidiTabs|null>(null);
 	currentTrackNode = computed<ObjectStateNode<Track>|null>(() => { 
-		const trackId = RegionSelectService.instance.selectedTrack();
-		return trackId ? (TracksService.instance.getTrack(trackId) ?? null) : null;
+		const track = RegionSelectService.instance.selectedTrack();
+		return track ?? null;
 	})
 
 	openCabnet(tabOption: MidiTabs = 0) {

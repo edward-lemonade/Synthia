@@ -9,11 +9,6 @@ import { MidiSelectService } from "./midi-select.service";
 
 export enum EditingMode {Select, Draw, Velocity, Erase}
 
-export interface NotePath {
-	regionId: string,
-	noteId: string,
-}
-
 @Injectable()
 export class MidiService { // SINGLETON
 	private static _instance: MidiService;
@@ -27,59 +22,46 @@ export class MidiService { // SINGLETON
 	getRegion(regionId: string): ObjectStateNode<MidiRegion> { 
 		return (this.track()?.regions.getById(regionId) as ObjectStateNode<MidiRegion>)
 	}
-	getNote(path: NotePath): ObjectStateNode<MidiNote> {
-		return this.getRegion(path.regionId).midiData.getById(path.noteId)!;
-	}
-	getRegionOfNote(note: ObjectStateNode<MidiNote>) {
-		return this.track()?.regions().find(region => {
-			const midiRegion = region as ObjectStateNode<MidiRegion>;
-			return note._id in midiRegion.midiData._ids;
-		}) as ObjectStateNode<MidiRegion> | undefined;
-	}
 
 	readonly editingMode = signal<EditingMode>(0);
 
 	// ==============================================================================================
 	// [Draw]
 
-	addNote(regionNode: ObjectStateNode<MidiRegion>, overrides: Partial<MidiNote> = {}) {
+	addNote(region: ObjectStateNode<MidiRegion>, overrides: Partial<MidiNote> = {}) {
 		const props: Partial<MidiNote> = {
 			...overrides,
 		}
-		regionNode.midiData.insertValue(props);
+		region.midiData.insertValue(props);
 	}
-	deleteNote(path: NotePath, actionId=uuid()) {
-		MidiSelectService.instance.removeSelectedNote(path);
-		this.getRegion(path.regionId).midiData.remove(path.noteId, actionId);
+	deleteNote(note: ObjectStateNode<MidiNote>, actionId=uuid()) {
+		MidiSelectService.instance.removeSelectedNote(note);
+		note._parent.remove(note._id, actionId);
 	}
-	deleteNotes(paths: NotePath[], actionId=uuid()) {
-		for (const p of paths) { this.deleteNote(p, actionId); }
+	deleteNotes(notes: ObjectStateNode<MidiNote>[], actionId=uuid()) {
+		for (const n of notes) { this.deleteNote(n, actionId); }
 	}
-	transferNoteToRegion(path: NotePath, newRegionId: string, actionId = uuid()) {
-		const sourceRegion = this.getRegion(path.regionId)!;
+	transferNoteToRegion(note: ObjectStateNode<MidiNote>, newRegionId: string, actionId = uuid()) {
 		const targetRegion = this.getRegion(newRegionId)!;
 		
-		const region = sourceRegion.midiData.remove(path.regionId, actionId);
-		targetRegion.midiData.push(region, actionId);
+		note._parent.remove(note._id, actionId);
+		targetRegion.midiData.push(note, actionId);
 	}
-	transferNotesToRegion(paths: NotePath[], newRegionId: string, actionId = uuid()) {
-		paths.forEach(path => {
-			this.transferNoteToRegion(path, newRegionId, actionId);
+	transferNotesToRegion(notes: ObjectStateNode<MidiNote>[], newRegionId: string, actionId = uuid()) {
+		notes.forEach(n => {
+			this.transferNoteToRegion(n, newRegionId, actionId);
 		});
 	}
-	moveNote(path: NotePath, newStart: number, actionId = uuid()) {
-		const noteNode = this.getNote(path);
-		noteNode.time.set(newStart, actionId);
+	moveNote(note: ObjectStateNode<MidiNote>, newStart: number, actionId = uuid()) {
+		note.time.set(newStart, actionId);
 	}
-	moveNotes(paths: NotePath[], startOffset: number, actionId = uuid()) {
-		paths.forEach(path => {
-			const note = this.getNote(path);
-			this.moveNote(path, note.time() + startOffset, actionId);
+	moveNotes(notes: ObjectStateNode<MidiNote>[], startOffset: number, actionId = uuid()) {
+		notes.forEach(note => {
+			this.moveNote(note, note.time() + startOffset, actionId);
 		});
 	}
-	resizeNote(path: NotePath, newStart: number, newDuration: number, actionId = uuid()) {
-		const noteNode = this.getNote(path);			
-		noteNode.time.set(newStart, actionId);
-		noteNode.duration.set(newDuration, actionId);
+	resizeNote(note: ObjectStateNode<MidiNote>, newStart: number, newDuration: number, actionId = uuid()) {		
+		note.time.set(newStart, actionId);
+		note.duration.set(newDuration, actionId);
 	}
 }

@@ -7,11 +7,6 @@ import { v4 as uuid } from "uuid";
 import { ViewportService } from "./viewport.service";
 import { RegionSelectService } from "./region-select.service";
 
-export interface RegionPath {
-	trackId: string;
-	regionId: string;
-}
-
 @Injectable()
 export class RegionService {
 	private static _instance: RegionService;
@@ -41,8 +36,8 @@ export class RegionService {
 	getRegions(trackId: string): ArrayStateNode<Region> {
 		return this.tracks.getById(trackId)!.regions;
 	}
-	getRegion(path: RegionPath): ObjectStateNode<Region> {
-		return this.getRegions(path.trackId).getById(path.regionId)!;
+	getRegion(trackId: string, regionId: string): ObjectStateNode<Region> {
+		return this.getRegions(trackId).getById(regionId)!;
 	}
 	addAudioRegion(trackNode: ObjectStateNode<Track>, overrides: Partial<AudioRegion> = {}) {
 		const props: Partial<AudioRegion> = {
@@ -58,73 +53,58 @@ export class RegionService {
 		}
 		trackNode.regions.insertValue(props);
 	}
-	deleteRegion(path: RegionPath) {
-		RegionSelectService.instance.removeSelectedRegion(path);
-		this.tracks.getById(path.trackId)?.regions.remove(path.regionId);
+	deleteRegion(region: ObjectStateNode<Region>) {
+		RegionSelectService.instance.removeSelectedRegion(region);
+		region._parent.remove(region._id);
 	}
-	deleteRegions(paths: RegionPath[]) {
-		for (const p of paths) { this.deleteRegion(p); }
+	deleteRegions(regions: ObjectStateNode<Region>[]) {
+		for (const r of regions) { this.deleteRegion(r); }
 	}
-	transferRegionToTrack(path: RegionPath, newTrackIndex: number, actionId = uuid()) {
-		const sourceTrack = this.tracks.getById(path.trackId)!;
+	transferRegionToTrack(region: ObjectStateNode<Region>, newTrackIndex: number, actionId = uuid()) {
 		const targetTrack = this.tracks.get(newTrackIndex)!;
 		
-		const region = sourceTrack.regions.remove(path.regionId, actionId);
+		region._parent.remove(region._id, actionId);
 		targetTrack.regions.push(region, actionId);
 	}
-	transferRegionsToTrack(paths: RegionPath[], trackIndexOffset: number, actionId = uuid()) {
-		paths.forEach(path => {
-			const trackIndex = this.tracks.getIndex(path.trackId);
-			this.transferRegionToTrack(path, trackIndex + trackIndexOffset, actionId);
+	transferRegionsToTrack(regions: ObjectStateNode<Region>[], trackIndexOffset: number, actionId = uuid()) {
+		regions.forEach(region => {
+			const trackIndex = this.tracks.getIndex(region.gp().trackId);
+			this.transferRegionToTrack(region, trackIndex + trackIndexOffset, actionId);
 		});
 	}
-	moveRegion(path: RegionPath, newStart: number, actionId = uuid()) {
-		const regionNode = this.getRegion(path);
+	moveRegion(region: ObjectStateNode<Region>, newStart: number, actionId = uuid()) {
+		if (region.type() == RegionType.Audio) {
+			const audioRegion = region as ObjectStateNode<AudioRegion>;
 
-		if (regionNode.type() == RegionType.Audio) {
-			const audioRegionNode = regionNode as ObjectStateNode<AudioRegion>;
-
-			const oldFullStart = audioRegionNode.fullStart();
-			const newFullStart = oldFullStart + (newStart - audioRegionNode.start());
+			const oldFullStart = audioRegion.fullStart();
+			const newFullStart = oldFullStart + (newStart - audioRegion.start());
 	
-			audioRegionNode.fullStart.set(newFullStart, actionId);
+			audioRegion.fullStart.set(newFullStart, actionId);
 		} else {
-			regionNode.start.set(newStart, actionId);
+			region.start.set(newStart, actionId);
 		}
 	}
-	moveRegions(paths: RegionPath[], startOffset: number, actionId = uuid()) {
-		paths.forEach(path => {
-			const region = this.getRegion(path);
-			this.moveRegion(path, region.start() + startOffset, actionId);
+	moveRegions(regions: ObjectStateNode<Region>[], startOffset: number, actionId = uuid()) {
+		regions.forEach(region => {
+			this.moveRegion(region, region.start() + startOffset, actionId);
 		});
 	}
-	resizeRegion(path: RegionPath, newStart: number, newDuration: number, actionId = uuid()) {
-		const regionNode = this.getRegion(path);
-
-		if (regionNode.type() == RegionType.Audio) {
-			const audioRegionNode = regionNode as ObjectStateNode<AudioRegion>;
+	resizeRegion(region: ObjectStateNode<Region>, newStart: number, newDuration: number, actionId = uuid()) {
+		if (region.type() == RegionType.Audio) {
+			const audioRegion = region as ObjectStateNode<AudioRegion>;
 			
-			audioRegionNode.audioStartOffset.set(ViewportService.instance.posToTime(newStart - audioRegionNode.fullStart()));
-			audioRegionNode.audioEndOffset.set(ViewportService.instance.posToTime(newStart + newDuration));
+			audioRegion.audioStartOffset.set(ViewportService.instance.posToTime(newStart - audioRegion.fullStart()));
+			audioRegion.audioEndOffset.set(ViewportService.instance.posToTime(newStart + newDuration));
 
-			audioRegionNode.start.set(newStart, actionId);
-			audioRegionNode.duration.set(newDuration, actionId);
+			audioRegion.start.set(newStart, actionId);
+			audioRegion.duration.set(newDuration, actionId);
 		} else {
-			regionNode.start.set(newStart, actionId);
-			regionNode.duration.set(newDuration, actionId);
+			region.start.set(newStart, actionId);
+			region.duration.set(newDuration, actionId);
 		}
 	}
-	duplicateRegion(path: RegionPath) {
-		const duped = { ...this.getRegion(path).snapshot() };
-		this.getRegions(path.trackId).insertValue(duped);
-	}
-	getParentTrack(regionId: string): number {
-		for (let index = 0; index < this.tracks._ids().length; index++) {
-			const track = this.tracks.get(index);
-			if (track?.regions._ids().includes(regionId)) {
-				return index;
-			}
-		}
-		return -1; // Return -1 if not found
+	duplicateRegion(region: ObjectStateNode<Region>) {
+		const duped = { ...region.snapshot() };
+		region._parent.insertValue(duped);
 	}
 }
