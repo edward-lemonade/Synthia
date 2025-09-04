@@ -3,10 +3,11 @@ import { ViewportService } from '../../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { PlaybackMarkerComponent } from "../../../studio-editor/viewport-overlay/playback-marker/playback-marker.component";
+import { ModeSelectComponent } from "./mode-select/mode-select.component";
 
 @Component({
 	selector: 'midi-editor-viewport-overlay',
-	imports: [CommonModule, MatIconModule, PlaybackMarkerComponent],
+	imports: [CommonModule, MatIconModule, PlaybackMarkerComponent, ModeSelectComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #scrollContainer class="scroll-container">
@@ -16,6 +17,8 @@ import { PlaybackMarkerComponent } from "../../../studio-editor/viewport-overlay
 				[viewportType]="'midi-editor'"/>
 			</div>
 		</div>
+
+		<midi-editor-mode-select class="mode-select"/>
 	`,
 	styleUrl: './viewport-overlay.component.scss'
 })

@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, ViewChild } from "@angular/core";
+import { MidiService } from "@src/app/pages/studio/services/midi.service";
 import { ViewportService } from "@src/app/pages/studio/services/viewport.service";
 
 @Component({
@@ -36,22 +37,20 @@ import { ViewportService } from "@src/app/pages/studio/services/viewport.service
 	styleUrl: './keyboard.component.scss'
 })
 export class MidiEditorKeyboardComponent implements OnInit {
-	@Input() SCALES: number = 0;
-	@Input() SCALE_HEIGHT: number = 0;
 	@ViewChild('keyboard', { static: true, read: ElementRef }) scrollable!: ElementRef<HTMLDivElement>;
 
-	declare ROW_HEIGHT: number;
+	constructor (
+		public viewportService: ViewportService,
+		public midiService: MidiService,
+	) {}
 
+	get SCALES() { return this.midiService.SCALES };
+	get SCALE_HEIGHT() { return this.midiService.SCALE_HEIGHT };
+	get ROW_HEIGHT() { return this.midiService.ROW_HEIGHT };
 	declare WHITE_KEY_HEIGHT: number;
 	declare BLACK_KEY_HEIGHT: number;
 
-	constructor (
-		public viewportService : ViewportService,
-	) {}
-
 	ngOnInit() {
-		this.ROW_HEIGHT = this.SCALE_HEIGHT / 12;
-
 		this.WHITE_KEY_HEIGHT = this.SCALE_HEIGHT / 7;
 		this.BLACK_KEY_HEIGHT = this.SCALE_HEIGHT / 12;
 
@@ -64,7 +63,7 @@ export class MidiEditorKeyboardComponent implements OnInit {
 
 	get scalesLabelArray() {
 		return Array.from({ length: this.SCALES }, (_, i) => ({
-			octave: (this.SCALES - 1 - i) + 2 // Reverse order: highest octave at top
+			octave: (this.SCALES - i) // Reverse order: highest octave at top
 		}));
 	}
 	

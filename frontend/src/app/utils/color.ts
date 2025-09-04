@@ -45,3 +45,18 @@ export function getRegionGhostColor(baseColor: string): string {
 	
 	return 'rgba(0, 123, 255, 0.4)';
 }
+export function getRegionGhostColor2(baseColor: string): string {
+	if (baseColor.startsWith('#')) {
+		const r = parseInt(baseColor.slice(1, 3), 16);
+		const g = parseInt(baseColor.slice(3, 5), 16);
+		const b = parseInt(baseColor.slice(5, 7), 16);
+		return `rgba(${r}, ${g}, ${b}, 0.2)`;
+	}
+
+	const rgbMatch = baseColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+	if (rgbMatch) {
+		return `rgba(${rgbMatch[1]}, ${rgbMatch[2]}, ${rgbMatch[3]}, 0.2)`;
+	}
+	
+	return 'rgba(0, 123, 255, 0.2)';
+}

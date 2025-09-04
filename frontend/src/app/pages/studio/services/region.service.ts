@@ -44,14 +44,14 @@ export class RegionService {
 			...overrides,
 			type: RegionType.Audio, 
 		}
-		trackNode.regions.insertValue(props);
+		return trackNode.regions.insertValue(props);
 	}
 	addMidiRegion(trackNode: ObjectStateNode<Track>, overrides: Partial<MidiRegion> = {}) {
 		const props: Partial<MidiRegion> = {
 			...overrides,
 			type: RegionType.Midi, 
 		}
-		trackNode.regions.insertValue(props);
+		return trackNode.regions.insertValue(props);
 	}
 	deleteRegion(region: ObjectStateNode<Region>) {
 		RegionSelectService.instance.removeSelectedRegion(region);

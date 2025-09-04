@@ -5,8 +5,6 @@ import { MidiNote, MidiRegion } from "@shared/types";
 import { ObjectStateNode } from "../state/state.factory";
 import { MidiService } from "./midi.service";
 
-export enum EditingMode {Select, Draw, Velocity, Erase}
-
 @Injectable()
 export class MidiSelectService { // SINGLETON
 	private static _instance: MidiSelectService;
@@ -34,7 +32,7 @@ export class MidiSelectService { // SINGLETON
 
 	readonly leftmostSelectedNote = computed(() => {
 		return this.selectedNotes().reduce((leftmost, current) => 
-			current.time() < leftmost.time() ? current : leftmost
+			current.start() < leftmost.start() ? current : leftmost
 		);
 	});
 

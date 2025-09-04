@@ -100,7 +100,7 @@ export class ViewportService { // SINGLETON
 	}
 	mouseXToPx(x: number, snap = this.snapToGrid()) {
 		let pos = (x - this.VPContainer!.getBoundingClientRect().left + this.windowPosX());
-		if (snap) { pos = this.snap(this.posToPx(this.pxToPos(pos))) }
+		if (snap) { pos = this.posToPx(this.snap(this.pxToPos(pos))) }
 		return pos;
 	}
 	mouseYToPx(y: number) {

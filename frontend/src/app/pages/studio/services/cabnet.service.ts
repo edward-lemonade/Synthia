@@ -1,4 +1,4 @@
-import { computed, Injectable, Injector, signal } from "@angular/core";
+import { computed, Injectable, Injector, runInInjectionContext, signal } from "@angular/core";
 import { AudioTrackType, MidiTrackType, Track, TrackType } from "@shared/types";
 import { RegionSelectService } from "./region-select.service";
 import { TracksService } from "./tracks.service";

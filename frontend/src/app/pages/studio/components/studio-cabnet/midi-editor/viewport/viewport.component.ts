@@ -2,26 +2,28 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, Injector, Input, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
 import { MidiNote, MidiRegion } from '@shared/types';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
-import { MidiService } from '@src/app/pages/studio/services/midi.service';
+import { EditingMode, MidiService } from '@src/app/pages/studio/services/midi.service';
 import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { BoxSelectBounds } from '@src/app/pages/studio/services/region-select.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { ObjectStateNode } from '@src/app/pages/studio/state/state.factory';
-import { getRegionGhostColor } from '@src/app/utils/color';
+import { getRegionGhostColor2 } from '@src/app/utils/color';
 import { MidiSelectService } from '@src/app/pages/studio/services/midi-select.service';
 import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.service';
+import { NoteComponent } from "./note/note.component";
 
 @Component({
 	selector: 'midi-editor-viewport',
-	imports: [CommonModule],
+	imports: [CommonModule, NoteComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #container class="container"
 			(mousedown)="onMouseDown($event)"
 			(mousemove)="onMouseMove($event)"
-			(mouseup)="onMouseUp($event)">
+			(mouseup)="onMouseUp($event)"
+			>
 
 			<canvas 
 				#canvas 
@@ -30,6 +32,7 @@ import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.servic
 
 			<div #scrollContainer class="scroll-container" 
 				(scroll)="onScroll()"
+				(click)="onClick($event)"
 				>
 				<div 
 					*ngFor="let scale of [].constructor(SCALES); let scaleIndex = index"
@@ -50,7 +53,7 @@ import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.servic
 				</div>
 
 				<div class="region"
-					*ngFor="let regionNode of regions; let regionIndex = index"
+					*ngFor="let regionNode of (regions!()); let regionIndex = index"
 					[style.background-color]="ghostColor"
 					[style.border-color]="ghostColor"
 					[style.left.px]="viewportService.posToPx(regionNode.start())"
@@ -69,20 +72,25 @@ import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.servic
 					[style.width.px]="boxOverlayStyle().width"
 					[style.height.px]="boxOverlayStyle().height">
 				</div>
+
+				<div class="notes">
+					<midi-editor-note
+						*ngFor="let note of notes(); let noteIndex = index;"
+						[note]="note">
+					</midi-editor-note>
+
+					<div class="square"></div>
+				</div>
 			</div>
 		</div>
 	`,
 	styleUrl: './viewport.component.scss'
 })
 
-export class ViewportComponent implements AfterViewInit, OnInit {
+export class ViewportComponent implements AfterViewInit {
 	@ViewChild("container", {static: true}) containerRef!: ElementRef<HTMLDivElement>;
 	@ViewChild("canvas", {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
 	@ViewChild("scrollContainer", {static: true}) scrollContainerRef!: ElementRef<HTMLDivElement>;
-
-	@Input() SCALES: number = 0;
-	@Input() SCALE_HEIGHT: number = 0;
-	declare ROW_HEIGHT: number;
 
 	public DPR = window.devicePixelRatio || 1;
 
@@ -101,12 +109,17 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 		public cabnetService: CabnetService,
 	) {}
 
-	get totalWidth() { return ViewportService.instance.totalWidth() }
-	get notes() { return CabnetService.instance.currentTrackNode()?.regions().flatMap((region) => {return {...(region as ObjectStateNode<MidiRegion>).midiData()}})}
+	get SCALES() { return this.midiService.SCALES };
+	get SCALE_HEIGHT() { return this.midiService.SCALE_HEIGHT };
+	get ROW_HEIGHT() { return this.midiService.ROW_HEIGHT };
 
-	ngOnInit(): void {
-		this.ROW_HEIGHT = this.SCALE_HEIGHT / 12;
-	}
+	get totalWidth() { return ViewportService.instance.totalWidth() }
+	get editingMode() { return MidiService.instance.editingMode() }
+	get track() { return this.cabnetService.currentTrackNode }
+	get regions() { return this.track()?.regions }
+	notes = computed(() => { return this.regions!().flatMap((region) => {return (region as ObjectStateNode<MidiRegion>).midiData()})})
+	get ghostColor() { return getRegionGhostColor2(this.track()!.color()) }
+
 	
 	ngAfterViewInit(): void {
 		const canvas = this.canvasRef.nativeElement;
@@ -152,19 +165,93 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 	}
 
 	// ==========================================================================================
-	// Region / Note Render
+	// Actions
 
-	get track() { return this.cabnetService.currentTrackNode() }
-	get regions() { return this.track?.regions() }
+	private placeNote(event: MouseEvent) {
+		const x = this.viewportService.mouseXToPx(event.clientX);
+		const y = this.viewportService.mouseYToPx(event.clientY);
 
-	get ghostColor() { return getRegionGhostColor(this.track!.color()) }
+		const semitones = this.midiService.pxToPitch(y);
+		const start = this.viewportService.pxToPos(x);
+		const duration = this.viewportService.smallestUnit();
+		const velocity = 0;
+		const note: MidiNote = {
+			start: start,
+			pitch: semitones,
+			velocity: velocity,
+			duration: duration,
+		}
+
+		this.midiService.addNote(note);
+	}
 
 	// ==========================================================================================
 	// Mouse Events
 
-	onMouseDown(event: MouseEvent) {}
-	onMouseUp(event: MouseEvent) {}
-	onMouseMove(event: MouseEvent) {}
+	onMouseDown(event: MouseEvent) {
+		this.isMouseDown = true;
+		
+		if (event.button === 0 && 
+			!this.dragService.isDragReady() && 
+			!this.dragService.isDragging() && 
+			!this.viewportService.isResizingRegion() &&
+			this.editingMode == EditingMode.Select
+		) {	
+			const startX = this.viewportService.mouseXToPx(event.clientX);
+			const startY = this.viewportService.mouseYToPx(event.clientY);
+
+			if (!event.ctrlKey && !event.metaKey) { this.selectService.clearSelection(); }
+
+			this.selectService.startBoxSelect(startX, startY);	
+		}
+	}
+
+	onMouseMove(event: MouseEvent) {
+		if (!this.isMouseDown) {return}
+
+		const currentMouseX = this.viewportService.mouseXToPx(event.clientX);
+		const currentMouseY = this.viewportService.mouseYToPx(event.clientY);
+
+		if (this.dragService.isDragReady()) {
+			const deltaX = Math.abs(currentMouseX - this.dragService.dragInfo()!.startPosX*this.viewportService.measureWidth());
+
+			if (deltaX >= this.dragThreshold) {
+				this.dragService.startDrag();
+			}
+		}
+
+		if (this.dragService.isDragging()) {
+			const mousePosX = this.viewportService.pxToPos(currentMouseX, false);
+			const pitch = this.midiService.pxToPitch(currentMouseY);
+			this.dragService.updateDrag(mousePosX, pitch);
+		} else if (this.selectService.isBoxSelecting()) {
+			this.selectService.updateBoxSelect(currentMouseX, currentMouseY);
+		}
+	}
+
+	onMouseUp(event: MouseEvent) {
+		this.isMouseDown = false;
+		
+		if (this.dragService.isDragging()) {
+			this.dragService.completeDrag();
+		} else if (this.dragService.isDragReady()) {
+			this.dragService.cancelDrag();	
+		} else if (this.selectService.isBoxSelecting()) {
+			if (this.selectService.shouldNullifyBoxSelect()) {
+				this.playbackService.setPlaybackPx(this.viewportService.mouseXToPx(event.clientX), false, this.viewportService);
+			}
+			this.selectService.completeBoxSelect((bounds) => {
+				return this.getNotesInBounds(bounds);
+			});
+		}
+	}
+
+	onClick(event: MouseEvent) {
+		event.stopPropagation();
+		if (this.editingMode == EditingMode.Draw && !this.dragService.isDragging()) {
+			this.placeNote(event);
+		}
+	}
 
 	// ==========================================================================================
 	// Box Selection
@@ -180,7 +267,7 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 			bottom: Math.max(bounds.startY, bounds.endY)
 		};
 
-		notes.forEach((note, noteIndex) => {
+		notes().forEach((note, noteIndex) => {
 			const noteTop = this.getNoteTop(note);
 			const noteBottom = this.getNoteBottom(note);
 			const noteLeft = this.getNoteLeft(note);
@@ -204,10 +291,10 @@ export class ViewportComponent implements AfterViewInit, OnInit {
 		return start1 <= end2 && end1 >= start2;
 	}
 
-	private getNoteLeft(note: ObjectStateNode<MidiNote>): number { return this.viewportService.timeToPx(note.time()); }
-	private getNoteRight(note: ObjectStateNode<MidiNote>): number { return this.viewportService.timeToPx(note.time()+note.duration()); }
-	private getNoteBottom(note: ObjectStateNode<MidiNote>): number { return this.SCALE_HEIGHT/12 * note.note(); }
-	private getNoteTop(note: ObjectStateNode<MidiNote>): number { return this.SCALE_HEIGHT/12 * (note.note()+1); }
+	public getNoteLeft(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.start()); }
+	public getNoteRight(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.start()+note.duration()); }
+	public getNoteBottom(note: ObjectStateNode<MidiNote>): number { return this.getNoteTop(note)+this.ROW_HEIGHT }
+	public getNoteTop(note: ObjectStateNode<MidiNote>): number { return this.ROW_HEIGHT * (this.SCALES*12 - note.pitch()); }
 
 	boxOverlayStyle() {
 		const bounds = this.selectService.getNormalizedBoxBounds();

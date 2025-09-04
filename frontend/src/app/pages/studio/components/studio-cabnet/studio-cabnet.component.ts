@@ -31,7 +31,7 @@ import { MidiEditorComponent } from "./midi-editor/midi-editor.component";
 						</button>
 						
 						<mat-divider 
-							*ngIf="i < tabEntries.length - 1"
+							*ngIf="i < tabEntries().length - 1"
 							class="divider" 
 							[vertical]="true">
 						</mat-divider>

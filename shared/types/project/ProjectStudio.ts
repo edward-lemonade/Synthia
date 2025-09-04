@@ -14,8 +14,8 @@ export function regionTypeFromTrack(value: any): RegionType { return isTrackAudi
 // Midi data
 
 export interface MidiNote {
-	time: number;
-	note: number;
+	start: number;
+	pitch: number;
 	velocity: number;
 	duration: number;
 	channel?: number;

@@ -19,6 +19,7 @@ import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { MidiService } from '@src/app/pages/studio/services/midi.service';
 import { CabnetService, MidiTabs } from '@src/app/pages/studio/services/cabnet.service';
 import { hexToHsl, hslToCss } from '@src/app/utils/color';
+
 type ResizeHandle = 'left' | 'right' | null;
 
 interface ViewportBounds {
@@ -61,7 +62,7 @@ interface ViewportBounds {
 				(mousedown)="onResizeHandleMouseDown($event, 'right')"></div>
 		</div>
 		
-
+		<!-- Resize ghost -->	
 		<resize-ghost
 			*ngIf="viewportService.isResizingRegion() && ghostRegion()"
 			[track]="track"
@@ -453,9 +454,8 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.canResize() && this.resizeHandle()) {
 			this.startResize(event, this.resizeHandle()!);
 		} else if (this.selectionService.isRegionSelected(this.region)) {
-			const target = event.currentTarget as HTMLElement;
-			const rect = target.closest("viewport-track")!.getBoundingClientRect();
-			const mousePosX = this.viewportService.pxToPos(event.clientX - rect.left, false);
+			const mousePxX = this.viewportService.mouseXToPx(event.clientX, false);
+			const mousePosX = this.viewportService.pxToPos(mousePxX, false);
 
 			this.dragService.prepareDrag(mousePosX, this.region.snapshot());
 		} else {
@@ -478,12 +478,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		}
 	}
 
-	duplicateRegion() {
-		const duplicatedRegion = { ...this.region };
-		this.regionService.duplicateRegion(this.region);
-	}
-
-	deleteRegion() {
-		this.regionService.deleteRegion(this.region);
-	}
+	duplicateRegion() { this.regionService.duplicateRegion(this.region); }
+	deleteRegion() { this.regionService.deleteRegion(this.region); }
 }

@@ -1,0 +1,41 @@
+.note {
+	position: absolute;
+	background-color: #a8a8a8;
+	border: 1px solid #636363;
+
+	border-radius: 4px;
+	box-sizing: border-box;
+
+	:hover {
+		border: 1px solid #ffffff;
+	}
+
+	
+	.resize-handle {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 8px;
+		background: transparent;
+		cursor: ew-resize;
+		z-index: 10;
+		
+		&.resize-handle-left {
+			left: 0;
+		}
+		
+		&.resize-handle-right {
+			right: 0;
+		}
+		
+		&:hover {
+			background: rgba(255, 255, 255, 0.3);
+		}
+	}
+}
+
+
+.note.selected {
+	background: rgb(255, 255, 255) !important; 
+	border: 1px solid #ff4e4e;
+}

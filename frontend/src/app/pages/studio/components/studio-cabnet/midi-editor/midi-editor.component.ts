@@ -1,10 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { TrackType, MidiTrackType, AudioTrackType, Track } from "@shared/types";
 import { ChangeDetectionStrategy, Component, Injector } from "@angular/core";
 import { MidiService } from "../../../services/midi.service";
-import { CabnetService } from "../../../services/cabnet.service";
-
-import { MatDivider } from "@angular/material/divider";
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ViewportService } from "../../../services/viewport.service";
@@ -27,16 +23,12 @@ import { MidiDragService } from "../../../services/midi-drag.service";
 			<div class="keyboard-container">
 				<div class="keyboard-header"></div>
 				<midi-editor-keyboard 
-					class="keyboard"
-					[SCALES]="SCALES"
-					[SCALE_HEIGHT]="SCALE_HEIGHT"/>
+					class="keyboard"/>
 			</div>
 			<div class="viewport-container">
 				<midi-editor-viewport-header class="viewport-header"/>
 				<midi-editor-viewport 
-					class="viewport-body"
-					[SCALES]="SCALES"
-					[SCALE_HEIGHT]="SCALE_HEIGHT"/>
+					class="viewport-body"/>
 				<midi-editor-viewport-overlay/>
 			</div>
 		</div>
@@ -45,7 +37,11 @@ import { MidiDragService } from "../../../services/midi-drag.service";
 })
 
 export class MidiEditorComponent {
-	SCALES = 9;
-	SCALE_HEIGHT = 200;
-	
+	constructor(
+		viewportService: ViewportService,
+		midiService: MidiService,
+	) {
+		viewportService.setZoom(3);
+		viewportService.setWindowPosY(midiService.SCALES * midiService.SCALE_HEIGHT / 2)
+	}
 }
