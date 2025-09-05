@@ -40,11 +40,7 @@ import { RegionService } from '@src/app/pages/studio/services/region.service';
 			<div class="track-menu-content">
 				<button class="track-menu-btn" mat-menu-item (click)="createRegion()">
 					<mat-icon>add</mat-icon>
-					Create region
-				</button>
-				<button class="track-menu-btn" mat-menu-item (click)="createRegion()">
-					<mat-icon>add</mat-icon>
-					Create region
+					<p>Create region</p>
 				</button>
 			</div>
 		</mat-menu>

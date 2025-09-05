@@ -10,6 +10,7 @@ import { ViewportHeaderComponent } from "./viewport-header/viewport-header.compo
 import { MidiEditorKeyboardComponent } from "./keyboard/keyboard.component";
 import { MidiSelectService } from "../../../services/midi-select.service";
 import { MidiDragService } from "../../../services/midi-drag.service";
+import { CabnetService } from "../../../services/cabnet.service";
 
 
 @Component({
@@ -22,13 +23,11 @@ import { MidiDragService } from "../../../services/midi-drag.service";
 			<div class="info"></div>
 			<div class="keyboard-container">
 				<div class="keyboard-header"></div>
-				<midi-editor-keyboard 
-					class="keyboard"/>
+				<midi-editor-keyboard class="keyboard"/>
 			</div>
 			<div class="viewport-container">
 				<midi-editor-viewport-header class="viewport-header"/>
-				<midi-editor-viewport 
-					class="viewport-body"/>
+				<midi-editor-viewport class="viewport-body"/>
 				<midi-editor-viewport-overlay/>
 			</div>
 		</div>
@@ -40,6 +39,7 @@ export class MidiEditorComponent {
 	constructor(
 		viewportService: ViewportService,
 		midiService: MidiService,
+		public cabnetService: CabnetService,
 	) {
 		viewportService.setZoom(3);
 		viewportService.setWindowPosY(midiService.SCALES * midiService.SCALE_HEIGHT / 2)

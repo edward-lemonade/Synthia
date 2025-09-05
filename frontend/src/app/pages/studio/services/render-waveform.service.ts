@@ -20,14 +20,14 @@ const DEFAULT_RENDER_OPTIONS: WaveformRenderOptions = {
 }
 
 @Injectable()
-export class WaveformRenderService {
-	private static _instance: WaveformRenderService;
-	static get instance(): WaveformRenderService { return WaveformRenderService._instance; }
+export class RenderWaveformService {
+	private static _instance: RenderWaveformService;
+	static get instance(): RenderWaveformService { return RenderWaveformService._instance; }
 
 	constructor(
 		private audioCacheService: AudioCacheService,
 	) {
-		WaveformRenderService._instance = this;
+		RenderWaveformService._instance = this;
 	}
 
 	// ==========================================
@@ -52,13 +52,12 @@ export class WaveformRenderService {
 				return { success: false, error: 'Waveform data not found', renderedSamples: 0, renderTime: 0 };
 			}
 
-			const ctx = this.setupCanvas(canvas);
+			const ctx = this.setupCanvas(canvas, endPx-startPx);
 			const dpr = window.devicePixelRatio || 1;
 			const heightPx = canvas.height / dpr;
 			const audioSegment = this.extractWaveformSegment(waveformData, audioStart, audioEnd);
 
 			const finalOptions = {...DEFAULT_RENDER_OPTIONS, ...options};
-			
 			const renderedSamples = this.drawWaveformViewport(
 				ctx, 
 				audioSegment, 
@@ -92,7 +91,7 @@ export class WaveformRenderService {
 	// PRIVATE RENDERING METHODS
 	// ==========================================
 
-	private setupCanvas(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+	private setupCanvas(canvas: HTMLCanvasElement, newWidth?: number): CanvasRenderingContext2D {
 		const ctx = canvas.getContext('2d')!;
 		const dpr = window.devicePixelRatio || 1;
 
@@ -102,7 +101,7 @@ export class WaveformRenderService {
 		ctx.clearRect(0, 0, width, height);
 
 		// Use provided dimensions or canvas client dimensions
-		const displayWidth = width ?? canvas.clientWidth;
+		const displayWidth = newWidth ?? canvas.clientWidth;
 		const displayHeight = height ?? canvas.clientHeight;
 
 		// Set actual canvas size in memory (high DPI)

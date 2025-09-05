@@ -44,16 +44,18 @@ export class ViewportService { // SINGLETON
 	setWindowPosY(position : number) { this.windowPosY.set(position); }
 	setZoom(factor: number) { this.zoomFactor.set(Math.max(0.1, factor)); }
 
+	MIN_MEASURE_WIDTH = 60;
+	MAX_MEASURE_LENGTH = 1024;
+
 	adjustZoom(direction: number, mousePos: number, zoomSpeed = 0.02) {
 		if (!this.VPHeaderContainer) return;
 
 		const minMeasureLength = this.VPHeaderContainer.clientWidth / this.lastMeasure();
-		const maxMeasureLength = 512;
 
 		// calculate new zoom factor
 		const currentMeasureWidth = this.measureWidth();
 		const newMeasureWidth = Math.exp(Math.log(currentMeasureWidth) + direction * zoomSpeed);
-		const clampedMeasureWidth = Math.max(minMeasureLength, Math.min(maxMeasureLength, newMeasureWidth));
+		const clampedMeasureWidth = Math.max(minMeasureLength, Math.min(this.MAX_MEASURE_LENGTH, newMeasureWidth));
 		const newZoomFactor = clampedMeasureWidth / this.BASE_PIXELS_PER_MEASURE;
 
 		// keep mouse position centered
@@ -213,7 +215,6 @@ export class ViewportService { // SINGLETON
 		)
 
 		const MAX_INTERVAL_WIDTH = 100;
-		const MIN_MEASURE_WIDTH = 60;
 
 		const startPos = this.windowPosX() - this.CANVAS_PADDING;
 		const endPos = this.windowPosX() + canvas1.width + this.CANVAS_PADDING;
@@ -221,7 +222,7 @@ export class ViewportService { // SINGLETON
 		// MEASURES
 		const measureWidth = this.measureWidth();
 		const drawMeasures: boolean = true;
-		const stepSize = Math.max(1, Math.pow(2, Math.ceil(-Math.log2(measureWidth / MIN_MEASURE_WIDTH))));
+		const stepSize = Math.max(1, Math.pow(2, Math.ceil(-Math.log2(measureWidth / this.MIN_MEASURE_WIDTH))));
 		const startMeasure = Math.ceil(startPos / measureWidth);
 		const endMeasure = Math.floor(endPos / measureWidth);
 		
@@ -232,8 +233,8 @@ export class ViewportService { // SINGLETON
 		const endBeat = Math.ceil(endPos / beatWidth);
 
 		// SUBDIVISIONS
-		const numSubdivisions = Math.log2(beatWidth / MAX_INTERVAL_WIDTH);
-		const subdivisionWidth = (beatWidth / Math.pow(2, Math.ceil(numSubdivisions)))
+		const numSubdivisions = Math.ceil(Math.log2(beatWidth / MAX_INTERVAL_WIDTH));
+		const subdivisionWidth = (beatWidth / Math.pow(2, numSubdivisions))
 		const drawSubdivisions: boolean = (numSubdivisions > 0);
 		const startSubdivision = Math.ceil(startPos / subdivisionWidth);
 		const endSubdivision = Math.floor(endPos / subdivisionWidth);
@@ -280,7 +281,7 @@ export class ViewportService { // SINGLETON
 			}
 		}
 		if (drawSubdivisions) {
-			smallestUnit = (1.0 / this.studioState.timeSignature().N) / numSubdivisions;
+			smallestUnit = (1.0 / this.studioState.timeSignature().N) / Math.pow(2,numSubdivisions);
 
 			for (let i = startSubdivision; i <= endSubdivision; i += 1) {
 				const x = i * subdivisionWidth - startPos;
@@ -320,8 +321,8 @@ export class ViewportService { // SINGLETON
 	private drawSmallLine(ctx: CanvasRenderingContext2D, x: number, y=30, length=10) {
 		if (!ctx) return
 
-		ctx.strokeStyle = "rgba(90, 90, 90, 0.2)"
-		ctx.fillStyle = "rgba(90, 90, 90, 0.2)"
+		ctx.strokeStyle = "rgba(120, 120, 120, 0.2)"
+		ctx.fillStyle = "rgba(120, 120, 120, 0.2)"
 		ctx.lineWidth = 1
 
 		ctx.beginPath()

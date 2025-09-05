@@ -1,7 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { TrackType, MidiTrackType, AudioTrackType, Track } from "@shared/types";
 import { ChangeDetectionStrategy, Component, computed, Injector, runInInjectionContext } from "@angular/core";
-import { MidiService } from "../../services/midi.service";
 import { CabnetService, MidiTabs } from "../../services/cabnet.service";
 
 import { MatDivider } from "@angular/material/divider";
@@ -53,7 +52,6 @@ export class StudioCabnetComponent {
 	constructor (
 		injector: Injector,
 		public cabnetService: CabnetService,
-		public midiService: MidiService,
 	) {}
 
 	openHeight = 400;
@@ -62,14 +60,13 @@ export class StudioCabnetComponent {
 	get selectedTab() {return this.cabnetService.selectedTab()}
 
 	get tabOptions() {return this.cabnetService.tabOptions()}
-	tabEntries = computed(
-		() => Object.keys(this.tabOptions)
+	get tabEntries() {return () => Object.keys(this.tabOptions)
 			.filter(key => isNaN(Number(key)))
 			.map((key, index) => ({ 
 				key, 
 				value: key,
 				index 
-			})));
+			}))}
 
 
 	onTabClick(tabIndex: number) {

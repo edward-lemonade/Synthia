@@ -3,7 +3,6 @@ import { BoxSelectBounds } from "./region-select.service";
 import { CabnetService } from "./cabnet.service";
 import { MidiNote, MidiRegion } from "@shared/types";
 import { ObjectStateNode } from "../state/state.factory";
-import { MidiService } from "./midi.service";
 
 @Injectable()
 export class MidiSelectService { // SINGLETON
@@ -20,8 +19,6 @@ export class MidiSelectService { // SINGLETON
 			})
 		})
 	}
-
-	get track() { return CabnetService.instance.currentTrackNode }
 
 	// ========================================================
 	// FIELDS

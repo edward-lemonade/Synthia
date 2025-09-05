@@ -1,8 +1,6 @@
-import { computed, Injectable, Injector, runInInjectionContext, signal } from "@angular/core";
+import { computed, effect, Injectable, Injector, runInInjectionContext, signal } from "@angular/core";
 import { AudioTrackType, MidiTrackType, Track, TrackType } from "@shared/types";
 import { RegionSelectService } from "./region-select.service";
-import { TracksService } from "./tracks.service";
-import { ObjectStateNode } from "../state/state.factory";
 
 export enum MidiTabs {"MIDI Editor"=0, "Instrument"=1, "Effects"=2}
 export enum NoTabs {}
@@ -12,8 +10,21 @@ export class CabnetService { // SINGLETON
 	private static _instance: CabnetService;
 	static get instance(): CabnetService { return CabnetService._instance; }
 
-	constructor(private injector: Injector) {
+	constructor(
+		private injector: Injector
+	) {
 		CabnetService._instance = this;
+
+		runInInjectionContext(this.injector, () => {
+			effect(() => {
+				const trackType = this.trackType();
+				const selectedTrack = this.selectedTrack();
+
+				if (!selectedTrack || !(this.selectedTab()! in this.tabOptions())) {
+					this.closeCabnet();
+				}
+			});
+		});
 	}
 
 	AudioTrackType = AudioTrackType;
@@ -23,14 +34,9 @@ export class CabnetService { // SINGLETON
 	// Fields
 
 	isOpen = signal(false);
-	trackType = computed<TrackType|null>(() => {
-		return RegionSelectService.instance.selectedTrack()?.trackType() ?? null;
-	});
 	selectedTab = signal<MidiTabs|null>(null);
-	currentTrackNode = computed<ObjectStateNode<Track>|null>(() => { 
-		const track = RegionSelectService.instance.selectedTrack();
-		return track ?? null;
-	})
+	get selectedTrack() { return RegionSelectService.instance.selectedTrack ?? null; }
+	trackType = computed<TrackType|null>(() => { return RegionSelectService.instance.selectedTrack()?.trackType() ?? null });
 
 	openCabnet(tabOption: MidiTabs = 0) {
 		this.isOpen.set(true);

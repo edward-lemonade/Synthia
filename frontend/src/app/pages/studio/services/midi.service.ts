@@ -22,12 +22,23 @@ export class MidiService { // SINGLETON
 		MidiService._instance = this;
 	}
 
-	get track() {return CabnetService.instance.currentTrackNode}
+	get track() {return CabnetService.instance.selectedTrack}
 	getRegion(regionId: string): ObjectStateNode<MidiRegion> { 
 		return (this.track()?.regions.getById(regionId) as ObjectStateNode<MidiRegion>)
 	}
 
 	editingMode = signal<EditingMode>(0);
+
+	drawNoteLength = computed(() => {
+		let unit = this.viewportService.smallestUnit();
+		if (!MidiSelectService.instance) {return unit}
+
+		const selected = MidiSelectService.instance.selectedNotes();
+		if (selected.length > 0) {
+			unit = selected[0].duration();
+		}
+		return unit;
+	})
 
 	// ==============================================================================================
 	// [Draw]
@@ -37,8 +48,8 @@ export class MidiService { // SINGLETON
 	public readonly ROW_HEIGHT: number = 200/12;
 	public readonly MIN_PITCH: number = 1;
 	public readonly MAX_PITCH: number = this.SCALES * 12;
-	public getNoteLeft(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.start()); }
-	public getNoteRight(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.start()+note.duration()); }
+	public getNoteLeft(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.gp().start() + note.start()); }
+	public getNoteRight(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.gp().start() + note.start()+note.duration()); }
 	public getNoteBottom(note: ObjectStateNode<MidiNote>): number { return this.getNoteTop(note)+this.ROW_HEIGHT }
 	public getNoteTop(note: ObjectStateNode<MidiNote>): number { return this.ROW_HEIGHT * (this.SCALES*12 - note.pitch()) - 1; }
 	public pxToPitch(py: number): number { return (this.SCALES*12) - Math.ceil(py / this.ROW_HEIGHT) + 1; }
@@ -99,6 +110,7 @@ export class MidiService { // SINGLETON
 	moveNote(note: ObjectStateNode<MidiNote>, newStart: number, newPitch: number, actionId = uuid()) {
 		note.start.set(newStart, actionId);
 		note.pitch.set(newPitch, actionId);
+		const region = this.getOrMakeRegionForNote(note.start() || 0, note.duration() || 1, actionId);
 	}
 	moveNotes(notes: ObjectStateNode<MidiNote>[], startOffset: number, pitchOffset: number, actionId = uuid()) {
 		notes.forEach(note => {

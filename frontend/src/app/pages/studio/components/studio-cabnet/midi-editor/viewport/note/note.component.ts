@@ -10,7 +10,7 @@ import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.servic
 import { EditingMode, MidiService } from '@src/app/pages/studio/services/midi.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
-import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-render.service';
+import { RenderWaveformService } from '@src/app/pages/studio/services/render-waveform.service';
 import { MidiNote } from '@shared/types';
 import { ObjectStateNode } from '@src/app/pages/studio/state/state.factory';
 import { DragGhostComponent } from "./ghosts/drag-ghost.component";
@@ -70,7 +70,7 @@ export class NoteComponent {
 		public dragService: MidiDragService,
 		public viewportService: ViewportService,
 		public audioCacheService: AudioCacheService,
-		public waveformRenderService: WaveformRenderService,
+		public waveformRenderService: RenderWaveformService,
 		public regionService: RegionService,
 		public midiService: MidiService,
 		public cabnetService: CabnetService,

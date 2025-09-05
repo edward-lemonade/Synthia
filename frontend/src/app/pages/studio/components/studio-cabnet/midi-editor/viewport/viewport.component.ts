@@ -115,7 +115,7 @@ export class ViewportComponent implements AfterViewInit {
 
 	get totalWidth() { return ViewportService.instance.totalWidth() }
 	get editingMode() { return MidiService.instance.editingMode() }
-	get track() { return this.cabnetService.currentTrackNode }
+	get track() { return this.cabnetService.selectedTrack }
 	get regions() { return this.track()?.regions }
 	notes = computed(() => { return this.regions!().flatMap((region) => {return (region as ObjectStateNode<MidiRegion>).midiData()})})
 	get ghostColor() { return getRegionGhostColor2(this.track()!.color()) }
@@ -173,7 +173,7 @@ export class ViewportComponent implements AfterViewInit {
 
 		const semitones = this.midiService.pxToPitch(y);
 		const start = this.viewportService.pxToPos(x);
-		const duration = this.viewportService.smallestUnit();
+		const duration = this.midiService.drawNoteLength();
 		const velocity = 0;
 		const note: MidiNote = {
 			start: start,

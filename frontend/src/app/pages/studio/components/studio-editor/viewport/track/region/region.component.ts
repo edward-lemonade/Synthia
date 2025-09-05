@@ -1,6 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AudioRegion, MidiRegion, Region, RegionType, Track } from '@shared/types';
+import { AudioRegion, MidiNote, MidiRegion, Region, RegionType, Track } from '@shared/types';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -11,14 +11,14 @@ import { DragGhostComponent } from './ghosts/drag-ghost.component';
 import { ResizeGhostComponent } from "./ghosts/resize-ghost.component";
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
-import { StateNode } from '@src/app/pages/studio/state/state.factory';
+import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
 
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
-import { WaveformRenderService } from '@src/app/pages/studio/services/waveform-render.service';
+import { RenderWaveformService } from '@src/app/pages/studio/services/render-waveform.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
-import { MidiService } from '@src/app/pages/studio/services/midi.service';
 import { CabnetService, MidiTabs } from '@src/app/pages/studio/services/cabnet.service';
 import { hexToHsl, hslToCss } from '@src/app/utils/color';
+import { RenderMidiService } from '@src/app/pages/studio/services/render-midi.service';
 
 type ResizeHandle = 'left' | 'right' | null;
 
@@ -28,6 +28,17 @@ interface ViewportBounds {
 	startPx: number;
 	endPx: number;
 }
+
+interface MidiRenderConfig {
+	noteHeight: number;
+	minPitch: number;
+	maxPitch: number;
+	noteColors: {
+		fill: string;
+		stroke: string;
+	};
+}
+
 
 @Component({
 	selector: 'viewport-track-region',
@@ -49,8 +60,8 @@ interface ViewportBounds {
 			(mousedown)="onMouseDown($event)"
 			(mousemove)="onMouseMove($event)"
 		>
-			<div class="waveform-div">
-				<canvas #waveformCanvas class="waveform-canvas"></canvas>
+			<div class="canvas-div">
+				<canvas #canvas class="canvas"></canvas>
 			</div>
 
 			<!-- Resize handles for selected regions -->
@@ -80,15 +91,15 @@ interface ViewportBounds {
 			<div class="region-menu-content">
 				<button class="region-menu-btn" mat-menu-item (click)="openMidiEditor()" *ngIf="isMidi()">
 					<mat-icon>piano</mat-icon>
-					Open MIDI Editor
+					<p>Open MIDI Editor</p>
 				</button>
 				<button class="region-menu-btn" mat-menu-item (click)="duplicateRegion()">
 					<mat-icon>content_copy</mat-icon>
-					Duplicate Region
+					<p>Duplicate Region</p>
 				</button>
 				<button class="region-menu-btn" mat-menu-item (click)="deleteRegion()">
 					<mat-icon>delete</mat-icon>
-					Delete Region
+					<p>Delete Region</p>
 				</button>
 			</div>
 		</mat-menu>
@@ -97,12 +108,12 @@ interface ViewportBounds {
 })
 
 export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
-	@Input() track!: StateNode<Track>;
-	@Input() region!: StateNode<AudioRegion | MidiRegion>;
+	@Input() track!: ObjectStateNode<Track>;
+	@Input() region!: ObjectStateNode<AudioRegion | MidiRegion>;
 	@Input() trackIndex!: number;
 	@Input() regionIndex!: number;
 	@ViewChild("region", {static: true}) regionRef!: ElementRef<HTMLDivElement>;
-	@ViewChild('waveformCanvas', { static: true }) waveformCanvas!: ElementRef<HTMLCanvasElement>;
+	@ViewChild("canvas", { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
 
 	declare type: RegionType;
 	declare fileId: string;
@@ -120,9 +131,9 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		public dragService: RegionDragService,
 		public viewportService: ViewportService,
 		public audioCacheService: AudioCacheService,
-		public waveformRenderService: WaveformRenderService,
+		public renderWaveformService: RenderWaveformService,
+		public renderMidiService: RenderMidiService,
 		public regionService: RegionService,
-		public midiService: MidiService,
 		public cabnetService: CabnetService,
 	) {
 		effect(() => {
@@ -131,10 +142,20 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			const totalWidth = this.viewportService.totalWidth();
 			const regionDuration = this.region.duration();
 			const regionStart = this.region.start();
-			
-			if (this.type === RegionType.Audio && this.waveformCanvas?.nativeElement) {
+				
+			if (this.type === RegionType.Audio) {
 				this.scheduleWaveformRender();
+			} else if (this.type === RegionType.Midi) {
+				const notes = (this.region as ObjectStateNode<MidiRegion>).midiData();
+				notes.forEach(note => {
+					const duration = note.duration();
+					const velocity = note.velocity();
+					const start = note.start();
+					const pitch = note.pitch();
+				})
+				this.scheduleMidiRender();
 			}
+			
 		});
 	}
 
@@ -148,6 +169,9 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.region.type() === RegionType.Audio) {
 			this.setupCanvasObserver();
 			this.scheduleWaveformRender();
+		} else if (this.region.type() === RegionType.Midi) {
+			this.setupCanvasObserver();
+			this.scheduleWaveformRender();
 		}
 	}
 
@@ -158,6 +182,35 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.resizeObserver) {
 			this.resizeObserver.disconnect();
 		}
+	}
+
+	private setupCanvasObserver(): void {
+		this.resizeObserver = new ResizeObserver(() => {
+			if (this.type === RegionType.Audio) {
+				this.scheduleWaveformRender();
+			} else if (this.type === RegionType.Midi) {
+				this.scheduleMidiRender();
+			}
+		});
+
+		if (this.canvas?.nativeElement) {
+			this.resizeObserver.observe(this.canvas.nativeElement);
+		}
+	}
+
+	private getViewportBounds(): ViewportBounds {
+		const startPx = this.viewportService.posToPx(this.viewportService.measurePosX());
+		const endPx = startPx + this.viewportService.viewportWidth();
+		
+		const startTime = this.viewportService.posToTime(this.viewportService.pxToPos(startPx));
+		const endTime = this.viewportService.posToTime(this.viewportService.pxToPos(endPx));
+		
+		return {
+			startTime,
+			endTime,
+			startPx,
+			endPx
+		};
 	}
 
 	// ====================================================================================================
@@ -195,6 +248,55 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	});
 
 	// ====================================================================================================
+	// Midi
+
+	private scheduleMidiRender(): void {
+		// Cancel any pending render
+		if (this.animationFrameId) {
+			cancelAnimationFrame(this.animationFrameId);
+		}
+
+		this.animationFrameId = requestAnimationFrame(() => {
+			this.renderMidiPreview();
+			this.animationFrameId = undefined;
+		});
+	}
+
+	private renderMidiPreview(): void {
+		const viewportBounds = this.getViewportBounds();
+		const canvas = this.canvas.nativeElement;
+
+		const regionStartTime = this.viewportService.posToTime(this.region.start());
+		const regionDurationTime = this.viewportService.posToTime(this.region.duration());
+		
+		const relativeVisibleStartTime = Math.max(viewportBounds.startTime, regionStartTime) - regionStartTime;
+		const relativeVisibleEndTime = Math.min(viewportBounds.endTime, regionStartTime + regionDurationTime) - regionStartTime;
+		const startPx = this.viewportService.timeToPx(relativeVisibleStartTime);
+		const endPx = this.viewportService.timeToPx(relativeVisibleEndTime);
+
+		if (startPx >= endPx) {
+			const ctx = canvas.getContext('2d');
+			if (ctx) { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+			return;
+		}
+		
+		const midiRegion = this.region as StateNode<MidiRegion>;
+		const notes = midiRegion.midiData.snapshot();
+
+		// Render only the visible portion - now passing region bounds
+		const result = this.renderMidiService.createMidiViewport(
+			canvas,
+			notes,
+			startPx,
+			endPx,
+		);
+
+		// Update tracking variables
+		this.lastViewportBounds = viewportBounds;
+		this.lastZoomLevel = this.viewportService.measureWidth();
+	}
+
+	// ====================================================================================================
 	// Waveform
 
 	private async waitForAudioToLoad(): Promise<void> {
@@ -218,17 +320,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		});
 	}
 
-	private setupCanvasObserver(): void {
-		// Observe canvas size changes
-		this.resizeObserver = new ResizeObserver(() => {
-			this.scheduleWaveformRender();
-		});
-		
-		if (this.waveformCanvas?.nativeElement) {
-			this.resizeObserver.observe(this.waveformCanvas.nativeElement);
-		}
-	}
-
 	private scheduleWaveformRender(): void {
 		// Cancel any pending render
 		if (this.animationFrameId) {
@@ -237,28 +328,13 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 		// Schedule new render
 		this.animationFrameId = requestAnimationFrame(() => {
-			this.renderWaveformViewport();
+			this.renderWaveformPreview();
 			this.animationFrameId = undefined;
 		});
 	}
 
-	private getViewportBounds(): ViewportBounds {
-		const startPx = this.viewportService.posToPx(this.viewportService.measurePosX());
-		const endPx = startPx + this.viewportService.viewportWidth();
-		
-		const startTime = this.viewportService.posToTime(this.viewportService.pxToPos(startPx));
-		const endTime = this.viewportService.posToTime(this.viewportService.pxToPos(endPx));
-		
-		return {
-			startTime,
-			endTime,
-			startPx,
-			endPx
-		};
-	}
-
-	async renderWaveformViewport() {
-		if (!this.waveformCanvas?.nativeElement || this.type !== RegionType.Audio) {
+	async renderWaveformPreview() {
+		if (!this.canvas?.nativeElement || this.type !== RegionType.Audio) {
 			return;
 		}
 
@@ -266,7 +342,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			await this.waitForAudioToLoad();
 
 			const viewportBounds = this.getViewportBounds();
-			const canvas = this.waveformCanvas.nativeElement;
+			const canvas = this.canvas.nativeElement;
 
 			const regionStartTime = this.viewportService.posToTime(this.region.start());
 			const regionDurationTime = this.viewportService.posToTime(this.region.duration());
@@ -287,7 +363,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			const audioEndTime = audioRegion.audioStartOffset() + relativeVisibleEndTime;
 
 			// Render only the visible portion - now passing region bounds
-			const result = await this.waveformRenderService.createWaveformViewport(
+			const result = await this.renderWaveformService.createWaveformViewport(
 				this.fileId,
 				canvas,
 				audioStartTime,
@@ -407,7 +483,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		document.removeEventListener('mousemove', this.onResizeMove);
 		document.removeEventListener('mouseup', this.onResizeFinish);
 
-		this.scheduleWaveformRender();  // rerender waveform
+		this.scheduleWaveformRender();	// rerender waveform
 	};
 
 	// ====================================================================================================
