@@ -1,8 +1,8 @@
 import { computed, effect, Injectable, Injector, runInInjectionContext, signal } from "@angular/core";
-import { BoxSelectBounds } from "./region-select.service";
-import { CabnetService } from "./cabnet.service";
+import { BoxSelectBounds } from "../region-select.service";
+import { CabnetService } from "../cabnet.service";
 import { MidiNote, MidiRegion } from "@shared/types";
-import { ObjectStateNode } from "../state/state.factory";
+import { ObjectStateNode } from "../../state/state.factory";
 
 @Injectable()
 export class MidiSelectService { // SINGLETON

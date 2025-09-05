@@ -18,11 +18,12 @@ import { PlaybackService } from './services/playback.service';
 import { StudioCabnetComponent } from "./components/studio-cabnet/studio-cabnet.component";
 import { CabnetService } from './services/cabnet.service';
 import { RenderMidiService } from './services/render-midi.service';
+import { MidiSynthesizerService } from './services/midi-synthesizer.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, RenderWaveformService, PlaybackService, CabnetService, RenderMidiService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, RenderWaveformService, PlaybackService, CabnetService, RenderMidiService, MidiSynthesizerService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, Injector, Input, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
 import { MidiNote, MidiRegion } from '@shared/types';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
-import { EditingMode, MidiService } from '@src/app/pages/studio/services/midi.service';
+import { EditingMode, MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
 import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { BoxSelectBounds } from '@src/app/pages/studio/services/region-select.service';
@@ -10,8 +10,8 @@ import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { ObjectStateNode } from '@src/app/pages/studio/state/state.factory';
 import { getRegionGhostColor2 } from '@src/app/utils/color';
-import { MidiSelectService } from '@src/app/pages/studio/services/midi-select.service';
-import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.service';
+import { MidiSelectService } from '@src/app/pages/studio/services/midi-editor/midi-select.service';
+import { MidiDragService } from '@src/app/pages/studio/services/midi-editor/midi-drag.service';
 import { NoteComponent } from "./note/note.component";
 
 @Component({
@@ -101,7 +101,7 @@ export class ViewportComponent implements AfterViewInit {
 		private injector: Injector,
 		public viewportService: ViewportService,
 		public playbackService: PlaybackService,
-		public midiService: MidiService,
+		public midiService: MidiEditorService,
 		public selectService: MidiSelectService,
 		public dragService: MidiDragService,
 		public tracksService: TracksService,
@@ -114,7 +114,7 @@ export class ViewportComponent implements AfterViewInit {
 	get ROW_HEIGHT() { return this.midiService.ROW_HEIGHT };
 
 	get totalWidth() { return ViewportService.instance.totalWidth() }
-	get editingMode() { return MidiService.instance.editingMode() }
+	get editingMode() { return MidiEditorService.instance.editingMode() }
 	get track() { return this.cabnetService.selectedTrack }
 	get regions() { return this.track()?.regions }
 	notes = computed(() => { return this.regions!().flatMap((region) => {return (region as ObjectStateNode<MidiRegion>).midiData()})})

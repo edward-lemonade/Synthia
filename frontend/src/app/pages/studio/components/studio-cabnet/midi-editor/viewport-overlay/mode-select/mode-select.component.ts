@@ -1,7 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { ChangeDetectionStrategy, Component, Injector } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
-import { EditingMode, MidiService } from "@src/app/pages/studio/services/midi.service";
+import { EditingMode, MidiEditorService } from "@src/app/pages/studio/services/midi-editor/midi-editor.service";
 import { MatButtonToggleModule } from "@angular/material/button-toggle";
 
 @Component({
@@ -50,6 +50,6 @@ export class ModeSelectComponent {
 	EditingMode = EditingMode;
 
 	constructor (
-		public midiService: MidiService,
+		public midiService: MidiEditorService,
 	) {}
 }

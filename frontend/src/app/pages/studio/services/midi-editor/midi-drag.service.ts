@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
-import { ViewportService } from './viewport.service';
+import { ViewportService } from '../viewport.service';
 import { MidiNote } from '@shared/types';
-import { MidiService } from './midi.service';
+import { MidiEditorService } from './midi-editor.service';
 import { MidiSelectService } from './midi-select.service';
 
 export interface DragInfo { // in beat/measure units for X, pitch units for Y
@@ -27,7 +27,7 @@ export class MidiDragService {
 		MidiDragService._instance = this; 
 	}
 
-	get midiService() { return MidiService.instance }
+	get midiService() { return MidiEditorService.instance }
 	get selectService() { return MidiSelectService.instance }
 
 	// Drag state

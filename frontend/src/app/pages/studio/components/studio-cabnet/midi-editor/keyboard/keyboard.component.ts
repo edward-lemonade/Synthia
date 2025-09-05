@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, ViewChild } from "@angular/core";
-import { MidiService } from "@src/app/pages/studio/services/midi.service";
+import { MidiEditorService } from "@src/app/pages/studio/services/midi-editor/midi-editor.service";
 import { ViewportService } from "@src/app/pages/studio/services/viewport.service";
 
 @Component({
@@ -41,7 +41,7 @@ export class MidiEditorKeyboardComponent implements OnInit {
 
 	constructor (
 		public viewportService: ViewportService,
-		public midiService: MidiService,
+		public midiService: MidiEditorService,
 	) {}
 
 	get SCALES() { return this.midiService.SCALES };

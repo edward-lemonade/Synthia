@@ -125,7 +125,7 @@ export const MIDI_NOTE_SCAFFOLD = {
 	_type: NodeType.Object,
 	start: 		{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteTime} as PropScaffold<number>,
 	pitch: 		{_type: NodeType.Prop, value: 0, mutator: M.setMidiNotePitch} as PropScaffold<number>,
-	velocity: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteVelocity} as PropScaffold<number>,
+	velocity: 	{_type: NodeType.Prop, value: 127, mutator: M.setMidiNoteVelocity} as PropScaffold<number>,
 	duration: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteDuration} as PropScaffold<number>,
 	channel: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteChannel} as PropScaffold<number>,
 } as ObjectScaffold<MidiNote>;

@@ -5,7 +5,7 @@ import { ViewportService } from '@src/app/pages/studio/services/viewport.service
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
 import { getRegionGhostColor } from '@src/app/utils/color';
-import { MidiService } from '@src/app/pages/studio/services/midi.service';
+import { MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
 
 @Component({
 	selector: 'midi-note-resize-ghost',
@@ -32,7 +32,7 @@ export class ResizeGhostComponent {
 	constructor (
 		public viewportService: ViewportService,
 		public dragService: RegionDragService,
-		public midiService: MidiService,
+		public midiService: MidiEditorService,
 	) {}
 
 	get TOP_PX() { return this.midiService.getNoteTop(this.note); } 

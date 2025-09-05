@@ -1,25 +1,25 @@
 import { computed, Injectable, Injector, signal } from "@angular/core";
-import { RegionService } from "./region.service";
-import { BoxSelectBounds } from "./region-select.service";
-import { CabnetService } from "./cabnet.service";
+import { RegionService } from "../region.service";
+import { BoxSelectBounds } from "../region-select.service";
+import { CabnetService } from "../cabnet.service";
 import { MidiNote, MidiRegion } from "@shared/types";
-import { ObjectStateNode } from "../state/state.factory";
+import { ObjectStateNode } from "../../state/state.factory";
 import { v4 as uuid } from "uuid";
 import { MidiSelectService } from "./midi-select.service";
-import { ViewportService } from "./viewport.service";
+import { ViewportService } from "../viewport.service";
 
 export enum EditingMode {Select, Draw, Velocity, Erase}
 
 @Injectable()
-export class MidiService { // SINGLETON
-	private static _instance: MidiService;
-	static get instance(): MidiService { return MidiService._instance; }
+export class MidiEditorService { // SINGLETON
+	private static _instance: MidiEditorService;
+	static get instance(): MidiEditorService { return MidiEditorService._instance; }
 
 	constructor(
 		private injector: Injector,
 		private viewportService: ViewportService,
 	) {
-		MidiService._instance = this;
+		MidiEditorService._instance = this;
 	}
 
 	get track() {return CabnetService.instance.selectedTrack}

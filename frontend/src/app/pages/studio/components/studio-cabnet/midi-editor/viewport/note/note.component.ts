@@ -5,9 +5,9 @@ import { PlaybackService } from '@src/app/pages/studio/services/playback.service
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
-import { MidiSelectService } from '@src/app/pages/studio/services/midi-select.service';
-import { MidiDragService } from '@src/app/pages/studio/services/midi-drag.service';
-import { EditingMode, MidiService } from '@src/app/pages/studio/services/midi.service';
+import { MidiSelectService } from '@src/app/pages/studio/services/midi-editor/midi-select.service';
+import { MidiDragService } from '@src/app/pages/studio/services/midi-editor/midi-drag.service';
+import { EditingMode, MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
 import { RenderWaveformService } from '@src/app/pages/studio/services/render-waveform.service';
@@ -72,7 +72,7 @@ export class NoteComponent {
 		public audioCacheService: AudioCacheService,
 		public waveformRenderService: RenderWaveformService,
 		public regionService: RegionService,
-		public midiService: MidiService,
+		public midiService: MidiEditorService,
 		public cabnetService: CabnetService,
 	) {
 		effect(() => {
