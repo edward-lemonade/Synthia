@@ -1,0 +1,224 @@
+@use "theme" as *;	
+@use "../../../studio-vars" as *;
+@use '@angular/material' as mat;
+@use 'sass:color';
+
+
+.container {
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	height: 100%;
+
+	align-items: center;
+	justify-content: start;
+
+	border-bottom: $border-width solid $border-color;
+	background: $appbar-bg;
+	--highlight-color: #{$accent-orange};
+
+	.scroll-container {
+		height: 100%;
+		width: $cabnet-instrument-selector;
+
+		padding-left: $left-padding;
+		padding-right: $left-padding;
+		padding-top: 0px;
+		padding-bottom: 0px;
+
+		border-right: $border-width solid $border-color;
+		overflow: auto;
+
+		.instrument-options {
+			display: flex;
+			flex: 1 0;
+			flex-direction: column;
+
+			background: $app-bg;
+			width: $cabnet-instrument-selector;
+			height: 100%;
+
+			.instrument-option {
+				height: 50px;
+				width: $cabnet-instrument-selector;
+
+				font-size: 14px;
+				font-weight: 500;
+				color: $appbar-text !important;
+				background: transparent;
+				border: 1px solid transparent;
+				cursor: pointer;
+				transition: all 0.2s ease;
+				display: flex;
+				align-items: center;
+				justify-content: left;
+				padding-left: 20px;
+
+				&:hover {
+					background: $appbar-accent-1;
+					border-color: $appbar-accent-1;
+				}
+			}
+			
+			.instrument-option.selected {
+				background: rgb(255, 255, 255) !important; 
+				color: $appbar-bg !important;
+			}
+
+			&::-webkit-scrollbar {
+				width: 8px; // Width of the scrollbar
+				height: 8px; 
+			}
+			&::-webkit-scrollbar-track {
+				background: $app-bg-l; // Track background
+				border-radius: 10px;
+			}
+			&::-webkit-scrollbar-thumb {
+				background: $app-bg-ll; // Thumb color
+				border-radius: 10px;
+				
+				&:hover {
+					background: $near-white; // Hover color
+				}
+			}
+			&::-webkit-scrollbar-corner {
+				background: transparent; // Corner where scrollbars meet
+			}
+		}
+	}
+
+	.controls {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+
+		flex: 1;           /* fill remaining width */
+		min-width: 0;
+		min-height: 0;     /* prevents vertical growth */
+		height: 100%;
+
+		padding: 20px;
+		gap: 20px;
+		box-sizing: border-box;
+
+		.card {
+			display: flex;
+			flex-direction: column;
+
+			width: 150px;
+			align-items: center;
+
+			font-weight: 500;
+			background: 
+				linear-gradient(135deg, 
+					rgba(122, 122, 122, 0.1) 0%, 
+					rgba(255, 255, 255, 0.1) 100%
+				);
+			&:hover {
+				transition: background-color 0.2s ease;
+				background: 
+					linear-gradient(135deg, 
+						rgba(122, 122, 122, 0.1) 0%, 
+						rgba(255, 255, 255, 0.1) 100%
+					), #ffffff06
+			}
+			
+			color: $appbar-text !important;
+
+			.title {
+				display: flex;
+
+				height: 50px;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.value {
+				display: flex;
+
+				height: 50px;
+				justify-content: center;
+				align-items: center;
+				
+				.text-input {
+					width: 100px;
+					font-size: 1.3em;
+					color: #fff;
+					font-weight: 700;
+					border: none;
+					outline: none;
+					text-align: center;
+
+					font-family: inherit;
+					line-height: 1;
+					vertical-align: middle;
+					padding: 0;
+					margin: 0;
+
+					background: $appbar-accent-2;
+					border-radius: 4px;
+				}
+			}
+
+			.body {
+				display: flex;
+				flex: 1 0;
+				justify-content: center;
+				align-items: center;
+				
+				.slider {
+					transform: rotate(-90deg);
+					transform-origin: center;
+					width: var(--slider-height);
+					
+					@include mat.slider-overrides((
+						active-track-color: var(--highlight-color),
+						inactive-track-color: color-mix(in srgb, var(--highlight-color) 55%, transparent 45%),
+
+						handle-color: var(--highlight-color),
+						focus-handle-color: var(--highlight-color),
+						focus-state-layer-color: #{rgba(var(--highlight-color), 0.1)},
+						hover-handle-color: var(--highlight-color),
+
+						active-track-height: 5px,
+						inactive-track-height: 5px,
+					));
+					
+					// CLICKABLE HITBOX
+					::ng-deep .mdc-slider {
+						height: 50px !important;
+						min-height: 50px !important;
+					}
+					::ng-deep .mdc-slider__input {
+						height: 20px !important;
+						padding: 0 !important;
+						margin: 0 !important;
+						width: 100% !important;
+						left: 0 !important;
+						top: 50% !important;
+						transform: translateY(-50%) !important;
+					}
+
+					// RIPPLE
+					::ng-deep .mat-ripple-element {
+						width: 30px !important;
+						height: 30px !important;
+						border-radius: 15px !important;
+						top: 50% !important;
+						left: 50% !important;
+						transform: translate(-50%, -50%) !important;
+					}
+					::ng-deep .mat-ripple {
+						width: 30px !important;
+						height: 30px !important;
+						border-radius: 15px !important;
+						top: 50% !important;
+						left: 50% !important;
+						transform: translate(-50%, -50%) !important;
+					}
+				}
+			}
+		}
+	}
+}
+

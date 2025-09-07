@@ -11,6 +11,7 @@ import { PlaybackMarkerComponent } from "../viewport-overlay/playback-marker/pla
 import { PlaybackService } from '../../../services/playback.service';
 import { ObjectStateNode } from '../../../state/state.factory';
 import { Region } from '@shared/types';
+import { CabnetService } from '../../../services/cabnet.service';
 
 @Component({
 	selector: 'studio-editor-viewport',
@@ -81,6 +82,7 @@ export class ViewportComponent implements AfterViewInit {
 		public selectService: RegionSelectService,
 		public dragService: RegionDragService,
 		public playbackService: PlaybackService,
+		public cabnetService: CabnetService,
 	) {}
 
 	get tracks() { return this.stateService.state.studio.tracks }
@@ -140,9 +142,8 @@ export class ViewportComponent implements AfterViewInit {
 		this.viewportService.windowPosY.set(scrollTop);
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ===========================================================================================
 	// MOUSE EVENTS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	onMouseDown(event: MouseEvent) {
 		this.isMouseDown = true;
@@ -199,9 +200,8 @@ export class ViewportComponent implements AfterViewInit {
 		}
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ===========================================================================================
 	// BOX SELECTION
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	private getRegionsInBounds(bounds: BoxSelectBounds): ObjectStateNode<Region>[] {
 		const selectedRegions: ObjectStateNode<Region>[] = [];
@@ -259,12 +259,16 @@ export class ViewportComponent implements AfterViewInit {
 		return { left, top, width, height };
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ===========================================================================================
 	// EVENT HANDLERS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	@HostListener('document:keydown', ['$event'])
 	onKeyDown(event: KeyboardEvent) {
+		if (this.shouldIgnoreKeyEvent(event)) {	return; }
+		if (this.cabnetService.isOpen()) { return; 	}
+		event.stopPropagation();
+		event.preventDefault();
+
 		if (event.key === 'Escape') {
 			if (this.selectService.isBoxSelecting()) {
 				this.selectService.cancelBoxSelect();
@@ -290,5 +294,30 @@ export class ViewportComponent implements AfterViewInit {
 			event.preventDefault();
 			this.selectService.selectAllRegions();
 		}
+	}
+
+	private shouldIgnoreKeyEvent(event: KeyboardEvent): boolean {
+		const target = event.target as Element;
+
+		const tagName = target.tagName.toLowerCase();
+		if (tagName === 'input' || 
+			   tagName === 'textarea' || 
+			   tagName === 'select' || 
+			   target.hasAttribute('contenteditable') ||
+			   target.closest('[contenteditable]') !== null) {
+			return true;
+		}
+
+		if (event.defaultPrevented) {
+			return true;
+		}
+
+		if (target.closest('app-rotary-knob') || 
+			target.closest('mat-slider') ||
+			target.closest('mat-menu')) {
+			return true;
+		}
+		
+		return false;
 	}
 }

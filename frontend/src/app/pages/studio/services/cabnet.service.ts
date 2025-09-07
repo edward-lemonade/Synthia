@@ -2,7 +2,7 @@ import { computed, effect, Injectable, Injector, runInInjectionContext, signal }
 import { AudioTrackType, MidiTrackType, Track, TrackType } from "@shared/types";
 import { RegionSelectService } from "./region-select.service";
 
-export enum MidiTabs {"MIDI Editor"=0, "Instrument"=1, "Effects"=2}
+export enum MidiTabs {"MIDI Editor"=0, "Instrument"=1}
 export enum NoTabs {}
 
 @Injectable()

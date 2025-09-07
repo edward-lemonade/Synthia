@@ -7,17 +7,19 @@ import { MatDivider } from "@angular/material/divider";
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MidiEditorComponent } from "./midi-editor/midi-editor.component";
+import { InstrumentSelectorComponent } from "./instrument-selector/instrument-selector.component";
 
 
 @Component({
 	selector: 'app-studio-cabnet',
-	imports: [CommonModule, MatDivider, MatButtonModule, MatButtonToggleModule, MidiEditorComponent],
+	imports: [CommonModule, MatDivider, MatButtonModule, MatButtonToggleModule, MidiEditorComponent, InstrumentSelectorComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="cabnet-container" [style.height.px]="cabnetService.isOpen() ? openHeight : closedHeight">
-			<ng-container *ngIf="selectedTab == MidiTabs['MIDI Editor']">
-				<midi-editor></midi-editor>
-			</ng-container>
+			
+			<midi-editor *ngIf="selectedTab == MidiTabs['MIDI Editor']"></midi-editor>
+			
+			<instrument-selector *ngIf="selectedTab == MidiTabs['Instrument']"></instrument-selector>
 
 			<div class="tabs-row">
 				<mat-button-toggle-group class='btn-group'>
@@ -60,13 +62,13 @@ export class StudioCabnetComponent {
 	get selectedTab() {return this.cabnetService.selectedTab()}
 
 	get tabOptions() {return this.cabnetService.tabOptions()}
-	get tabEntries() {return () => Object.keys(this.tabOptions)
-			.filter(key => isNaN(Number(key)))
-			.map((key, index) => ({ 
-				key, 
-				value: key,
-				index 
-			}))}
+	tabEntries = computed(() => {return Object.keys(this.tabOptions)
+		.filter(key => isNaN(Number(key)))
+		.map((key, index) => ({ 
+			key, 
+			value: key,
+			index 
+		}))})
 
 
 	onTabClick(tabIndex: number) {

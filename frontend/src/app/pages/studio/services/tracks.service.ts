@@ -39,11 +39,11 @@ export class TracksService {
 	// ========================================================
 	// Track Operations
 
-	getTrack(key: string | number): ObjectStateNode<Track> | undefined {
+	getTrack(key: string | number): ObjectStateNode<Track> | null {
 		if (typeof key === 'string') {
-			return this.tracks.getById(key);
+			return this.tracks.getById(key) ?? null;
 		} else {
-			return this.tracks.get(key);
+			return this.tracks.get(key) ?? null;
 		}
 	}
 	addTrack(type: TrackType, overrides: Partial<Track> = {}): ObjectStateNode<Track> {

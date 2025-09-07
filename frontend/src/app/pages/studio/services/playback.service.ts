@@ -8,10 +8,18 @@ import { TracksService } from './tracks.service';
 import { ObjectStateNode } from '../state/state.factory';
 import { PlaybackMarkerComponent } from '../components/studio-editor/viewport-overlay/playback-marker/playback-marker.component';
 import { MidiSynthesizerService, MidiSource, SynthParams } from './midi-synthesizer.service';
+import { ReverbProcessor } from './synthesizers/Reverb';
 
 export interface TrackNodes {
 	gainNode: GainNode,
 	pannerNode: StereoPannerNode,
+	reverbMixNode: {
+		input: GainNode;
+		dryGain: GainNode;
+		wetGain: GainNode;
+		output: GainNode;
+		convolver: ConvolverNode | null;
+	} | null,
 	trackId: string,
 }
 
@@ -28,15 +36,16 @@ export class PlaybackService { // SINGLETON
 
 	constructor(
 		private injector: Injector,
-		private midiSynth: MidiSynthesizerService
+		private midiSynth: MidiSynthesizerService,
+		private reverbProcessor: ReverbProcessor
 	) {
 		PlaybackService._instance = this;
 		this.audioContext = new AudioContext();
 		this.masterGainNode = this.audioContext.createGain();
 		this.masterGainNode.connect(this.audioContext.destination);
-		
-		// Initialize MIDI synthesizer with our audio context
+
 		this.midiSynth.initialize(this.audioContext);
+		this.reverbProcessor.initialize(this.audioContext);
 	}
 
 	get viewportService() { return ViewportService.instance }
@@ -173,23 +182,36 @@ export class PlaybackService { // SINGLETON
 			const trackId = track._id;
 			const volume = track.volume();
 			const pan = track.pan();
+			const reverb = track.reverb();
 			const mute = track.mute();
 
 			const trackGainNode = this.audioContext.createGain();
 			const trackPannerNode = this.audioContext.createStereoPanner();
 			
+			// Create reverb mix node if reverb is enabled
+			const reverbMixNode = reverb > 0 ? this.reverbProcessor.createReverbMixNode(reverb) : null;
+			
 			const volumeLevel = mute ? 0 : volume / 100;
 			trackGainNode.gain.value = volumeLevel;
 			trackPannerNode.pan.value = pan / 100;
 			
-			// gain -> panner -> master
-			trackGainNode.connect(trackPannerNode);
+			// Connect audio chain: gain -> reverb -> panner -> master
+			if (reverbMixNode) {
+				// With reverb: gain -> reverb input -> reverb output -> panner -> master
+				trackGainNode.connect(reverbMixNode.input);
+				reverbMixNode.output.connect(trackPannerNode);
+			} else {
+				// Without reverb: gain -> panner -> master
+				trackGainNode.connect(trackPannerNode);
+			}
+			
 			trackPannerNode.connect(this.masterGainNode);
 			
 			// Store track nodes
 			this.trackNodes.set(trackId, {
 				gainNode: trackGainNode,
 				pannerNode: trackPannerNode,
+				reverbMixNode: reverbMixNode,
 				trackId: trackId,
 			});
 
@@ -198,7 +220,12 @@ export class PlaybackService { // SINGLETON
 				if (region.type() === RegionType.Audio) {
 					this.startAudioRegion(region as ObjectStateNode<AudioRegion>, trackGainNode, playbackTime);
 				} else if (region.type() === RegionType.Midi) {
-					this.startMidiRegion(region as ObjectStateNode<MidiRegion>, trackGainNode, playbackTime);
+					this.startMidiRegion(
+						region as ObjectStateNode<MidiRegion>, 
+						trackGainNode, 
+						playbackTime,
+						trackId  // Pass the trackId
+					);
 				}
 			});
 		});
@@ -242,7 +269,8 @@ export class PlaybackService { // SINGLETON
 	private startMidiRegion(
 		midiRegion: ObjectStateNode<MidiRegion>, 
 		trackGainNode: GainNode, 
-		playbackTime: number
+		playbackTime: number,
+		trackId: string  // Add trackId parameter
 	) {
 		const midiData = midiRegion.midiData.snapshot();
 		if (!midiData || midiData.length === 0) return;
@@ -250,8 +278,13 @@ export class PlaybackService { // SINGLETON
 		const regionStart = this.viewportService.posToTime(midiRegion.start());
 		const regionDuration = this.viewportService.posToTime(midiRegion.duration());
 
-		// Create MIDI source (parallel to AudioBufferSourceNode)
-		const midiSource = this.midiSynth.createMidiSource(midiData, regionStart, regionDuration);
+		// MIDI source -> gain -> reverb -> pan -> master
+		const midiSource = this.midiSynth.createMidiSource(
+			midiData, 
+			regionStart, 
+			regionDuration,
+			trackId
+		);
 		midiSource.connect(trackGainNode);
 
 		const scheduleTime = this.startAudioTime + (regionStart - playbackTime);
@@ -259,7 +292,7 @@ export class PlaybackService { // SINGLETON
 		if (scheduleTime >= this.audioContext.currentTime) {
 			midiSource.start(scheduleTime, 0, regionDuration);
 		} else {
-			// Start from middle of region (parallel to audio offset logic)
+			// Start from middle of region
 			const playOffset = playbackTime - regionStart;
 			
 			if (playOffset >= 0 && playOffset < regionDuration) {
@@ -268,12 +301,10 @@ export class PlaybackService { // SINGLETON
 			}
 		}
 
-		// Store reference (parallel to activeAudioSources)
 		this.activeMidiSources.push({
 			source: midiSource,
 			region: midiRegion
 		});
-
 	}
 
 	private stopPlayback() {
@@ -302,34 +333,9 @@ export class PlaybackService { // SINGLETON
 	}
 
 	// ==============================================================================================
-	// Midi Test
-
-
-	testMidiPlayback() {
-		const audioContext = new AudioContext();
-		if (audioContext.state === 'suspended') {
-			audioContext.resume();
-		}
-		
-		const midiSynthService = new MidiSynthesizerService();
-		midiSynthService.initialize(audioContext);
-		
-		const testNotes: MidiNote[] = [{
-			start: 0,
-			pitch: 60,
-			velocity: 100,
-			duration: 1000
-		}];
-		
-		const source = midiSynthService.createMidiSource(testNotes, 0, 2000);
-		source.connect(audioContext.destination);
-		source.start(audioContext.currentTime);
-	}
-
-	// ==============================================================================================
 	// Realtime Updates 
 
-	public updateNodeVolumeMute(trackId: string, volume: number, mute: boolean) {
+	public updateNodeVolumeMute(trackId: string, volume: number, mute?: boolean) {
 		const trackNodes = this.trackNodes.get(trackId);
 		if (!trackNodes) return;
 	
@@ -348,4 +354,65 @@ export class PlaybackService { // SINGLETON
 		trackNodes.pannerNode.pan.setTargetAtTime(panValue, this.audioContext.currentTime, 0.01);
 	}
 
+	public updateNodeReverb(trackId: string, reverb: number) {
+		const trackNodes = this.trackNodes.get(trackId);
+		if (!trackNodes) return;
+
+		// If reverb is being enabled for the first time
+		if (!trackNodes.reverbMixNode && reverb > 0) {
+			// Need to recreate the audio chain - this is complex during playback
+			// For now, we'll handle this by restarting playback if playing
+			if (this.isPlaying()) {
+				// Store current state
+				const wasPlaying = this.isPlaying();
+				const currentPos = this.playbackPos();
+				
+				// Restart playback with new reverb settings
+				this.pause();
+				setTimeout(() => {
+					this.setPlaybackPos(currentPos, true);
+					if (wasPlaying) this.play();
+				}, 10);
+			}
+			return;
+		}
+
+		// If reverb exists, update the mix levels
+		if (trackNodes.reverbMixNode) {
+			if (reverb <= 0) {
+				// Disable reverb by setting wet gain to 0 and dry gain to 1
+				trackNodes.reverbMixNode.wetGain.gain.setTargetAtTime(0, this.audioContext.currentTime, 0.01);
+				trackNodes.reverbMixNode.dryGain.gain.setTargetAtTime(1, this.audioContext.currentTime, 0.01);
+			} else {
+				// Update reverb mix levels
+				this.reverbProcessor.updateReverbMix(trackNodes.reverbMixNode, reverb, this.audioContext);
+			}
+		}
+	}
+
+	// ==============================================================================================
+	// Extras
+
+	testMidiPlayback() {
+		const audioContext = new AudioContext();
+		if (audioContext.state === 'suspended') {
+			audioContext.resume();
+		}
+		
+		const midiSynthService = new MidiSynthesizerService();
+		midiSynthService.initialize(audioContext);
+		
+		const testNotes: MidiNote[] = [{
+			start: 0,
+			pitch: 60,
+			velocity: 100,
+			duration: 1000
+		}];
+		
+		// Use a test track ID
+		const testTrackId = 'test-track-1';
+		const source = midiSynthService.createMidiSource(testNotes, 0, 2000, testTrackId);
+		source.connect(audioContext.destination);
+		source.start(audioContext.currentTime);
+	}
 }

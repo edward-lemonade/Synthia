@@ -283,7 +283,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		const midiRegion = this.region as StateNode<MidiRegion>;
 		const notes = midiRegion.midiData.snapshot();
 
-		// Render only the visible portion - now passing region bounds
 		const result = this.renderMidiService.createMidiViewport(
 			canvas,
 			notes,
@@ -291,7 +290,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			endPx,
 		);
 
-		// Update tracking variables
 		this.lastViewportBounds = viewportBounds;
 		this.lastZoomLevel = this.viewportService.measureWidth();
 	}
@@ -467,7 +465,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	};
 
 	private onResizeFinish = (event: MouseEvent) => {
-		// Commit the final size from ghost to actual region
 		const ghost = this.ghostRegion();
 		if (ghost) {
 			this.regionService.resizeRegion(this.region, ghost.start, ghost.duration);

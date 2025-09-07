@@ -63,6 +63,7 @@ export const TrackSchema = new Schema<Track>({
 	instrument: { type: String, required: false },
 	volume: { type: Number, required: true, default: 100 },
 	pan: { type: Number, required: true, default: 0 },
+	reverb: { type: Number, required: true, default: 0 },
 	mute: { type: Boolean, required: true, default: false },
 	solo: { type: Boolean, required: true, default: false },
 	effects: { type: [String], required: true, default: [] },

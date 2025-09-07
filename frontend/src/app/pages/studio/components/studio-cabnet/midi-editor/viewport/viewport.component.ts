@@ -313,6 +313,11 @@ export class ViewportComponent implements AfterViewInit {
 
 	@HostListener('document:keydown', ['$event'])
 	onKeyDown(event: KeyboardEvent) {
+		if (this.shouldIgnoreKeyEvent(event)) {	return; }
+
+		event.stopPropagation();
+		event.preventDefault();
+
 		if (event.key === 'Escape') {
 			if (this.selectService.isBoxSelecting()) {
 				this.selectService.cancelBoxSelect();
@@ -334,5 +339,29 @@ export class ViewportComponent implements AfterViewInit {
 			}
 		}
 	}
+	
+	private shouldIgnoreKeyEvent(event: KeyboardEvent): boolean {
+		const target = event.target as Element;
+
+		const tagName = target.tagName.toLowerCase();
+		if (tagName === 'input' || 
+			   tagName === 'textarea' || 
+			   tagName === 'select' || 
+			   target.hasAttribute('contenteditable') ||
+			   target.closest('[contenteditable]') !== null) {
+			return true;
+		}
+
+		if (event.defaultPrevented) {
+			return true;
+		}
+
+		if (target.closest('app-rotary-knob') || 
+			target.closest('mat-slider') ||
+			target.closest('mat-menu')) {
+			return true;
+		}
 		
+		return false;
+	}
 }

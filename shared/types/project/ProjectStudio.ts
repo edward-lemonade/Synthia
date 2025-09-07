@@ -85,11 +85,12 @@ export class Track {
 
 	trackType: TrackType = AudioTrackType.Audio;
 	regionType: RegionType = RegionType.Audio;
-	instrument?: string;
+	instrument: string = "none";
 
 	// master settings
 	volume: number = 100;
 	pan: number = 0;
+	reverb: number = 0;
 	mute: boolean = false;
 	solo: boolean = false;
 

@@ -17,6 +17,7 @@ import { StateService } from '@src/app/pages/studio/state/state.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
 import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
+import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 
 @Component({
 	selector: 'tracklist-track',
@@ -82,7 +83,7 @@ import { PlaybackService } from '@src/app/pages/studio/services/playback.service
 
 				<div class="row lower-controls">
 					<div class="volume-slider-container">
-						<mat-slider min="0" max="100" step="1" class="volume-slider" [style.--slider-color]="color()">
+						<mat-slider min="0" max="100" step="1" class="volume-slider">
 							<input matSliderThumb 
 								[(ngModel)]="volumeInput" 
 								(change)="updateVolume()"
@@ -99,8 +100,7 @@ import { PlaybackService } from '@src/app/pages/studio/services/playback.service
 						[precision]="1"
 						[size]="24"
 						[color]="color()"
-						>
-					</app-rotary-knob>
+						/>
 					
 					<mat-button-toggle-group multiple class="ms-btn-group">
 						<button 	class="ms-btn" [class.selected]="mute()" (click)="toggleMute()">M</button>
@@ -128,6 +128,7 @@ export class TrackComponent implements OnInit {
 		public viewportService : ViewportService,
 		public selectService : RegionSelectService,
 		public playbackService : PlaybackService,
+		public cabnetService : CabnetService,
 	) {
 		effect(() => {
 			this.volumeInput.set(this.track.volume());
@@ -188,6 +189,6 @@ export class TrackComponent implements OnInit {
 	}
 
 	openEditor() {
-		
+		this.cabnetService.openCabnet();
 	}
 }

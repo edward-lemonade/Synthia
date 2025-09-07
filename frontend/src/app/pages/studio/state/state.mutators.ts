@@ -52,7 +52,9 @@ export const setBpm: Mutator<number> = (val: number, node: PropStateNode<number>
 	HistoryService.instance.recordCommand(actionId, forward, reverse);
 
 	RegionService.instance.getAllRegions().forEach((regionNode) => {
-		(regionNode.duration as PropStateNode<number>).update(og => og / initial * val, actionId);
+		if ((regionNode as ObjectStateNode<Region>).type() == RegionType.Audio) {
+			(regionNode.duration as PropStateNode<number>).update(og => og / initial * val, actionId);
+		}
 	})
 }
 export const setKey: Mutator<Key> = (val: Key, node: PropStateNode<Key>, actionId) => { // simple change 
@@ -152,6 +154,13 @@ export const setTrackVolume: Mutator<number> = (val: number, node: PropStateNode
 	HistoryService.instance.recordCommand(actionId, forward, reverse);
 }
 export const setTrackPan: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
+	const initial = node();
+	const forward = () => { node._set(val); }
+	const reverse = () => { node._set(initial); }
+	forward();
+	HistoryService.instance.recordCommand(actionId, forward, reverse);
+}
+export const setTrackReverb: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
 	const initial = node();
 	const forward = () => { node._set(val); }
 	const reverse = () => { node._set(initial); }

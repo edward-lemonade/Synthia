@@ -67,6 +67,7 @@ export const TRACK_SCAFFOLD = {
 	color: 		{_type: NodeType.Prop, value: "#FFFFFF", mutator: M.setTrackColor} as PropScaffold<string>,
 	volume: 	{_type: NodeType.Prop, value: 100, mutator: M.setTrackVolume} as PropScaffold<number>,
 	pan: 		{_type: NodeType.Prop, value: 0, mutator: M.setTrackPan} as PropScaffold<number>,
+	reverb: 	{_type: NodeType.Prop, value: 0, mutator: M.setTrackReverb} as PropScaffold<number>,
 	mute: 		{_type: NodeType.Prop, value: false, mutator: M.setTrackMute} as PropScaffold<boolean>,
 	solo: 		{_type: NodeType.Prop, value: false, mutator: M.setTrackSolo} as PropScaffold<boolean>,
 	effects: 	{_type: NodeType.Prop, value: [], mutator: M.setTrackEffects} as PropScaffold<string[]>,
@@ -76,6 +77,7 @@ export const AUDIO_TRACK_SCAFFOLD = {
 	...TRACK_SCAFFOLD,
 	trackType: 	{_type: NodeType.Prop, value: AudioTrackType.Audio} as PropScaffold<AudioTrackType>,
 	regionType: {_type: NodeType.Prop, value: RegionType.Audio} as PropScaffold<RegionType>,
+	instrument: {_type: NodeType.Prop, value: "none", mutator: M.setTrackInstrument} as PropScaffold<string>,
 	regions: 	{_type: NodeType.Array, value: [], mutator: M.setTrackRegions, scaffold: (el: AudioRegion) => AUDIO_REGION_SCAFFOLD} as ArrayScaffold<AudioRegion>,
 } as ObjectScaffold<Track>;
 

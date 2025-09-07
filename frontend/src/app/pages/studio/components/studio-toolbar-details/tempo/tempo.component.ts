@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, WritableSignal, signal, effect } from '@angular/core';
 import { CommonModule, Time } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -29,8 +29,9 @@ import { StateService } from '../../../state/state.service';
 				<input
 					type="text"
 					maxlength="3"
-					[value]="bpm().toString()"
-					(input)="setBpm($event)"
+					[(ngModel)]="bpmDisplayValue"
+					(blur)="commitBpmChange($event)"
+					(keydown.enter)="commitBpmChange($event)"
 					placeholder="bpm"
 					class="bpm-number" />
 				
@@ -80,7 +81,11 @@ import { StateService } from '../../../state/state.service';
 })
 
 export class TempoComponent {
-	constructor(public stateService: StateService) {}
+	constructor(public stateService: StateService) {
+		effect(() => {
+			this.bpmDisplayValue.set(this.bpm().toString());
+		});
+	}
 
 	// METRONOME
 
@@ -92,18 +97,24 @@ export class TempoComponent {
 	// BPM
 
 	get bpm() { return this.stateService.state.studio.bpm }
-	setBpm(event: Event) {
-		const input = (event.target as HTMLInputElement).value;
-		
-		if (/^\d*$/.test(input)) {
-			let parsed = parseInt(input, 10);
-			if (isNaN(parsed)) {parsed = 0};
+	bpmDisplayValue = signal(''); // placeholder
 
-			const finalBpm = Math.min(999, Math.max(1, parsed));
-			this.bpm.set(finalBpm);
+	commitBpmChange(event: Event) {
+		const input = (event.target as HTMLInputElement).value.trim();
+
+		if (input === '') {
+			this.bpmDisplayValue.set(this.bpm().toString());
+			return;
 		}
-		
-		(event.target as HTMLInputElement).value = this.bpm().toString()
+
+		const parsed = parseFloat(input);
+		if (!isNaN(parsed)) {
+			const clampedValue = Math.min(999, Math.max(1, Math.round(parsed)));
+			this.bpm.set(clampedValue);
+			this.bpmDisplayValue.set(clampedValue.toString());
+		} else {
+			this.bpmDisplayValue.set(this.bpm().toString());
+		}
 	}
 
 	// TIME SIGNATURE
