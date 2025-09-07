@@ -142,6 +142,7 @@ export class TrackComponent implements OnInit {
 	}
 
 	ngOnInit() {
+		console.log(this.track.trackType())
 		this.iconPath = `assets/icons/${this.track.trackType()}.svg`;
 		this.trackNameInput.set(this.track.name());
 		this.volumeInput.set(this.track.volume());

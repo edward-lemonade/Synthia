@@ -266,20 +266,24 @@ export class ViewportComponent implements AfterViewInit {
 	onKeyDown(event: KeyboardEvent) {
 		if (this.shouldIgnoreKeyEvent(event)) {	return; }
 		if (this.cabnetService.isOpen()) { return; 	}
-		event.stopPropagation();
-		event.preventDefault();
 
 		if (event.key === 'Escape') {
 			if (this.selectService.isBoxSelecting()) {
 				this.selectService.cancelBoxSelect();
 				this.isMouseDown = false;
 				this.containerRef.nativeElement.classList.remove('box-selecting');
+
+				event.stopPropagation();
+				event.preventDefault();
 			}
 			
 			if (this.dragService.isDragging()) {
 				this.dragService.cancelDrag();
 				this.isMouseDown = false;
 				this.containerRef.nativeElement.classList.remove('dragging', 'drag-ready');
+
+				event.stopPropagation();
+				event.preventDefault();
 			}
 		}
 		
@@ -287,12 +291,17 @@ export class ViewportComponent implements AfterViewInit {
 			if (this.selectService.hasSelectedRegions()) {
 				this.regionService.deleteRegions(this.selectService.selectedRegions());
 				this.selectService.clearSelection();
+
+				event.stopPropagation();
+				event.preventDefault();
 			}
 		}
 
 		if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
-			event.preventDefault();
 			this.selectService.selectAllRegions();
+
+			event.stopPropagation();
+			event.preventDefault();
 		}
 	}
 

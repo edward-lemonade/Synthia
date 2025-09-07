@@ -315,20 +315,23 @@ export class ViewportComponent implements AfterViewInit {
 	onKeyDown(event: KeyboardEvent) {
 		if (this.shouldIgnoreKeyEvent(event)) {	return; }
 
-		event.stopPropagation();
-		event.preventDefault();
-
 		if (event.key === 'Escape') {
 			if (this.selectService.isBoxSelecting()) {
 				this.selectService.cancelBoxSelect();
 				this.isMouseDown = false;
 				this.containerRef.nativeElement.classList.remove('box-selecting');
+
+				event.stopPropagation();
+				event.preventDefault();
 			}
 			
 			if (this.dragService.isDragging()) {
 				this.dragService.cancelDrag();
 				this.isMouseDown = false;
 				this.containerRef.nativeElement.classList.remove('dragging', 'drag-ready');
+
+				event.stopPropagation();
+				event.preventDefault();
 			}
 		}
 		
@@ -336,6 +339,9 @@ export class ViewportComponent implements AfterViewInit {
 			if (this.selectService.hasSelectedNotes()) {
 				this.midiService.deleteNotes(this.selectService.selectedNotes());
 				this.selectService.clearSelection();
+
+				event.stopPropagation();
+				event.preventDefault();
 			}
 		}
 	}

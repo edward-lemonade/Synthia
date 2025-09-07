@@ -2,13 +2,15 @@ import { Injectable, signal, computed, effect, Injector, runInInjectionContext }
 import { StateService } from '../state/state.service';
 import { ViewportService } from './viewport.service';
 import { AudioCacheService } from './audio-cache.service';
-import { AudioRegion, MidiNote, MidiRegion, Region, RegionType } from '@shared/types';
+import { AudioRegion, MidiNote, MidiRegion, Region, RegionType, Track } from '@shared/types';
 import { RegionService } from './region.service';
 import { TracksService } from './tracks.service';
 import { ObjectStateNode } from '../state/state.factory';
 import { PlaybackMarkerComponent } from '../components/studio-editor/viewport-overlay/playback-marker/playback-marker.component';
 import { MidiSynthesizerService, MidiSource, SynthParams } from './midi-synthesizer.service';
 import { ReverbProcessor } from './synthesizers/Reverb';
+import { AudioRecording, AudioRecordingService } from './audio-recording.service';
+import { RegionSelectService } from './region-select.service';
 
 export interface TrackNodes {
 	gainNode: GainNode,
@@ -65,6 +67,8 @@ export class PlaybackService { // SINGLETON
 	playbackPos = signal(0);
 	playbackTime = computed(() => ViewportService.instance.posToTime(this.playbackPos()));
 	playbackPx = computed(() => ViewportService.instance.posToPx(this.playbackPos()));
+	basePos = signal(0);
+	deltaPos = signal(0);
 
 	setPlaybackPos(pos: number, dontSnap = false, viewportService: ViewportService = ViewportService.instance) { 
 		const wasPlaying = this.isPlaying();
@@ -94,7 +98,6 @@ export class PlaybackService { // SINGLETON
 
 	private startClockTime = 0;
 	private startAudioTime = 0;
-	private basePos = 0;
 
 	// ==============================================================================================
 	// Control
@@ -113,6 +116,18 @@ export class PlaybackService { // SINGLETON
 		this.stopPlaybackLineAnim();
 		this.stopPlayback();
 		await this.audioContext.suspend()
+	}
+
+	async toggleRecording(): Promise<AudioRecording | void> {
+		if (AudioRecordingService.instance.isRecording()) {
+			this.pause();
+			this.setPlaybackPos(this.basePos());
+			return await AudioRecordingService.instance.stopRecording();
+		} else {
+			this.play();
+			await AudioRecordingService.instance.startRecording();
+			return; 
+		}
 	}
 
 	moveForward() {
@@ -134,7 +149,8 @@ export class PlaybackService { // SINGLETON
 
 		this.startClockTime = performance.now();
 		this.startAudioTime = this.audioContext.currentTime;
-		this.basePos = this.playbackPos();
+		this.basePos.set(this.playbackPos());
+		this.deltaPos.set(0);
 
 		const playbackLine = this.playbackLineRef?.deref(); 
 		const playbackLineMidiEditor = this.playbackLineMidiEditorRef?.deref(); 
@@ -143,10 +159,11 @@ export class PlaybackService { // SINGLETON
 			if (!this.isPlaying()) return;
 
 			const elapsedSec = (now - this.startClockTime) / 1000;
-			const pos = this.viewportService.timeToPos(elapsedSec);
+			const deltaPos = this.viewportService.timeToPos(elapsedSec);
+			this.deltaPos.set(deltaPos);
 
-			if (playbackLine) {playbackLine.updateTransform(pos)};
-			if (playbackLineMidiEditor) {playbackLineMidiEditor.updateTransform(pos)};
+			if (playbackLine) {playbackLine.updateTransform(deltaPos)};
+			if (playbackLineMidiEditor) {playbackLineMidiEditor.updateTransform(deltaPos)};
 
 			requestAnimationFrame(step);
 		};
@@ -156,10 +173,11 @@ export class PlaybackService { // SINGLETON
 
 	private async stopPlaybackLineAnim() {
 		const now = performance.now();
-		const elapsedSec = (now - this.startClockTime) / 1000;
-		const pos = this.basePos + this.viewportService.timeToPos(elapsedSec);
 
-		this.setPlaybackPos(pos, true);
+		const elapsedSec = (now - this.startClockTime) / 1000;
+		const deltaPos = this.viewportService.timeToPos(elapsedSec);
+
+		this.setPlaybackPos(this.basePos() + deltaPos, true);
 
 		const playbackLine = this.playbackLineRef?.deref(); 
 		const playbackLineMidiEditor = this.playbackLineMidiEditorRef?.deref(); 

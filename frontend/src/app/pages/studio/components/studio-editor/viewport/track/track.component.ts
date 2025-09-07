@@ -13,6 +13,8 @@ import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
+import { AudioRecordingService } from '@src/app/pages/studio/services/audio-recording.service';
+import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
 
 @Component({
 	selector: 'viewport-track',
@@ -28,12 +30,18 @@ import { RegionService } from '@src/app/pages/studio/services/region.service';
 
 			<viewport-track-region 
 				*ngFor="let region of track.regions(); let i = index"
-				
 				[track]="track"
 				[region]="region"
 				[trackIndex]="index"
 				[regionIndex]="i"
 			/>
+
+			<div *ngIf="this.recordingService.recordingTrack() == track && recordingService.isRecording() && playbackService.isPlaying()" 
+				class="recording-progress"
+				[style.left.px]="recordingStartPx()"
+				[style.width.px]="recordingWidthPx()">
+			</div>
+
 		</div>
 
 		<mat-menu #menu [class]="'track-menu'">
@@ -59,8 +67,26 @@ export class TrackComponent{
 		public selectService : RegionSelectService,
 		public dragService : RegionDragService,
 		public tracksService : TracksService,
-		public regionService : RegionService
+		public regionService : RegionService,
+		public recordingService : AudioRecordingService,
+		public playbackService : PlaybackService
 	) {}
+
+	recordingStartPx = computed(() => {
+		if (!this.recordingService.isRecording()) return 0;
+		return this.viewportService.posToPx(this.playbackService.basePos());
+	});
+	recordingWidthPx = computed(() => {
+		console.log(this.recordingService.isRecording())
+		if (!this.recordingService.isRecording()) return 0;
+		
+		const deltaPos = this.playbackService.deltaPos();
+		const width = this.viewportService.posToPx(deltaPos);
+		console.log(width);
+		
+		return Math.max(0, width); // Ensure width is never negative
+	});
+
 	
 	color = computed(() => this.track.color);
 	colorSelectedBg = computed(() => this.selectService.selectedTrackBgColor(this.track.color()));

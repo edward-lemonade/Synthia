@@ -25,7 +25,7 @@ import { ViewportService } from '../../../services/viewport.service';
 				<button class="add-track-menu-btn" (click)="onAddAudioTrack()">
 					<p>Audio File</p>
 				</button>
-				<button class="add-track-menu-btn" (click)="onAddTrack(AudioTrackType.Audio)">
+				<button class="add-track-menu-btn" (click)="onAddTrack(AudioTrackType.Microphone)">
 					<p>Microphone</p>
 				</button>
 				<button class="add-track-menu-btn" (click)="onAddTrack(MidiTrackType.Drums)">
@@ -62,7 +62,11 @@ export class TracklistHeaderComponent {
 	) {}
 
 	onAddTrack(type: TrackType) {
-		this.tracksService.addTrack(type);
+		const trackName = 
+			type == MidiTrackType.Instrument ? "Instrument" :
+			type == MidiTrackType.Drums ? "Drums" :
+			type == AudioTrackType.Microphone ? "Mic" : ""
+		this.tracksService.addTrack(type, {name: trackName});
 	}
 
 	onAddAudioTrack() {
@@ -78,7 +82,6 @@ export class TracklistHeaderComponent {
 			
 			try {
 				this.tracksService.addNewAudioTrack(file);
-				
 			} catch (error) {
 				console.error('Failed to create audio track:', error);
 			}

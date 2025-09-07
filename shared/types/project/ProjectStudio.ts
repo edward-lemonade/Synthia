@@ -2,7 +2,7 @@ import { TimeSignature } from '../studio/TimeSignature';
 import { Key } from '../studio/Key';
 
 export enum RegionType { Audio="audio", Midi="midi" }
-export enum AudioTrackType { Audio="audio", Microphone="midi" }
+export enum AudioTrackType { Audio="audio", Microphone="microphone" }
 export enum MidiTrackType { Instrument="instrument", Drums="drums" }
 export type TrackType = AudioTrackType | MidiTrackType
 

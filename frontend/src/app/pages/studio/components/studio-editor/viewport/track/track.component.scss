@@ -18,6 +18,31 @@
 
 	background-color: transparent;
 	border-bottom: $border-width solid rgba($border-color, 0.07);
+
+	.recording-progress {
+		position: absolute;
+		top: 0;
+		height: 100%;
+		background: linear-gradient(90deg, 
+			rgba(255, 0, 0, 0.3) 0%, 
+			rgba(255, 0, 255, 0.3) 100%
+		);
+		border: 1px solid rgba(255, 0, 0, 0.5);
+		border-radius: 10px;
+		pointer-events: none; 
+		z-index: 10;
+
+		animation: recording-pulse 1s ease-in-out infinite alternate;
+	}
+
+	@keyframes recording-pulse {
+		0% {
+			opacity: 0.6;
+		}
+		100% {
+			opacity: 0.9;
+		}
+	}
 }
 
 

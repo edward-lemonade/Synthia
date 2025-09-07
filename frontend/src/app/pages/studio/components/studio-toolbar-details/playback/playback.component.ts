@@ -1,40 +1,51 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDivider } from '@angular/material/divider';
 import { MatIcon } from '@angular/material/icon';
 import { PlaybackService } from '../../../services/playback.service';
+import { AudioRecordingService, AudioRecording } from '../../../services/audio-recording.service';
+import { RegionService } from '../../../services/region.service';
+import { RegionSelectService } from '../../../services/region-select.service';
+import { AudioCacheService } from '../../../services/audio-cache.service';
+import { AudioRegion, RegionType } from '@shared/types';
+import { ViewportService } from '../../../services/viewport.service';
 
 @Component({
 	selector: 'studio-toolbar-details-playback',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, MatDivider, MatIcon],
+	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, MatDivider, MatIcon, MatTooltipModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-button-toggle-group class='btn-group'>
 			<button 
-				class="btn back"
+				class="btn"
+				[disabled]="recordingService.isRecording()"
 				(click)="playbackService.moveBackward()">
 				<mat-icon>fast_rewind</mat-icon>
 			</button>
 			
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				class="btn forward"
+				class="btn"
+				[disabled]="recordingService.isRecording()"
 				(click)="playbackService.moveForward()">
 				<mat-icon>fast_forward</mat-icon>
 			</button>
 
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				class="btn play"
+				class="btn"
+				[disabled]="recordingService.isRecording()"
 				*ngIf="!playbackService.isPlaying()" 
 				(click)="playbackService.play()">
 				<mat-icon>play_arrow</mat-icon>
 			</button>
 			<button 
-				class="btn pause"
+				class="btn"
+				[disabled]="recordingService.isRecording()"
 				*ngIf="playbackService.isPlaying()" 
 				(click)="playbackService.pause()">
 				<mat-icon>pause</mat-icon>
@@ -42,22 +53,98 @@ import { PlaybackService } from '../../../services/playback.service';
 
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				class="btn beginning"
+				class="btn"
+				[disabled]="recordingService.isRecording()"
 				(click)="playbackService.moveBeginning()">
 				<mat-icon>skip_previous</mat-icon>
 			</button>
 
 			<mat-divider class="divider" [vertical]="true"></mat-divider>
 			<button 
-				class="btn record">
-				<mat-icon style="color: rgb(192, 56, 79)" >circle</mat-icon>
+				class="btn record-btn"
+				[class.recording]="recordingService.isRecording()"
+				[disabled]="recordingService.isProcessing() || recordingDisabled()"
+				(click)="toggleRecording()"
+				matTooltip="An audio/microphone track must be selected."
+				[matTooltipDisabled]="!recordingDisabled()"
+ 				matTooltipPosition="below"
+  				>
+				<mat-icon 
+					[style.color]="recordIconColor()"
+					[class.pulsing]="recordingService.isRecording()">
+					{{ recordIcon() }}
+				</mat-icon>
 			</button>
 		</mat-button-toggle-group>
 	`,
 	styleUrl: './playback.component.scss'
 })
-export class PlaybackComponent {
+export class PlaybackComponent implements OnDestroy {
+	recordingDisabled = computed(() => 
+		!this.recordingService.isSupported() || 
+		!this.selectService.selectedTrack() || 
+		this.selectService.selectedTrack()!.regionType() != RegionType.Audio
+	);
+
+	recordIconColor = computed(() => {
+		if (this.recordingService.isProcessing()) return 'rgb(255, 193, 7)'; // Yellow for processing
+		if (this.recordingService.isRecording()) return 'rgb(192, 56, 79)'; // Red for recording
+		else return 'rgb(192, 56, 79)';
+	});
+	recordIcon = computed(() => {
+		if (this.recordingService.isProcessing()) return 'hourglass_empty';
+		if (this.recordingService.isRecording()) return 'square'; // Red for recording
+		return 'circle';
+	});
+
 	constructor(
 		public playbackService: PlaybackService,
+		public regionService: RegionService,
+		public selectService: RegionSelectService,
+		public recordingService: AudioRecordingService,
+		public audioCacheService: AudioCacheService,
+		public viewportService: ViewportService,
 	) {}
+
+	ngOnDestroy(): void {
+		this.recordingService.destroy();
+	}
+
+	async toggleRecording(): Promise<void> {
+		if (this.recordingDisabled()) {
+			return;
+		}
+
+		try {
+			const recordingData = await this.playbackService.toggleRecording();
+			
+			if (recordingData) {
+				this.handleRecordingComplete(recordingData);
+			}
+		} catch (error) {
+			console.error('Error toggling recording:', error);
+		}
+	}
+
+	private async handleRecordingComplete(recordingData: AudioRecording) {
+		console.log('Recording completed:', {
+			duration: recordingData.duration,
+			size: recordingData.blob.size,
+			type: recordingData.mimeType
+		});
+		const cachedAudioFile = await this.audioCacheService.addAudioFile(this.recordingService.recordingToFile(recordingData));
+
+		const durationInMeasures = this.viewportService.timeToPos(cachedAudioFile.duration);
+		const regionProps : Partial<AudioRegion> = {
+			fileId: cachedAudioFile.fileId,
+			start: this.playbackService.playbackPos(),
+			duration: durationInMeasures,
+			fullStart: 0,
+			fullDuration: durationInMeasures,
+			audioStartOffset: 0,
+			audioEndOffset: cachedAudioFile.duration,
+		}
+		this.regionService.addAudioRegion(this.recordingService.recordingTrack()!, regionProps);
+	}
+
 }

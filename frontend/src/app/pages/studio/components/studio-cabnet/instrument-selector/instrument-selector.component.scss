@@ -14,7 +14,6 @@
 	justify-content: start;
 
 	border-bottom: $border-width solid $border-color;
-	background: $appbar-bg;
 	--highlight-color: #{$accent-orange};
 
 	.scroll-container {
@@ -27,16 +26,17 @@
 		padding-bottom: 0px;
 
 		border-right: $border-width solid $border-color;
-		overflow: auto;
+
+		overflow-y: auto;
+		overflow-x: hidden;
 
 		.instrument-options {
 			display: flex;
 			flex: 1 0;
 			flex-direction: column;
 
-			background: $app-bg;
+			background: $appbar-bg;
 			width: $cabnet-instrument-selector;
-			height: 100%;
 
 			.instrument-option {
 				height: 50px;
@@ -59,31 +59,30 @@
 					border-color: $appbar-accent-1;
 				}
 			}
-			
 			.instrument-option.selected {
-				background: rgb(255, 255, 255) !important; 
+				background: $appbar-text !important; 
 				color: $appbar-bg !important;
 			}
+		}
 
-			&::-webkit-scrollbar {
-				width: 8px; // Width of the scrollbar
-				height: 8px; 
+		&::-webkit-scrollbar {
+			width: 8px; // Width of the scrollbar
+			height: 8px; 
+		}
+		&::-webkit-scrollbar-track {
+			background: $app-bg-l; // Track background
+			border-radius: 10px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background: $app-bg-ll; // Thumb color
+			border-radius: 10px;
+			
+			&:hover {
+				background: $near-white; // Hover color
 			}
-			&::-webkit-scrollbar-track {
-				background: $app-bg-l; // Track background
-				border-radius: 10px;
-			}
-			&::-webkit-scrollbar-thumb {
-				background: $app-bg-ll; // Thumb color
-				border-radius: 10px;
-				
-				&:hover {
-					background: $near-white; // Hover color
-				}
-			}
-			&::-webkit-scrollbar-corner {
-				background: transparent; // Corner where scrollbars meet
-			}
+		}
+		&::-webkit-scrollbar-corner {
+			background: transparent; // Corner where scrollbars meet
 		}
 	}
 

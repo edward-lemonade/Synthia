@@ -85,7 +85,7 @@ export const MIDI_TRACK_SCAFFOLD = {
 	...TRACK_SCAFFOLD,
 	trackType: 	{_type: NodeType.Prop, value: MidiTrackType.Instrument} as PropScaffold<MidiTrackType>,
 	regionType: {_type: NodeType.Prop, value: RegionType.Midi} as PropScaffold<RegionType>,
-	instrument: {_type: NodeType.Prop, value: "none", mutator: M.setTrackInstrument} as PropScaffold<string>,
+	instrument: {_type: NodeType.Prop, value: "Golden Synth", mutator: M.setTrackInstrument} as PropScaffold<string>,
 	regions: 	{_type: NodeType.Array, value: [], mutator: M.setTrackRegions, scaffold: (el: MidiRegion) => MIDI_REGION_SCAFFOLD} as ArrayScaffold<MidiRegion>,
 } as ObjectScaffold<Track>;
 
