@@ -6,8 +6,8 @@ import { ViewportService } from "./viewport.service";
 
 interface MidiRenderOptions {
 	noteHeight: number;
-	minPitch: number;
-	maxPitch: number;
+	minMidiNote: number;
+	maxMidiNote: number;
 	noteColors: {
 		fill: string;
 		stroke: string;
@@ -16,8 +16,8 @@ interface MidiRenderOptions {
 
 const DEFAULT_RENDER_OPTIONS: MidiRenderOptions = {
 	noteHeight: 2,
-	minPitch: 21, // A0
-	maxPitch: 108, // C8
+	minMidiNote: 21, // A0
+	maxMidiNote: 108, // C8
 	noteColors: {
 		fill: 'rgba(255, 255, 255, 0.8)',
 		stroke: 'rgba(255, 255, 255, 1)'
@@ -52,14 +52,14 @@ export class RenderMidiService {
 			return;
 		}
 
-		const pitchRange = this.calculatePitchRange(midiNotes);
+		const midiNoteRange = this.calculateMidiNoteRange(midiNotes);
 
 		const finalOptions = {...DEFAULT_RENDER_OPTIONS, ...options};
 		midiNotes.forEach(note => {
 			this.renderMidiNote(
 				ctx, 
 				note, 
-				pitchRange, 
+				midiNoteRange, 
 				startPx,
 				canvas.width, 
 				heightPx,
@@ -99,25 +99,25 @@ export class RenderMidiService {
 		return ctx;
 	}
 
-	private calculatePitchRange(midiNotes: MidiNote[]): { min: number; max: number } {
+	private calculateMidiNoteRange(midiNotes: MidiNote[]): { min: number; max: number } {
 		if (midiNotes.length === 0) {
 			return { min: 60, max: 72 }; 
 		}
 
-		let minPitch = Math.min(...midiNotes.map(note => note.pitch));
-		let maxPitch = Math.max(...midiNotes.map(note => note.pitch));
+		let minMidiNote = Math.min(...midiNotes.map(note => note.midiNote));
+		let maxMidiNote = Math.max(...midiNotes.map(note => note.midiNote));
 
-		const padding = Math.max(1, (maxPitch - minPitch) * 0.1);
-		minPitch = Math.max(21, minPitch - padding); // A0
-		maxPitch = Math.min(108, maxPitch + padding); // C8
+		const padding = Math.max(1, (maxMidiNote - minMidiNote) * 0.1);
+		minMidiNote = Math.max(21, minMidiNote - padding); // A0
+		maxMidiNote = Math.min(108, maxMidiNote + padding); // C8
 		
-		return { min: minPitch, max: maxPitch };
+		return { min: minMidiNote, max: maxMidiNote };
 	}
 	
 	private renderMidiNote(
 		ctx: CanvasRenderingContext2D,
 		note: MidiNote,
-		pitchRange: { min: number; max: number },
+		midiNoteRange: { min: number; max: number },
 		regionStartPx: number,
 		canvasWidth: number,
 		canvasHeight: number,
@@ -128,10 +128,10 @@ export class RenderMidiService {
 
 		const noteWidthPx = Math.max(1, noteEnd - noteStart);
 
-		// Calculate vertical position based on pitch
-		const pitchNormalized = (note.pitch - pitchRange.min) / (pitchRange.max - pitchRange.min);
-		const noteY = canvasHeight - (pitchNormalized * canvasHeight);
-		const noteHeight = Math.max(1, Math.min(options.noteHeight, canvasHeight / (pitchRange.max - pitchRange.min + 1)));
+		// Calculate vertical position based on midiNote
+		const midiNoteNormalized = (note.midiNote - midiNoteRange.min) / (midiNoteRange.max - midiNoteRange.min);
+		const noteY = canvasHeight - (midiNoteNormalized * canvasHeight);
+		const noteHeight = Math.max(1, Math.min(options.noteHeight, canvasHeight / (midiNoteRange.max - midiNoteRange.min + 1)));
 
 		// Apply velocity to opacity/brightness
 		const velocityNormalized = note.velocity / 127;

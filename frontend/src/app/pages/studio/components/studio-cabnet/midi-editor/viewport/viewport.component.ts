@@ -171,13 +171,15 @@ export class ViewportComponent implements AfterViewInit {
 		const x = this.viewportService.mouseXToPx(event.clientX);
 		const y = this.viewportService.mouseYToPx(event.clientY);
 
-		const semitones = this.midiService.pxToPitch(y);
-		const start = this.viewportService.pxToPos(x);
+		const midiNote = this.midiService.pxToMidiNote(y);
+		const start = this.viewportService.snapToGrid() ?
+			this.viewportService.pxToPos(x - this.viewportService.posToPx(this.viewportService.smallestUnit())) :
+			this.viewportService.pxToPos(x)
 		const duration = this.midiService.drawNoteLength();
 		const velocity = 0;
 		const note: MidiNote = {
 			start: start,
-			pitch: semitones,
+			midiNote: midiNote,
 			velocity: velocity,
 			duration: duration,
 		}
@@ -222,8 +224,8 @@ export class ViewportComponent implements AfterViewInit {
 
 		if (this.dragService.isDragging()) {
 			const mousePosX = this.viewportService.pxToPos(currentMouseX, false);
-			const pitch = this.midiService.pxToPitch(currentMouseY);
-			this.dragService.updateDrag(mousePosX, pitch);
+			const midiNote = this.midiService.pxToMidiNote(currentMouseY);
+			this.dragService.updateDrag(mousePosX, midiNote);
 		} else if (this.selectService.isBoxSelecting()) {
 			this.selectService.updateBoxSelect(currentMouseX, currentMouseY);
 		}
@@ -268,10 +270,10 @@ export class ViewportComponent implements AfterViewInit {
 		};
 
 		notes().forEach((note, noteIndex) => {
-			const noteTop = this.getNoteTop(note);
-			const noteBottom = this.getNoteBottom(note);
-			const noteLeft = this.getNoteLeft(note);
-			const noteRight = this.getNoteRight(note);
+			const noteTop = this.midiService.getNoteTop(note);
+			const noteBottom = this.midiService.getNoteBottom(note);
+			const noteLeft = this.midiService.getNoteLeft(note);
+			const noteRight = this.midiService.getNoteRight(note);
 
 			if (this.boundsIntersect(
 				normalizedBounds.left, normalizedBounds.right,
@@ -290,11 +292,6 @@ export class ViewportComponent implements AfterViewInit {
 	private boundsIntersect(start1: number, end1: number, start2: number, end2: number): boolean {
 		return start1 <= end2 && end1 >= start2;
 	}
-
-	public getNoteLeft(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.start()); }
-	public getNoteRight(note: ObjectStateNode<MidiNote>): number { return this.viewportService.posToPx(note.start()+note.duration()); }
-	public getNoteBottom(note: ObjectStateNode<MidiNote>): number { return this.getNoteTop(note)+this.ROW_HEIGHT }
-	public getNoteTop(note: ObjectStateNode<MidiNote>): number { return this.ROW_HEIGHT * (this.SCALES*12 - note.pitch()); }
 
 	boxOverlayStyle() {
 		const bounds = this.selectService.getNormalizedBoxBounds();

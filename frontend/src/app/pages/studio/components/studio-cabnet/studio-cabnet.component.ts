@@ -1,34 +1,32 @@
 import { CommonModule } from "@angular/common";
 import { TrackType, MidiTrackType, AudioTrackType, Track } from "@shared/types";
 import { ChangeDetectionStrategy, Component, computed, Injector, runInInjectionContext } from "@angular/core";
-import { CabnetService, MidiTabs } from "../../services/cabnet.service";
+import { CabnetService } from "../../services/cabnet.service";
 
 import { MatDivider } from "@angular/material/divider";
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MidiEditorComponent } from "./midi-editor/midi-editor.component";
-import { InstrumentSelectorComponent } from "./instrument-selector/instrument-selector.component";
-
+import { MIDI_DRUM_MAPPING } from "../../services/synths/presets/drums";
 
 @Component({
 	selector: 'app-studio-cabnet',
-	imports: [CommonModule, MatDivider, MatButtonModule, MatButtonToggleModule, MidiEditorComponent, InstrumentSelectorComponent],
+	imports: [CommonModule, MatDivider, MatButtonModule, MatButtonToggleModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="cabnet-container" [style.height.px]="cabnetService.isOpen() ? openHeight : closedHeight">
 			
-			<midi-editor *ngIf="selectedTab == MidiTabs['MIDI Editor']"></midi-editor>
-			
-			<instrument-selector *ngIf="selectedTab == MidiTabs['Instrument']"></instrument-selector>
+			<div class="outlet">
+				<ng-container *ngComponentOutlet="cabnetService.selectedTabComponent()"></ng-container>
+			</div>
 
 			<div class="tabs-row">
 				<mat-button-toggle-group class='btn-group'>
 					<ng-container *ngFor="let tab of tabEntries(); let i = index">
 						<button 
 							class="btn"
-							[class.selected]="selectedTab === i"
-							(click)="onTabClick(i)">
-							{{ tab.value }}
+							[class.selected]="selectedTabIndex === tab.index"
+							(click)="onTabClick(tab.index)">
+							{{ tab.name }}
 						</button>
 						
 						<mat-divider 
@@ -48,8 +46,6 @@ import { InstrumentSelectorComponent } from "./instrument-selector/instrument-se
 export class StudioCabnetComponent {
 	MidiTrackType = MidiTrackType;
 	AudioTrackType = AudioTrackType;
-	
-	MidiTabs = MidiTabs;
 
 	constructor (
 		injector: Injector,
@@ -59,23 +55,17 @@ export class StudioCabnetComponent {
 	openHeight = 400;
 	closedHeight = 40;
 
-	get selectedTab() {return this.cabnetService.selectedTab()}
-
+	get selectedTabIndex() {return this.cabnetService.selectedTabIndex()}
 	get tabOptions() {return this.cabnetService.tabOptions()}
-	tabEntries = computed(() => {return Object.keys(this.tabOptions)
-		.filter(key => isNaN(Number(key)))
-		.map((key, index) => ({ 
-			key, 
-			value: key,
-			index 
-		}))})
+	tabEntries = computed(() => {return this.tabOptions.map((v,i) => this.cabnetService.TABS[v])})
 
 
 	onTabClick(tabIndex: number) {
-		if (this.cabnetService.selectedTab() === tabIndex && this.cabnetService.isOpen()) {
+		if (this.cabnetService.selectedTabIndex() === tabIndex && this.cabnetService.isOpen()) {
 			this.cabnetService.closeCabnet();
 		} else {
 			this.cabnetService.openCabnet(tabIndex);
+			console.log(MIDI_DRUM_MAPPING)
 		}
 	}
 }

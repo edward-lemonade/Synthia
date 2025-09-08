@@ -9,37 +9,26 @@ import { ViewportService } from "../../../services/viewport.service";
 import { CabnetService } from "../../../services/cabnet.service";
 
 import { SYNTHS } from "../../../services/synths/presets/instruments";
+import { RotaryKnobComponent } from "@src/app/components/rotary-knob/rotary-knob.component";
 import { PlaybackService } from "../../../services/playback.service";
 import { FormsModule } from "@angular/forms";
 import { MatSliderModule } from "@angular/material/slider";
-import { ControlsComponent } from "../instrument-controls/controls/controls.component";
+import { ControlsComponent } from "./controls/controls.component";
 
 
 @Component({
-	selector: 'instrument-selector',
+	selector: 'instrument-controls',
 	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, FormsModule, MatCardModule, MatSliderModule, ControlsComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<div class="container" [style.--highlight-color]="color()">
-			<div class="scroll-container">
-				<div class="instrument-options">
-					<ng-container *ngFor="let synthName of synthKeys; let i = index">
-						<button
-							class="instrument-option"
-							[class.selected]="selectedInstrument && synthName == selectedInstrument"
-							(click)="onSelect(synthName)">
-							<p>{{synthName}}</p>
-						</button>
-					</ng-container>
-				</div>
-			</div>
+		<div class="container">
 			<controls/>
 		</div>
 	`,
-	styleUrl: './instrument-selector.component.scss'
+	styleUrl: './instrument-controls.component.scss'
 })
 
-export class InstrumentSelectorComponent {
+export class InstrumentControlsComponent {
 	declare synthKeys: string[];
 
 	constructor(
@@ -51,14 +40,9 @@ export class InstrumentSelectorComponent {
 	}
 
 	get track() { return this.cabnetService?.selectedTrack() ?? null }
-	get selectedInstrument() { return this.track!.instrument() }
 
 	// =======================================================================
-	// Selector
-
-	onSelect(synthName: string) {
-		this.track?.instrument.set(synthName);
-	}
+	// Volume Control
 
 	color = computed(() => this.track!.color());
 }

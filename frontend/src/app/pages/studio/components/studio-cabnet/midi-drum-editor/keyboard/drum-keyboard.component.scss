@@ -20,10 +20,6 @@
 	&::-webkit-scrollbar { display: none; }
 	scrollbar-width: none;
 	-ms-overflow-style: none;
-
-	.keyboard-content {
-
-	}
 }
 
 .key {
@@ -37,27 +33,6 @@
 
 	padding-right: 8px;
 }
-.scale {
-	position: relative;
-	height: 200px;
-	width: 80px;
-	
-	.white-key {
-		position: relative;
-		background: white;
-		width: 80px;
-		z-index: 1;
-		color: gray;
-	}
-	
-	.black-key {
-		position: absolute;
-		background: black;
-		width: 40px;
-		z-index: 2;
-		color: white;
-	}	
-}	
 .drum-key {
 	position: relative;
 	background: white;

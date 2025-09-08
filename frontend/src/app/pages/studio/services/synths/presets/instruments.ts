@@ -1,4 +1,4 @@
-import { SynthParams } from "./midi-synthesizer.service";
+import { SynthParams } from "../midi-synthesizer.service";
 
 export const SYNTHS: Record<string, Partial<SynthParams>> = { 
 	'Golden Synth': {
@@ -96,7 +96,7 @@ export const SYNTHS: Record<string, Partial<SynthParams>> = {
 		
 		lfoRate: 0.2,
 		lfoAmount: 0.15,
-		lfoTarget: 'pitch',
+		lfoTarget: 'midiNote',
 		
 		volume: 0.6,
 		drive: 0.8
@@ -154,7 +154,7 @@ export const SYNTHS: Record<string, Partial<SynthParams>> = {
 		
 		lfoRate: 6.0,
 		lfoAmount: 0.2,
-		lfoTarget: 'pitch',
+		lfoTarget: 'midiNote',
 		
 		volume: 0.75,
 		drive: 1.6
@@ -241,7 +241,7 @@ export const SYNTHS: Record<string, Partial<SynthParams>> = {
 		
 		lfoRate: 7.3,
 		lfoAmount: 0.25,
-		lfoTarget: 'pitch',
+		lfoTarget: 'midiNote',
 		
 		volume: 0.6,
 		drive: 1.8

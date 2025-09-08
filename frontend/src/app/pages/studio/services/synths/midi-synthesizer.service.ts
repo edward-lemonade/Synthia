@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { MidiNote, MidiRegion } from '@shared/types';
-import { ViewportService } from './viewport.service';
-import { DEFAULT_SYNTH, SYNTHS } from './synths';
-import { TracksService } from './tracks.service';
-import { ObjectStateNode } from '../state/state.factory';
+import { MidiNote, MidiRegion, MidiTrackType } from '@shared/types';
+import { ViewportService } from '../viewport.service';
+import { DEFAULT_SYNTH, SYNTHS } from './presets/instruments';
+import { TracksService } from '../tracks.service';
+import { ObjectStateNode } from '../../state/state.factory';
+import { DrumSynthesizerService } from './drum-synthesizer.service';
 
 export interface MidiSource {
 	notes: MidiNote[];
@@ -20,7 +21,7 @@ export interface SynthVoice {
 	filterNode: BiquadFilterNode;
 	noteId: string;
 	endTime: number;
-	pitch: number;
+	midiNote: number;
 	trackId: string;
 }
 
@@ -53,7 +54,7 @@ export interface SynthParams {
 	// Modulation
 	lfoRate: number;
 	lfoAmount: number;
-	lfoTarget: 'pitch' | 'filter' | 'amplitude';
+	lfoTarget: 'midiNote' | 'filter' | 'amplitude';
 	
 	// Master settings
 	volume: number;
@@ -81,8 +82,9 @@ export class MidiSynthesizerService {
 		MidiSynthesizerService._instance = this;
 	}
 
-	initialize(audioContext: AudioContext) {
+	async initialize(audioContext: AudioContext) {
 		this.audioContext = audioContext;
+		await DrumSynthesizerService.instance.initialize(audioContext);
 	}
 
 	// ========================================================================================
@@ -119,6 +121,21 @@ export class MidiSynthesizerService {
 		regionDuration: number,
 		trackId: string
 	): MidiSource {
+		// Check if this is a drum track
+		const trackNode = TracksService.instance.getTrack(trackId);
+		const isDrumTrack = trackNode && trackNode.trackType() === MidiTrackType.Drums;
+		
+		// Route to appropriate synthesizer
+		if (isDrumTrack) {
+			return DrumSynthesizerService.instance.createMidiSource(
+				midiData, 
+				regionStartTime, 
+				regionDuration, 
+				trackId
+			);
+		}
+		
+		// Regular melodic synthesis
 		const noteIds: string[] = [];
 		let isConnected = false;
 		let outputNode: AudioNode;
@@ -157,7 +174,7 @@ export class MidiSynthesizerService {
 					
 					if (actualNoteDuration > 0.001) { // Minimum 1ms duration
 						const noteId = this.startNote(
-							note.pitch,
+							note.midiNote,
 							note.velocity || 100,
 							actualStartTime,
 							actualEndTime,
@@ -188,7 +205,7 @@ export class MidiSynthesizerService {
 	// Note Management
 
 	private startNote(
-		pitch: number, 
+		midiNote: number, 
 		velocity: number, 
 		startTime: number,
 		endTime: number,
@@ -204,16 +221,12 @@ export class MidiSynthesizerService {
 		const trackNode = TracksService.instance.getTrack(trackId);
 		const synthParams = this.getSynthParams(trackNode ? trackNode.instrument() : '');
 
-		//console.log(`Starting note: track=${trackId}, pitch=${pitch}, startTime=${startTime}, endTime=${endTime}`);
-
-		// Ensure timing is valid
 		if (startTime < this.audioContext.currentTime - 0.001) {
-			//console.log(`Adjusting start time from ${startTime} to ${this.audioContext.currentTime}`);
 			startTime = this.audioContext.currentTime;
 		}
 
-		const noteId = this.generateNoteId(pitch, startTime, channel, trackId);
-		const frequency = this.midiToFrequency(pitch);
+		const noteId = this.generateNoteId(midiNote, startTime, channel, trackId);
+		const frequency = this.midiToFrequency(midiNote);
 		const gain = this.velocityToGain(velocity) * synthParams.volume;
 
 		try {
@@ -321,7 +334,7 @@ export class MidiSynthesizerService {
 				filterNode: filter,
 				noteId,
 				endTime: noteReleaseEnd,
-				pitch,
+				midiNote,
 				trackId
 			};
 
@@ -329,7 +342,7 @@ export class MidiSynthesizerService {
 
 			// Cleanup when note ends
 			osc1.addEventListener('ended', () => {
-				//console.log(`Note ended: track=${trackId}, pitch=${pitch}`);
+				//console.log(`Note ended: track=${trackId}, midiNote=${midiNote}`);
 				this.activeVoices.delete(noteId);
 			});
 
@@ -362,7 +375,7 @@ export class MidiSynthesizerService {
 		
 		// Route LFO based on target
 		switch (synthParams.lfoTarget) {
-			case 'pitch':
+			case 'midiNote':
 				lfoGain.connect(oscillator.frequency);
 				break;
 			case 'filter':
@@ -422,6 +435,9 @@ export class MidiSynthesizerService {
 		this.activeVoices.forEach((voice, noteId) => {
 			this.stopNote(noteId, currentTime);
 		});
+		
+		// Also stop all drums
+		DrumSynthesizerService.instance.stopAllDrums(currentTime);
 	}
 
 	cleanup(): void {
@@ -434,6 +450,9 @@ export class MidiSynthesizerService {
 				this.activeVoices.delete(noteId);
 			}
 		});
+		
+		// Also cleanup drums
+		DrumSynthesizerService.instance.cleanup();
 	}
 
 	// ========================================================================================
@@ -447,8 +466,8 @@ export class MidiSynthesizerService {
 		return Math.pow(velocity / 127, 1.5); // Slightly curved response
 	}
 
-	private generateNoteId(pitch: number, startTime: number, channel: number = 0, trackId: string): string {
-		return `${trackId}-${channel}-${pitch}-${startTime.toFixed(6)}`;
+	private generateNoteId(midiNote: number, startTime: number, channel: number = 0, trackId: string): string {
+		return `${trackId}-${channel}-${midiNote}-${startTime.toFixed(6)}`;
 	}
 
 	getActiveVoiceCount(): number {

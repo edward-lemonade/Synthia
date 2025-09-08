@@ -14,9 +14,9 @@
 
 	box-sizing: border-box;
 
-	> *:not(.tabs-row) {
+	.outlet {
 		flex: 1;
-		min-height: 0; // Important for flex children
+		min-height: 0;
 	}
 
 	.tabs-row {

@@ -234,8 +234,8 @@ export class NoteComponent {
 				const mousePxX = this.viewportService.mouseXToPx(event.clientX, false);
 				const mousePosX = this.viewportService.pxToPos(mousePxX, false);
 				const mousePxY = this.viewportService.mouseYToPx(event.clientY);
-				const pitch = this.midiService.pxToPitch(mousePxY);
-				this.dragService.prepareDrag(mousePosX, pitch, this.note.snapshot());
+				const midiNote = this.midiService.pxToMidiNote(mousePxY);
+				this.dragService.prepareDrag(mousePosX, midiNote, this.note.snapshot());
 			} else {
 				event.stopPropagation();
 			}

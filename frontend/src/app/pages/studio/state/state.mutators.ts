@@ -298,7 +298,7 @@ export const setRegionVolume: Mutator<number> = (val: number, node: PropStateNod
 	forward();
 	HistoryService.instance.recordCommand(actionId, forward, reverse);
 }
-export const setRegionPitch: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
+export const setRegionMidiNote: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
 	const initial = node();
 	const forward = () => { node._set(val); }
 	const reverse = () => { node._set(initial); }
@@ -354,7 +354,7 @@ export const setMidiNoteTime: Mutator<number> = (val: number, node: PropStateNod
 	forward();
 	HistoryService.instance.recordCommand(actionId, forward, reverse);
 }
-export const setMidiNotePitch: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
+export const setMidiNoteMidiNote: Mutator<number> = (val: number, node: PropStateNode<number>, actionId) => {
 	const initial = node();
 	const forward = () => { node._set(val); }
 	const reverse = () => { node._set(initial); }

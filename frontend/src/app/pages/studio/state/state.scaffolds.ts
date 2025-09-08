@@ -108,7 +108,7 @@ export const AUDIO_REGION_SCAFFOLD = {
 	audioStartOffset: 	{_type: NodeType.Prop, value: 0, mutator: M.setRegionAudioStartOffset} as PropScaffold<number>,
 	audioEndOffset: 	{_type: NodeType.Prop, value: -1, mutator: M.setRegionAudioEndOffset} as PropScaffold<number>,
 	volume: 			{_type: NodeType.Prop, value: 100, mutator: M.setRegionVolume} as PropScaffold<number>,
-	pitch: 				{_type: NodeType.Prop, value: 0, mutator: M.setRegionPitch} as PropScaffold<number>,
+	midiNote: 				{_type: NodeType.Prop, value: 0, mutator: M.setRegionMidiNote} as PropScaffold<number>,
 	timeStretch: 		{_type: NodeType.Prop, value: 0, mutator: M.setRegionTimeStretch} as PropScaffold<number>,
 	fadeIn: 			{_type: NodeType.Prop, value: 0, mutator: M.setRegionFadeIn} as PropScaffold<number>,
 	fadeOut: 			{_type: NodeType.Prop, value: 0, mutator: M.setRegionFadeOut} as PropScaffold<number>,
@@ -126,7 +126,7 @@ export const MIDI_REGION_SCAFFOLD = {
 export const MIDI_NOTE_SCAFFOLD = {
 	_type: NodeType.Object,
 	start: 		{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteTime} as PropScaffold<number>,
-	pitch: 		{_type: NodeType.Prop, value: 0, mutator: M.setMidiNotePitch} as PropScaffold<number>,
+	midiNote: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteMidiNote} as PropScaffold<number>,
 	velocity: 	{_type: NodeType.Prop, value: 127, mutator: M.setMidiNoteVelocity} as PropScaffold<number>,
 	duration: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteDuration} as PropScaffold<number>,
 	channel: 	{_type: NodeType.Prop, value: 0, mutator: M.setMidiNoteChannel} as PropScaffold<number>,

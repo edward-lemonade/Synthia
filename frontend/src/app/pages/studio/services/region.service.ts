@@ -99,8 +99,14 @@ export class RegionService {
 			audioRegion.start.set(newStart, actionId);
 			audioRegion.duration.set(newDuration, actionId);
 		} else {
+			const midiRegion = region as ObjectStateNode<MidiRegion>;
+
+			const regionStart = region.start();
 			region.start.set(newStart, actionId);
 			region.duration.set(newDuration, actionId);
+			for (const note of midiRegion.midiData()) {
+				note.start.update(noteStart => noteStart + (regionStart - newStart), actionId)
+			}
 		}
 	}
 	duplicateRegion(region: ObjectStateNode<Region>) {

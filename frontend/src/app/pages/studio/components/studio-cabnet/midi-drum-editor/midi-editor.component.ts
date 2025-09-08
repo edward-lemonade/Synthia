@@ -4,19 +4,19 @@ import { MidiEditorService } from "../../../services/midi-editor/midi-editor.ser
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ViewportService } from "../../../services/viewport.service";
-import { ViewportComponent } from "./viewport/viewport.component";
-import { ViewportOverlayComponent } from "./viewport-overlay/viewport-overlay.component";
-import { ViewportHeaderComponent } from "./viewport-header/viewport-header.component";
-import { MidiEditorKeyboardComponent } from "./keyboard/keyboard.component";
 import { MidiSelectService } from "../../../services/midi-editor/midi-select.service";
 import { MidiDragService } from "../../../services/midi-editor/midi-drag.service";
 import { CabnetService } from "../../../services/cabnet.service";
 import { AudioTrackType, MidiTrackType, TrackType } from "@shared/types";
+import { ViewportComponent } from "../midi-editor/viewport/viewport.component";
+import { ViewportOverlayComponent } from "../midi-editor/viewport-overlay/viewport-overlay.component";
+import { ViewportHeaderComponent } from "../midi-editor/viewport-header/viewport-header.component";
+import { MidiDrumEditorKeyboardComponent } from "./keyboard/drum-keyboard.component";
 
 
 @Component({
-	selector: 'midi-editor',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiEditorKeyboardComponent],
+	selector: 'midi-drum-editor',
+	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiDrumEditorKeyboardComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [ViewportService, MidiEditorService, MidiSelectService, MidiDragService],
 	template: `
@@ -24,7 +24,7 @@ import { AudioTrackType, MidiTrackType, TrackType } from "@shared/types";
 			<div class="info"></div>
 			<div class="keyboard-container">
 				<div class="keyboard-header"></div>
-				<midi-editor-keyboard class="keyboard"/>
+				<midi-drum-editor-keyboard class="keyboard"/>
 			</div>
 			<div class="viewport-container">
 				<midi-editor-viewport-header class="viewport-header"/>
@@ -36,7 +36,7 @@ import { AudioTrackType, MidiTrackType, TrackType } from "@shared/types";
 	styleUrl: './midi-editor.component.scss'
 })
 
-export class MidiEditorComponent {
+export class MidiDrumEditorComponent {
 	AudioTrackType = AudioTrackType;
 	MidiTrackType = MidiTrackType;
 

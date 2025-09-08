@@ -1,6 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AudioRegion, MidiNote, MidiRegion, Region, RegionType, Track } from '@shared/types';
+import { AudioRegion, MidiNote, MidiRegion, MidiTrackType, Region, RegionType, Track } from '@shared/types';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -16,7 +16,7 @@ import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.fa
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
 import { RenderWaveformService } from '@src/app/pages/studio/services/render-waveform.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
-import { CabnetService, MidiTabs } from '@src/app/pages/studio/services/cabnet.service';
+import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 import { hexToHsl, hslToCss } from '@src/app/utils/color';
 import { RenderMidiService } from '@src/app/pages/studio/services/render-midi.service';
 
@@ -31,8 +31,8 @@ interface ViewportBounds {
 
 interface MidiRenderConfig {
 	noteHeight: number;
-	minPitch: number;
-	maxPitch: number;
+	minmidiNote: number;
+	maxmidiNote: number;
 	noteColors: {
 		fill: string;
 		stroke: string;
@@ -151,7 +151,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 					const duration = note.duration();
 					const velocity = note.velocity();
 					const start = note.start();
-					const pitch = note.pitch();
+					const midiNote = note.midiNote();
 				})
 				this.scheduleMidiRender();
 			}
@@ -547,7 +547,11 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	openMidiEditor() {
 		if (this.isMidi()) {
-			this.cabnetService.openCabnet(MidiTabs['MIDI Editor']);
+			if (this.track.trackType() == MidiTrackType.Instrument) {
+				this.cabnetService.openCabnet(this.cabnetService.INSTRUMENT_TABS[0]);
+			} else if (this.track.trackType() == MidiTrackType.Drums) {
+				this.cabnetService.openCabnet(this.cabnetService.DRUM_TABS[0]);
+			} 
 		}
 	}
 

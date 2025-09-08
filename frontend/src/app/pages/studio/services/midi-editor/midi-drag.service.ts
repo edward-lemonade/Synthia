@@ -4,17 +4,17 @@ import { MidiNote } from '@shared/types';
 import { MidiEditorService } from './midi-editor.service';
 import { MidiSelectService } from './midi-select.service';
 
-export interface DragInfo { // in beat/measure units for X, pitch units for Y
+export interface DragInfo { // in beat/measure units for X, midiNote units for Y
 	startPosX: number;
-	startPitch: number;
+	startMidiNote: number;
 	currentPosX: number;
-	currentPitch: number;
+	currentMidiNote: number;
 	deltaPosX: number;
-	deltaPitch: number;
+	deltaMidiNote: number;
 	mouseOffsetPosX: number;
 	mouseOffsetMinPosX: number;
-	minPitchOffset: number;
-	maxPitchOffset: number;
+	minMidiNoteOffset: number;
+	maxMidiNoteOffset: number;
 	heldNote: MidiNote;
 }
 
@@ -35,23 +35,23 @@ export class MidiDragService {
 	readonly isDragging = signal<boolean>(false);
 	readonly dragInfo = signal<DragInfo | null>(null);
 
-	public prepareDrag(startPosX: number, startPitch: number, note: MidiNote) { // mouse down on note, but not moving yet
+	public prepareDrag(startPosX: number, startMidiNote: number, note: MidiNote) { // mouse down on note, but not moving yet
 		const selectedNotes = this.selectService.selectedNotes();
-		const lowestPitch = selectedNotes.reduce((min, n) => Math.min(min, n.pitch()), note.pitch);
-		const highestPitch = selectedNotes.reduce((min, n) => Math.max(min, n.pitch()), note.pitch);
+		const lowestMidiNote = selectedNotes.reduce((min, n) => Math.min(min, n.midiNote()), note.midiNote);
+		const highestMidiNote = selectedNotes.reduce((min, n) => Math.max(min, n.midiNote()), note.midiNote);
 		
 		this.isDragReady.set(true);
 		this.dragInfo.set({
 			startPosX: startPosX,
-			startPitch: startPitch,
+			startMidiNote: startMidiNote,
 			currentPosX: startPosX,
-			currentPitch: startPitch,
+			currentMidiNote: startMidiNote,
 			deltaPosX: 0,
-			deltaPitch: 0,
+			deltaMidiNote: 0,
 			mouseOffsetPosX: startPosX - note.start,
 			mouseOffsetMinPosX: startPosX - this.selectService.leftmostSelectedNote().start(),
-			minPitchOffset: note.pitch - lowestPitch,
-			maxPitchOffset: highestPitch - note.pitch,
+			minMidiNoteOffset: note.midiNote - lowestMidiNote,
+			maxMidiNoteOffset: highestMidiNote - note.midiNote,
 			heldNote: note,
 		});
 	}
@@ -61,12 +61,12 @@ export class MidiDragService {
 		this.isDragging.set(true);
 	}
 
-	public updateDrag(mousePosX: number, pitch: number) { // mouse down and moving
+	public updateDrag(mousePosX: number, midiNote: number) { // mouse down and moving
 		const dragInfo = this.dragInfo();
 
 		if (dragInfo && this.isDragging()) {
 			let finalPosX = mousePosX;
-			let finalPitch = pitch;
+			let finalMidiNote = midiNote;
 
 			if (this.viewportService.snapToGrid()) {
 				const mouseOffsetPosX = dragInfo.mouseOffsetPosX;
@@ -75,19 +75,19 @@ export class MidiDragService {
 
 			finalPosX = Math.max(0, finalPosX - dragInfo.mouseOffsetMinPosX) + dragInfo.mouseOffsetMinPosX;
 
-			const adjustedMinY = this.midiService.MIN_PITCH + dragInfo.minPitchOffset;
-			const adjustedMaxY = this.midiService.MAX_PITCH - dragInfo.maxPitchOffset;
-			finalPitch = Math.max(adjustedMinY, Math.min(adjustedMaxY, finalPitch));
+			const adjustedMinY = this.midiService.MIN_MIDINOTE + dragInfo.minMidiNoteOffset;
+			const adjustedMaxY = this.midiService.MAX_MIDINOTE - dragInfo.maxMidiNoteOffset;
+			finalMidiNote = Math.max(adjustedMinY, Math.min(adjustedMaxY, finalMidiNote));
 
 			const deltaX = finalPosX - dragInfo.startPosX;
-			const deltaY = finalPitch - dragInfo.startPitch;
+			const deltaY = finalMidiNote - dragInfo.startMidiNote;
 
 			this.dragInfo.set({
 				...dragInfo,
 				currentPosX: mousePosX,
-				currentPitch: pitch,
+				currentMidiNote: midiNote,
 				deltaPosX: deltaX,
-				deltaPitch: deltaY,
+				deltaMidiNote: deltaY,
 			});
 		}
 	}
@@ -96,7 +96,7 @@ export class MidiDragService {
 		const dragInfo = this.dragInfo();
 		if (dragInfo) {
 			const deltaPosX = dragInfo.deltaPosX;
-			const deltaPosY = dragInfo.deltaPitch;
+			const deltaPosY = dragInfo.deltaMidiNote;
 
 			this.midiService.moveNotes(this.selectService.selectedNotes(), deltaPosX, deltaPosY);
 		}
@@ -114,7 +114,7 @@ export class MidiDragService {
 
 	public getDragDelta(): { x: number; y: number } {
 		const info = this.dragInfo();
-		return info ? { x: info.deltaPosX, y: info.deltaPitch } : { x: 0, y: 0 };
+		return info ? { x: info.deltaPosX, y: info.deltaMidiNote } : { x: 0, y: 0 };
 	}
 
 	public getDragDeltaX(): number {
@@ -124,7 +124,7 @@ export class MidiDragService {
 
 	public getDragDeltaY(): number {
 		const info = this.dragInfo();
-		return info ? info.deltaPitch : 0;
+		return info ? info.deltaMidiNote : 0;
 	}
 
 	public getDragInfo(): DragInfo | null {

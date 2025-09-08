@@ -2,15 +2,16 @@ import { Injectable, signal, computed, effect, Injector, runInInjectionContext }
 import { StateService } from '../state/state.service';
 import { ViewportService } from './viewport.service';
 import { AudioCacheService } from './audio-cache.service';
-import { AudioRegion, MidiNote, MidiRegion, Region, RegionType, Track } from '@shared/types';
+import { AudioRegion, MidiNote, MidiRegion, MidiTrackType, Region, RegionType, Track } from '@shared/types';
 import { RegionService } from './region.service';
 import { TracksService } from './tracks.service';
 import { ObjectStateNode } from '../state/state.factory';
 import { PlaybackMarkerComponent } from '../components/studio-editor/viewport-overlay/playback-marker/playback-marker.component';
-import { MidiSynthesizerService, MidiSource, SynthParams } from './midi-synthesizer.service';
-import { ReverbProcessor } from './synthesizers/Reverb';
+import { MidiSynthesizerService, MidiSource, SynthParams } from './synths/midi-synthesizer.service';
+import { ReverbProcessor } from './synths/effects/Reverb';
 import { AudioRecording, AudioRecordingService } from './audio-recording.service';
 import { RegionSelectService } from './region-select.service';
+import { DrumSynthesizerService } from './synths/drum-synthesizer.service';
 
 export interface TrackNodes {
 	gainNode: GainNode,
@@ -39,6 +40,7 @@ export class PlaybackService { // SINGLETON
 	constructor(
 		private injector: Injector,
 		private midiSynth: MidiSynthesizerService,
+		private drumSynth: DrumSynthesizerService,
 		private reverbProcessor: ReverbProcessor
 	) {
 		PlaybackService._instance = this;
@@ -47,6 +49,7 @@ export class PlaybackService { // SINGLETON
 		this.masterGainNode.connect(this.audioContext.destination);
 
 		this.midiSynth.initialize(this.audioContext);
+		this.drumSynth.initialize(this.audioContext);
 		this.reverbProcessor.initialize(this.audioContext);
 	}
 
@@ -215,11 +218,9 @@ export class PlaybackService { // SINGLETON
 			
 			// Connect audio chain: gain -> reverb -> panner -> master
 			if (reverbMixNode) {
-				// With reverb: gain -> reverb input -> reverb output -> panner -> master
 				trackGainNode.connect(reverbMixNode.input);
 				reverbMixNode.output.connect(trackPannerNode);
 			} else {
-				// Without reverb: gain -> panner -> master
 				trackGainNode.connect(trackPannerNode);
 			}
 			
@@ -296,13 +297,14 @@ export class PlaybackService { // SINGLETON
 		const regionStart = this.viewportService.posToTime(midiRegion.start());
 		const regionDuration = this.viewportService.posToTime(midiRegion.duration());
 
+		// Check if this track is a drum track
+		const track = TracksService.instance.getTrack(trackId);
+		const isDrumTrack = track && track.trackType() === MidiTrackType.Drums;
+		
 		// MIDI source -> gain -> reverb -> pan -> master
-		const midiSource = this.midiSynth.createMidiSource(
-			midiData, 
-			regionStart, 
-			regionDuration,
-			trackId
-		);
+		const midiSource = isDrumTrack ? 
+			this.drumSynth.createMidiSource(midiData, regionStart, regionDuration, trackId) :
+			this.midiSynth.createMidiSource(midiData, regionStart, regionDuration, trackId);
 		midiSource.connect(trackGainNode);
 
 		const scheduleTime = this.startAudioTime + (regionStart - playbackTime);
@@ -346,6 +348,7 @@ export class PlaybackService { // SINGLETON
 		});
 		this.activeMidiSources = [];
 		this.midiSynth.cleanup();
+		this.drumSynth.cleanup();
 		
 		this.trackNodes.clear();
 	}
@@ -422,7 +425,7 @@ export class PlaybackService { // SINGLETON
 		
 		const testNotes: MidiNote[] = [{
 			start: 0,
-			pitch: 60,
+			midiNote: 60,
 			velocity: 100,
 			duration: 1000
 		}];
@@ -432,5 +435,35 @@ export class PlaybackService { // SINGLETON
 		const source = midiSynthService.createMidiSource(testNotes, 0, 2000, testTrackId);
 		source.connect(audioContext.destination);
 		source.start(audioContext.currentTime);
+	}
+
+	testDrumPlayback() {
+		const audioContext = new AudioContext();
+		if (audioContext.state === 'suspended') {
+			audioContext.resume();
+		}
+		
+		const drumSynthService = new DrumSynthesizerService();
+		drumSynthService.initialize(audioContext);
+		
+		// Test different drum sounds
+		const testNotes: MidiNote[] = [
+			{ start: 0, midiNote: 36, velocity: 100, duration: 1000 }, // Kick drum
+			{ start: 0.5, midiNote: 38, velocity: 80, duration: 500 }, // Snare drum
+			{ start: 1.0, midiNote: 42, velocity: 60, duration: 200 }, // Closed hi-hat
+			{ start: 1.5, midiNote: 46, velocity: 70, duration: 1000 }, // Open hi-hat
+			{ start: 2.0, midiNote: 49, velocity: 90, duration: 2000 }, // Crash cymbal
+		];
+		
+		// Use a test track ID
+		const testTrackId = 'test-drum-track-1';
+		const source = drumSynthService.createMidiSource(testNotes, 0, 4000, testTrackId);
+		source.connect(audioContext.destination);
+		source.start(audioContext.currentTime);
+	}
+
+	// Quick test method for console access
+	static testDrums() {
+		PlaybackService.instance.testDrumPlayback();
 	}
 }

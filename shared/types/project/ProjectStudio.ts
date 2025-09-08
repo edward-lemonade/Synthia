@@ -15,7 +15,7 @@ export function regionTypeFromTrack(value: any): RegionType { return isTrackAudi
 
 export interface MidiNote {
 	start: number;
-	pitch: number;
+	midiNote: number;
 	velocity: number;
 	duration: number;
 	channel?: number;
@@ -60,7 +60,7 @@ export interface AudioRegion extends BaseRegion {
 	
 	// Playback modifications
 	volume: number;
-	pitch: number;
+	midiNote: number;
 	timeStretch: number;
 	fadeIn: number;
 	fadeOut: number;
@@ -77,28 +77,28 @@ export type Region = AudioRegion | MidiRegion;
 // ==============================================================
 // Track
 
-export class Track {
+export interface Track {
 	// metadata
-	index: number = -1;
-	name: string = "Track";
-	color: string = "#FFFFFF";
+	index: number,
+	name: string,
+	color: string,
 
-	trackType: TrackType = AudioTrackType.Audio;
-	regionType: RegionType = RegionType.Audio;
-	instrument: string = "none";
+	trackType: TrackType,
+	regionType: RegionType,
+	instrument: string,
 
 	// master settings
-	volume: number = 100;
-	pan: number = 0;
-	reverb: number = 0;
-	mute: boolean = false;
-	solo: boolean = false;
+	volume: number,
+	pan: number,
+	reverb: number,
+	mute: boolean,
+	solo: boolean,
 
 	// effects
-	effects: string[] = [];
+	effects: string[],
 
 	// data
-	regions: Region[] = [];
+	regions: Region[],
 }
 
 // ==============================================================

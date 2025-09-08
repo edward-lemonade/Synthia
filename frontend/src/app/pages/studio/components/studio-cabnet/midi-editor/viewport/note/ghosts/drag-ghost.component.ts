@@ -19,7 +19,7 @@ import { MidiDragService } from '@src/app/pages/studio/services/midi-editor/midi
 			class="note-ghost"
 			[style.left.px]="viewportService.posToPx(note.start() + dragService.dragInfo()!.deltaPosX)"
 			[style.width.px]="viewportService.posToPx(note.duration())"
-			[style.top.px]="midiService.pitchToPx(note.pitch() + dragService.dragInfo()!.deltaPitch)"
+			[style.top.px]="midiService.midiNoteToPx(note.midiNote() + dragService.dragInfo()!.deltaMidiNote)"
 			[style.height.px]="HEIGHT_PX"
 			[style.background-color]="'#989898ff'">
 		</div>
