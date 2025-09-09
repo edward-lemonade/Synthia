@@ -1,4 +1,4 @@
-import { SynthParams } from "../midi-synthesizer.service";
+import { SynthParams } from "../midi-synthesizer";
 
 export const SYNTHS: Record<string, Partial<SynthParams>> = { 
 	'Golden Synth': {

@@ -6,7 +6,7 @@ import { CabnetService } from "../../services/cabnet.service";
 import { MatDivider } from "@angular/material/divider";
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MIDI_DRUM_MAPPING } from "../../services/synths/presets/drums";
+import { MIDI_DRUM_MAPPING } from "@shared/audio-processing/synthesis/presets/drums";
 
 @Component({
 	selector: 'app-studio-cabnet',

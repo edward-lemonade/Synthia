@@ -1,8 +1,5 @@
-import { Injectable } from '@angular/core';
-import { MidiNote, MidiRegion, MidiTrackType } from '@shared/types';
-import { ViewportService } from '../viewport.service';
-import { DEFAULT_SYNTH, SYNTHS } from '@shared/audio-processing/synthesis/presets/instruments';
-import { TracksService } from '../tracks.service';
+import { MidiNote, ProjectStudio } from "types";
+import { DEFAULT_SYNTH, SYNTHS } from "./presets/instruments";
 
 export interface MidiSource {
 	notes: MidiNote[];
@@ -12,17 +9,16 @@ export interface MidiSource {
 	noteIds: string[];
 	trackId?: string;
 }
-
 export interface SynthVoice {
 	oscillators: OscillatorNode[];
 	gainNode: GainNode;
 	filterNode: BiquadFilterNode;
-	noteId: string;
 	endTime: number;
 	midiNote: number;
-	trackId: string;
-}
 
+	trackId?: string;
+	noteId?: string;
+}
 export interface SynthParams {
 	// Oscillator settings
 	waveform1: OscillatorType;
@@ -59,34 +55,25 @@ export interface SynthParams {
 	drive: number;
 }
 
-export interface TrackSynthConfig {
-	trackId: string;
-	synthParams: SynthParams;
-	preset?: string;
-}
-
-@Injectable()
-export class MidiSynthesizerService {
-	private static _instance: MidiSynthesizerService;
-	static get instance(): MidiSynthesizerService { return MidiSynthesizerService._instance; }
-
+export class MidiSynthesizer {
+	private studioState?: ProjectStudio;
 	private audioContext?: AudioContext;
-	private activeVoices = new Map<string, SynthVoice>();
 	
-	// Track-specific synth configurations
-	private trackSynthConfigs = new Map<string, SynthParams>();
-	
-	constructor() {
-		MidiSynthesizerService._instance = this;
-	}
-
-	async initialize(audioContext: AudioContext) {
+	constructor(
+		audioContext: AudioContext,
+	) {
 		this.audioContext = audioContext;
 	}
+
+	getSynthParamsFromTrack: (trackId: string) => SynthParams = 
+		(trackId: string) => {
+			return this.getSynthParams("");
+		};
 
 	// ========================================================================================
 	// MIDI Source Creation
 
+	/*
 	createMidiSource(
 		midiData: MidiNote[], 
 		regionStartTime: number, 
@@ -132,8 +119,8 @@ export class MidiSynthesizerService {
 					);
 				} else {
 					midiData.forEach((note, index) => {
-						const noteStartTime = when + ViewportService.instance.posToTime(note.start) - offset;
-						const noteEndTime = noteStartTime + ViewportService.instance.posToTime(note.duration);
+						const noteStartTime = when + this.posToTime(note.start) - offset;
+						const noteEndTime = noteStartTime + this.posToTime(note.duration);
 
 						// Skip notes outside playback range
 						if (noteEndTime <= when || noteStartTime >= endTime) {
@@ -146,21 +133,14 @@ export class MidiSynthesizerService {
 						const actualNoteDuration = actualEndTime - actualStartTime;
 						
 						if (actualNoteDuration > 0.001) { // Minimum 1ms duration
-							const noteId = this.startNote(
-								note.midiNote,
-								note.velocity || 100,
+							const synthVoice = this.startNote(
+								audioContext,
+								this.getSynthParams(trackId),
+								note,
 								actualStartTime,
 								actualEndTime,
-								note.channel ?? 0,
 								outputNode,
-								trackId,
-								offline,
-								audioContext
 							);
-							
-							if (noteId) {
-								noteIds.push(noteId);
-							}
 						}
 					});
 				}
@@ -173,17 +153,19 @@ export class MidiSynthesizerService {
 				
 				const stopTime = when ?? this.audioContext!.currentTime;
 				noteIds.forEach(noteId => {
-					this.stopNote(noteId, stopTime);
+					this.stopNote(synthParams, stopTime);
 				});
 			},
 			
 			noteIds
 		};
 	}
+	*/
 
 	// ========================================================================================
 	// Note Management
 
+	/*
 	private processNotesOffline(
 		offlineContext: OfflineAudioContext,
 		midiData: MidiNote[],
@@ -195,8 +177,8 @@ export class MidiSynthesizerService {
 		noteIds: string[]
 	): void {
 		midiData.forEach((note) => {
-			const noteStartTime = when + ViewportService.instance.posToTime(note.start) - offset;
-			const noteEndTime = noteStartTime + ViewportService.instance.posToTime(note.duration);
+			const noteStartTime = when + this.posToTime(note.start) - offset;
+			const noteEndTime = noteStartTime + this.posToTime(note.duration);
 
 			// Skip notes outside playback range
 			if (noteEndTime <= when || noteStartTime >= endTime) {
@@ -209,53 +191,40 @@ export class MidiSynthesizerService {
 			const actualNoteDuration = actualEndTime - actualStartTime;
 			
 			if (actualNoteDuration > 0.001) { // Minimum 1ms duration
-				const noteId = this.startNote(
-					note.midiNote,
-					note.velocity || 100,
+				const synthVoice = this.startNote(
+					offlineContext,
+					this.getSynthParams(trackId),
+					note,
 					actualStartTime,
 					actualEndTime,
-					note.channel ?? 0,
 					outputNode,
-					trackId,
-					true, // offline = true
-					offlineContext
 				);
-				
-				if (noteId) {
-					noteIds.push(noteId);
-				}
 			}
 		});
 	}
+	*/
 
-	private startNote(
-		midiNote: number, 
-		velocity: number, 
+	startNote(
+		audioContext: AudioContext | OfflineAudioContext,
+		synthParams: SynthParams,
+		midiData: MidiNote,
 		startTime: number,
 		endTime: number,
-		channel: number = 0,
 		outputNode: AudioNode,
-		trackId: string,
-		offline: boolean = false,
-		audioContext?: AudioContext | OfflineAudioContext
-	): string {
+	): SynthVoice | null {
 		// Use provided context or fall back to instance context
 		const ctx = audioContext || this.audioContext!;
 		
 		if (!ctx) {
 			console.warn('MidiSynthesizerService not initialized with AudioContext');
-			return '';
+			return null;
 		}
 
-		const trackNode = TracksService.instance.getTrack(trackId);
-		const synthParams = this.getSynthParams(trackNode ? trackNode.instrument() : '');
+		startTime = ctx.currentTime;
 
-		// For realtime, adjust start time if in the past
-		if (!offline && startTime < ctx.currentTime - 0.001) {
-			startTime = ctx.currentTime;
-		}
-
-		const noteId = this.generateNoteId(midiNote, startTime, channel, trackId);
+		const velocity = midiData.velocity;
+		const midiNote = midiData.midiNote;
+		
 		const frequency = this.midiToFrequency(midiNote);
 		const gain = this.velocityToGain(velocity) * synthParams.volume;
 
@@ -357,30 +326,16 @@ export class MidiSynthesizerService {
 				osc.stop(noteReleaseEnd);
 			});
 
-			// Create voice object (only for realtime playback)
-			if (!offline) {
-				const voice: SynthVoice = {
-					oscillators,
-					gainNode: ampGain,
-					filterNode: filter,
-					noteId,
-					endTime: noteReleaseEnd,
-					midiNote,
-					trackId
-				};
-
-				this.activeVoices.set(noteId, voice);
-
-				osc1.addEventListener('ended', () => {
-					this.activeVoices.delete(noteId);
-				});
-			}
-
-			return noteId;
-			
+			const voice: SynthVoice = {
+				oscillators,
+				gainNode: ampGain,
+				filterNode: filter,
+				endTime: noteReleaseEnd,
+				midiNote,
+			};
+			return voice;
 		} catch (error) {
-			console.error(`Failed to start note ${noteId} on track ${trackId}:`, error);
-			return '';
+			return null;
 		}
 	}
 
@@ -425,12 +380,8 @@ export class MidiSynthesizerService {
 		lfo.stop(endTime);
 	}
 
-	private stopNote(noteId: string, stopTime?: number): void {
-		const voice = this.activeVoices.get(noteId);
-		if (!voice) return;
-
+	stopNote(voice: SynthVoice, synthParams: SynthParams, stopTime?: number): void {
 		const currentTime = stopTime ?? this.audioContext!.currentTime;
-		const synthParams = this.getTrackSynthParams(voice.trackId);
 		const { release } = synthParams;
 
 		// Cancel any scheduled changes and fade out smoothly
@@ -456,53 +407,6 @@ export class MidiSynthesizerService {
 	}
 
 	// ========================================================================================
-	// Global Controls
-
-	stopAllNotes(stopTime?: number): void {
-		const currentTime = stopTime ?? this.audioContext!.currentTime;
-		
-		this.activeVoices.forEach((voice, noteId) => {
-			this.stopNote(noteId, currentTime);
-		});
-	}
-
-	cleanup(): void {
-		if (!this.audioContext) return;
-		
-		const currentTime = this.audioContext.currentTime;
-		
-		this.activeVoices.forEach((voice, noteId) => {
-			if (currentTime > voice.endTime + 0.1) { // Small buffer
-				this.activeVoices.delete(noteId);
-			}
-		});
-	}
-
-	// ========================================================================================
-	// Track Management
-
-	setTrackSynthParams(trackId: string, params: Partial<SynthParams>) {
-		const existingParams = this.trackSynthConfigs.get(trackId) || { ...DEFAULT_SYNTH };
-		const newParams = { ...existingParams, ...params };
-		this.trackSynthConfigs.set(trackId, newParams);
-	}
-
-	applyTrackPreset(trackId: string, presetName: string) {
-		const preset = SYNTHS[presetName];
-		if (preset) {
-			this.trackSynthConfigs.set(trackId, {...DEFAULT_SYNTH, ...preset });
-		}
-	}
-
-	getTrackSynthParams(trackId: string): SynthParams {
-		return this.trackSynthConfigs.get(trackId) || { ...DEFAULT_SYNTH };
-	}
-
-	getSynthParams(instrument: string): SynthParams {
-		return {...DEFAULT_SYNTH, ...SYNTHS[instrument] ?? {}}
-	}
-	
-	// ========================================================================================
 	// Utility
 
 	private midiToFrequency(midiNote: number): number {
@@ -513,27 +417,11 @@ export class MidiSynthesizerService {
 		return Math.pow(velocity / 127, 1.5); // Slightly curved response
 	}
 
-	private generateNoteId(midiNote: number, startTime: number, channel: number = 0, trackId: string): string {
-		return `${trackId}-${channel}-${midiNote}-${startTime.toFixed(6)}`;
+	posToTime(pos: number) {
+		return pos * this.studioState!.timeSignature.N  / this.studioState!.bpm * 60; // in seconds
 	}
 
-	getActiveVoiceCount(): number {
-		return this.activeVoices.size;
-	}
-
-	getTrackActiveVoiceCount(trackId: string): number {
-		let count = 0;
-		this.activeVoices.forEach(voice => {
-			if (voice.trackId === trackId) count++;
-		});
-		return count;
-	}
-
-	getActiveTrackIds(): string[] {
-		const trackIds = new Set<string>();
-		this.activeVoices.forEach(voice => {
-			trackIds.add(voice.trackId);
-		});
-		return Array.from(trackIds);
+	getSynthParams(instrument: string) {
+		return {...DEFAULT_SYNTH, ...SYNTHS[instrument] ?? {}}
 	}
 }

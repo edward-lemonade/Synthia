@@ -4,7 +4,7 @@ import { ViewportService } from '../viewport.service';
 import { TracksService } from '../tracks.service';
 import { ObjectStateNode } from '../../state/state.factory';
 import { MidiSource } from './midi-synthesizer.service';
-import { DRUM_PRESETS, DEFAULT_KICK, MIDI_DRUM_MAPPING } from './presets/drums';
+import { DRUM_PRESETS, DEFAULT_KICK, MIDI_DRUM_MAPPING } from "@shared/audio-processing/synthesis/presets/drums";
 
 export interface DrumVoice {
 	oscillators: OscillatorNode[];

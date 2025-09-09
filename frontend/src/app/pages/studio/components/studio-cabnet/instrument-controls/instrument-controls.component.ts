@@ -8,7 +8,7 @@ import { MatCardModule } from '@angular/material/card';
 import { ViewportService } from "../../../services/viewport.service";
 import { CabnetService } from "../../../services/cabnet.service";
 
-import { SYNTHS } from "../../../services/synths/presets/instruments";
+import { SYNTHS } from "@shared/audio-processing/synthesis/presets/instruments";
 import { RotaryKnobComponent } from "@src/app/components/rotary-knob/rotary-knob.component";
 import { TimelinePlaybackService } from "../../../services/timeline-playback.service";
 import { FormsModule } from "@angular/forms";
