@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDivider } from '@angular/material/divider';
 import { MatIcon } from '@angular/material/icon';
-import { PlaybackService } from '../../../services/playback.service';
+import { TimelinePlaybackService } from '../../../services/timeline-playback.service';
 import { AudioRecordingService, AudioRecording } from '../../../services/audio-recording.service';
 import { RegionService } from '../../../services/region.service';
 import { RegionSelectService } from '../../../services/region-select.service';
@@ -98,7 +98,7 @@ export class PlaybackComponent implements OnDestroy {
 	});
 
 	constructor(
-		public playbackService: PlaybackService,
+		public playbackService: TimelinePlaybackService,
 		public regionService: RegionService,
 		public selectService: RegionSelectService,
 		public recordingService: AudioRecordingService,

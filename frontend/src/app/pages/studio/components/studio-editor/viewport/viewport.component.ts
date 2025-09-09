@@ -8,7 +8,7 @@ import { StateService } from '../../../state/state.service';
 import { RegionService } from '../../../services/region.service';
 import { TracksService } from '../../../services/tracks.service';
 import { PlaybackMarkerComponent } from "../viewport-overlay/playback-marker/playback-marker.component";
-import { PlaybackService } from '../../../services/playback.service';
+import { TimelinePlaybackService } from '../../../services/timeline-playback.service';
 import { ObjectStateNode } from '../../../state/state.factory';
 import { Region } from '@shared/types';
 import { CabnetService } from '../../../services/cabnet.service';
@@ -81,7 +81,7 @@ export class ViewportComponent implements AfterViewInit {
 		public regionService: RegionService,
 		public selectService: RegionSelectService,
 		public dragService: RegionDragService,
-		public playbackService: PlaybackService,
+		public playbackService: TimelinePlaybackService,
 		public cabnetService: CabnetService,
 	) {}
 

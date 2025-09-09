@@ -3,7 +3,7 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, El
 import { MidiNote, MidiRegion } from '@shared/types';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 import { EditingMode, MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
-import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
+import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { BoxSelectBounds } from '@src/app/pages/studio/services/region-select.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
@@ -100,7 +100,7 @@ export class ViewportComponent implements AfterViewInit {
 	constructor(
 		private injector: Injector,
 		public viewportService: ViewportService,
-		public playbackService: PlaybackService,
+		public playbackService: TimelinePlaybackService,
 		public midiService: MidiEditorService,
 		public selectService: MidiSelectService,
 		public dragService: MidiDragService,
@@ -168,12 +168,12 @@ export class ViewportComponent implements AfterViewInit {
 	// Actions
 
 	private placeNote(event: MouseEvent) {
-		const x = this.viewportService.mouseXToPx(event.clientX);
+		const x = this.viewportService.mouseXToPx(event.clientX, false);
 		const y = this.viewportService.mouseYToPx(event.clientY);
 
 		const midiNote = this.midiService.pxToMidiNote(y);
 		const start = this.viewportService.snapToGrid() ?
-			this.viewportService.pxToPos(x - this.viewportService.posToPx(this.viewportService.smallestUnit())) :
+			this.viewportService.pxToPos(x - this.viewportService.posToPx(this.viewportService.smallestUnit())/2) :
 			this.viewportService.pxToPos(x)
 		const duration = this.midiService.drawNoteLength();
 		const velocity = 0;

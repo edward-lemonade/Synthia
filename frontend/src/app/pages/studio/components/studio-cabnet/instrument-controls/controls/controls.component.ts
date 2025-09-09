@@ -10,7 +10,7 @@ import { CabnetService } from "../../../../services/cabnet.service";
 
 import { SYNTHS } from "../../../../services/synths/presets/instruments";
 import { RotaryKnobComponent } from "@src/app/components/rotary-knob/rotary-knob.component";
-import { PlaybackService } from "../../../../services/playback.service";
+import { TimelinePlaybackService } from "../../../../services/timeline-playback.service";
 import { FormsModule } from "@angular/forms";
 import { MatSliderModule } from "@angular/material/slider";
 
@@ -99,7 +99,7 @@ export class ControlsComponent {
 
 	constructor(
 		public viewportService: ViewportService,
-		public playbackService: PlaybackService,
+		public playbackService: TimelinePlaybackService,
 		public cabnetService: CabnetService,
 	) {
 		this.synthKeys = Object.keys(SYNTHS);

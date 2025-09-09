@@ -33,9 +33,9 @@ export interface MidiSourceInfo {
 
 
 @Injectable()
-export class PlaybackService { // SINGLETON
-	private static _instance: PlaybackService;
-	static get instance(): PlaybackService { return PlaybackService._instance; }
+export class TimelinePlaybackService { // SINGLETON
+	private static _instance: TimelinePlaybackService;
+	static get instance(): TimelinePlaybackService { return TimelinePlaybackService._instance; }
 
 	constructor(
 		private injector: Injector,
@@ -43,7 +43,7 @@ export class PlaybackService { // SINGLETON
 		private drumSynth: DrumSynthesizerService,
 		private reverbProcessor: ReverbProcessor
 	) {
-		PlaybackService._instance = this;
+		TimelinePlaybackService._instance = this;
 		this.audioContext = new AudioContext();
 		this.masterGainNode = this.audioContext.createGain();
 		this.masterGainNode.connect(this.audioContext.destination);
@@ -61,7 +61,7 @@ export class PlaybackService { // SINGLETON
 	// ==============================================================================================
 	// Fields
 
-	private audioContext: AudioContext;
+	audioContext: AudioContext;
 	private masterGainNode: GainNode;
 	private activeAudioSources: AudioBufferSourceNode[] = [];
 	private activeMidiSources: MidiSourceInfo[] = [];
@@ -411,59 +411,4 @@ export class PlaybackService { // SINGLETON
 		}
 	}
 
-	// ==============================================================================================
-	// Extras
-
-	testMidiPlayback() {
-		const audioContext = new AudioContext();
-		if (audioContext.state === 'suspended') {
-			audioContext.resume();
-		}
-		
-		const midiSynthService = new MidiSynthesizerService();
-		midiSynthService.initialize(audioContext);
-		
-		const testNotes: MidiNote[] = [{
-			start: 0,
-			midiNote: 60,
-			velocity: 100,
-			duration: 1000
-		}];
-		
-		// Use a test track ID
-		const testTrackId = 'test-track-1';
-		const source = midiSynthService.createMidiSource(testNotes, 0, 2000, testTrackId);
-		source.connect(audioContext.destination);
-		source.start(audioContext.currentTime);
-	}
-
-	testDrumPlayback() {
-		const audioContext = new AudioContext();
-		if (audioContext.state === 'suspended') {
-			audioContext.resume();
-		}
-		
-		const drumSynthService = new DrumSynthesizerService();
-		drumSynthService.initialize(audioContext);
-		
-		// Test different drum sounds
-		const testNotes: MidiNote[] = [
-			{ start: 0, midiNote: 36, velocity: 100, duration: 1000 }, // Kick drum
-			{ start: 0.5, midiNote: 38, velocity: 80, duration: 500 }, // Snare drum
-			{ start: 1.0, midiNote: 42, velocity: 60, duration: 200 }, // Closed hi-hat
-			{ start: 1.5, midiNote: 46, velocity: 70, duration: 1000 }, // Open hi-hat
-			{ start: 2.0, midiNote: 49, velocity: 90, duration: 2000 }, // Crash cymbal
-		];
-		
-		// Use a test track ID
-		const testTrackId = 'test-drum-track-1';
-		const source = drumSynthService.createMidiSource(testNotes, 0, 4000, testTrackId);
-		source.connect(audioContext.destination);
-		source.start(audioContext.currentTime);
-	}
-
-	// Quick test method for console access
-	static testDrums() {
-		PlaybackService.instance.testDrumPlayback();
-	}
 }

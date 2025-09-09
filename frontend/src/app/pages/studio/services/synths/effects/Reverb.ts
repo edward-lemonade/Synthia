@@ -11,47 +11,56 @@ export class ReverbProcessor {
 		this.audioContext = audioContext;
 	}
 
-	/**
-	 * Creates a convolver node with reverb based on the reverb amount (0-100)
-	 * Returns null if reverb is 0 or disabled
-	 */
-	createReverbNode(reverbAmount: number): ConvolverNode | null {
-		if (!this.audioContext || reverbAmount <= 0) {
+	createReverbNode(
+		reverbAmount: number, 
+		offline: boolean = false, 
+		audioContext?: AudioContext | OfflineAudioContext
+	): ConvolverNode | null {
+		const ctx = audioContext || this.audioContext;
+		
+		if (!ctx || reverbAmount <= 0) {
 			return null;
 		}
 
-		const convolver = this.audioContext.createConvolver();
-		const impulseResponse = this.generateImpulseResponse(reverbAmount);
+		const convolver = ctx.createConvolver();
+		const impulseResponse = this.generateImpulseResponse(reverbAmount, offline, ctx);
 		convolver.buffer = impulseResponse;
 		
 		return convolver;
 	}
 
-	/**
-	 * Updates an existing reverb node's impulse response
-	 */
-	updateReverbNode(convolver: ConvolverNode, reverbAmount: number) {
-		if (!this.audioContext || reverbAmount <= 0) {
+	updateReverbNode(
+		convolver: ConvolverNode, 
+		reverbAmount: number, 
+		offline: boolean = false, 
+		audioContext?: AudioContext | OfflineAudioContext
+	) {
+		const ctx = audioContext || this.audioContext;
+		
+		if (!ctx || reverbAmount <= 0) {
 			return;
 		}
 
-		const impulseResponse = this.generateImpulseResponse(reverbAmount);
+		const impulseResponse = this.generateImpulseResponse(reverbAmount, offline, ctx);
 		convolver.buffer = impulseResponse;
 	}
 
-	/**
-	 * Generates an impulse response buffer for reverb simulation
-	 * Uses a simple algorithmic approach for performance
-	 */
-	private generateImpulseResponse(reverbAmount: number): AudioBuffer {
-		if (!this.audioContext) {
+	private generateImpulseResponse(
+		reverbAmount: number, 
+		offline: boolean = false, 
+		audioContext?: AudioContext | OfflineAudioContext
+	): AudioBuffer {
+		const ctx = audioContext || this.audioContext;
+		
+		if (!ctx) {
 			throw new Error('AudioContext not initialized');
 		}
 
 		// Create cache key based on reverb amount and sample rate
-		const cacheKey = `${reverbAmount}-${this.audioContext.sampleRate}`;
+		const cacheKey = `${reverbAmount}-${ctx.sampleRate}`;
 		
-		if (this.impulseResponseCache.has(cacheKey)) {
+		// For offline rendering, don't use cache to avoid cross-context issues
+		if (!offline && this.impulseResponseCache.has(cacheKey)) {
 			return this.impulseResponseCache.get(cacheKey)!;
 		}
 
@@ -60,10 +69,10 @@ export class ReverbProcessor {
 		
 		// Reverb duration: 0.5s to 3s based on amount
 		const duration = 0.5 + (normalizedAmount * 2.5);
-		const sampleRate = this.audioContext.sampleRate;
+		const sampleRate = ctx.sampleRate;
 		const length = Math.floor(sampleRate * duration);
 		
-		const impulseResponse = this.audioContext.createBuffer(2, length, sampleRate);
+		const impulseResponse = ctx.createBuffer(2, length, sampleRate);
 		
 		// Generate stereo impulse response
 		for (let channel = 0; channel < 2; channel++) {
@@ -89,15 +98,14 @@ export class ReverbProcessor {
 			}
 		}
 		
-		// Cache the generated impulse response
-		this.impulseResponseCache.set(cacheKey, impulseResponse);
+		// Only cache for realtime contexts to avoid memory leaks
+		if (!offline) {
+			this.impulseResponseCache.set(cacheKey, impulseResponse);
+		}
 		
 		return impulseResponse;
 	}
 
-	/**
-	 * Generates early reflections pattern for more realistic reverb
-	 */
 	private generateEarlyReflections(time: number, intensity: number): number {
 		if (time > 0.1) return 0; // Only early reflections
 		
@@ -120,25 +128,27 @@ export class ReverbProcessor {
 		return output;
 	}
 
-	/**
-	 * Creates a dry/wet mix node for reverb
-	 * Returns an object with input, dry, wet, and output nodes
-	 */
-	createReverbMixNode(reverbAmount: number): {
+	createReverbMixNode(
+		reverbAmount: number, 
+		offline: boolean = false, 
+		audioContext?: AudioContext | OfflineAudioContext
+	): {
 		input: GainNode;
 		dryGain: GainNode;
 		wetGain: GainNode;
 		output: GainNode;
 		convolver: ConvolverNode | null;
 	} | null {
-		if (!this.audioContext) {
+		const ctx = audioContext || this.audioContext;
+		
+		if (!ctx) {
 			return null;
 		}
 
-		const input = this.audioContext.createGain();
-		const dryGain = this.audioContext.createGain();
-		const wetGain = this.audioContext.createGain();
-		const output = this.audioContext.createGain();
+		const input = ctx.createGain();
+		const dryGain = ctx.createGain();
+		const wetGain = ctx.createGain();
+		const output = ctx.createGain();
 		
 		// Calculate dry/wet mix (0-100% reverb)
 		const wetLevel = Math.max(0, Math.min(100, reverbAmount)) / 100;
@@ -148,7 +158,7 @@ export class ReverbProcessor {
 		wetGain.gain.value = wetLevel * 0.3; // Scale wet signal to prevent clipping
 		
 		// Create reverb convolver if needed
-		const convolver = this.createReverbNode(reverbAmount);
+		const convolver = this.createReverbNode(reverbAmount, offline, ctx);
 		
 		// Connect the nodes
 		// input -> dryGain -> output (dry path)
@@ -171,31 +181,63 @@ export class ReverbProcessor {
 		};
 	}
 
-	/**
-	 * Updates the dry/wet mix levels for an existing reverb mix node
-	 */
-	updateReverbMix(mixNode: {
-		dryGain: GainNode;
-		wetGain: GainNode;
-		convolver: ConvolverNode | null;
-	}, reverbAmount: number, audioContext: AudioContext) {
+	updateReverbMix(
+		mixNode: {
+			dryGain: GainNode;
+			wetGain: GainNode;
+			convolver: ConvolverNode | null;
+		}, 
+		reverbAmount: number, 
+		audioContext: AudioContext | OfflineAudioContext,
+		offline: boolean = false
+	) {
 		const wetLevel = Math.max(0, Math.min(100, reverbAmount)) / 100;
 		const dryLevel = 1 - (wetLevel * 0.7);
 		
-		const currentTime = audioContext.currentTime;
-		
-		mixNode.dryGain.gain.setTargetAtTime(dryLevel, currentTime, 0.01);
-		mixNode.wetGain.gain.setTargetAtTime(wetLevel * 0.3, currentTime, 0.01);
+		// For offline rendering, set values immediately
+		if (offline) {
+			mixNode.dryGain.gain.value = dryLevel;
+			mixNode.wetGain.gain.value = wetLevel * 0.3;
+		} else {
+			// For realtime, use smooth transitions
+			const currentTime = audioContext.currentTime;
+			mixNode.dryGain.gain.setTargetAtTime(dryLevel, currentTime, 0.01);
+			mixNode.wetGain.gain.setTargetAtTime(wetLevel * 0.3, currentTime, 0.01);
+		}
 		
 		// Update convolver if reverb amount changed significantly
 		if (mixNode.convolver && reverbAmount > 0) {
-			this.updateReverbNode(mixNode.convolver, reverbAmount);
+			this.updateReverbNode(mixNode.convolver, reverbAmount, offline, audioContext);
 		}
 	}
 
-	/**
-	 * Clears the impulse response cache (useful for memory management)
-	 */
+	// Helper method to create reverb for offline export
+	createOfflineReverbMixNode(
+		reverbAmount: number,
+		offlineContext: OfflineAudioContext
+	): {
+		input: GainNode;
+		dryGain: GainNode;
+		wetGain: GainNode;
+		output: GainNode;
+		convolver: ConvolverNode | null;
+	} | null {
+		return this.createReverbMixNode(reverbAmount, true, offlineContext);
+	}
+
+	// Helper method to update reverb for offline export
+	updateOfflineReverbMix(
+		mixNode: {
+			dryGain: GainNode;
+			wetGain: GainNode;
+			convolver: ConvolverNode | null;
+		}, 
+		reverbAmount: number, 
+		offlineContext: OfflineAudioContext
+	) {
+		this.updateReverbMix(mixNode, reverbAmount, offlineContext, true);
+	}
+
 	clearCache() {
 		this.impulseResponseCache.clear();
 	}

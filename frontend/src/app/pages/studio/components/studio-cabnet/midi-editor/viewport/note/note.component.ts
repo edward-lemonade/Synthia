@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, Injector, Input, OnDestroy, signal} from '@angular/core';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
-import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
+import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';

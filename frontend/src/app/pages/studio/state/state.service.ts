@@ -1,4 +1,4 @@
-import { Injectable, signal } from "@angular/core";
+import { computed, Injectable, signal } from "@angular/core";
 import { Author, ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
 import { Command, HistoryService } from "../services/history.service";
 
@@ -51,7 +51,13 @@ export class StateService { // SINGLETON
 		});
 	}
 
-
+	projectDuration = computed(() => {
+		return this.state.studio.tracks().reduce((max, track) => {
+			return Math.max(max, track.regions().reduce((regionMax, region) => {
+				return Math.max(regionMax, region.start() + region.duration());
+				}, 0));
+		}, 0); 
+	});
 
 	// ==============================================================================================
 	// Methods

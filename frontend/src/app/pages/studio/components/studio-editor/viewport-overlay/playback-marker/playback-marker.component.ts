@@ -2,7 +2,7 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, 
 import { ViewportService } from '../../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { PlaybackService } from '../../../../services/playback.service';
+import { TimelinePlaybackService } from '../../../../services/timeline-playback.service';
 import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 
 @Component({
@@ -31,7 +31,7 @@ export class PlaybackMarkerComponent {
 	constructor(
 		private injector: Injector,
 		public viewportService: ViewportService,
-		public playbackService: PlaybackService,
+		public playbackService: TimelinePlaybackService,
 		public selectService: RegionSelectService,
 	) {}
 

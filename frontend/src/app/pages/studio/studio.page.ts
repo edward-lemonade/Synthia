@@ -14,18 +14,19 @@ import { StateService } from './state/state.service';
 import { TracksService } from './services/tracks.service';
 import { RenderWaveformService } from './services/render-waveform.service';
 import { RegionService } from './services/region.service';
-import { PlaybackService } from './services/playback.service';
+import { TimelinePlaybackService } from './services/timeline-playback.service';
 import { StudioCabnetComponent } from "./components/studio-cabnet/studio-cabnet.component";
 import { CabnetService } from './services/cabnet.service';
 import { RenderMidiService } from './services/render-midi.service';
 import { MidiSynthesizerService } from './services/synths/midi-synthesizer.service';
 import { DrumSynthesizerService } from './services/synths/drum-synthesizer.service';
 import { AudioRecordingService } from './services/audio-recording.service';
+import { TimelineExportService } from './services/timeline-export.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, RenderWaveformService, PlaybackService, CabnetService, RenderMidiService, MidiSynthesizerService, AudioRecordingService, DrumSynthesizerService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, RenderWaveformService, TimelinePlaybackService, CabnetService, RenderMidiService, MidiSynthesizerService, AudioRecordingService, DrumSynthesizerService, TimelineExportService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

@@ -14,7 +14,7 @@ import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.fa
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { AudioRecordingService } from '@src/app/pages/studio/services/audio-recording.service';
-import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
+import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 
 @Component({
 	selector: 'viewport-track',
@@ -69,7 +69,7 @@ export class TrackComponent{
 		public tracksService : TracksService,
 		public regionService : RegionService,
 		public recordingService : AudioRecordingService,
-		public playbackService : PlaybackService
+		public playbackService : TimelinePlaybackService
 	) {}
 
 	recordingStartPx = computed(() => {

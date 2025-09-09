@@ -3,7 +3,7 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, 
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
+import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 
 @Component({
@@ -48,7 +48,7 @@ export class ViewportHeaderComponent implements AfterViewInit {
 	constructor(
 		private injector: Injector,
 		public viewportService: ViewportService,
-		public playbackService: PlaybackService,
+		public playbackService: TimelinePlaybackService,
 	) {
 	}
 

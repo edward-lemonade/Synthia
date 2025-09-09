@@ -1,9 +1,29 @@
-import { DrumParams, DRUM_PRESETS } from '../drum-synthesizer.service';
+import { DrumParams } from '../drum-synthesizer.service';
 
-// Extended drum presets with more variety
-export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
+export const DEFAULT_KICK: DrumParams = {
+	waveform: 'sine',
+	frequency: 60,
+	detune: 0,
+	noiseLevel: 0,
+	noiseColor: 0.5,
+	cutoff: 20000,
+	resonance: 1,
+	filterType: 'lowpass',
+	attack: 0.001,
+	decay: 0.3,
+	sustain: 0.1,
+	release: 0.1,
+	midiNoteAttack: 0.001,
+	midiNoteDecay: 0.1,
+	midiNoteStart: 2.0,
+	midiNoteEnd: 0.5,
+	volume: 0.8,
+	drive: 1.0
+};
+
+export const DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 	// Kick Drums
-	'kick-classic': {
+	'kick': {
 		waveform: 'sine',
 		frequency: 60,
 		attack: 0.001,
@@ -15,6 +35,32 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		midiNoteStart: 2.0,
 		midiNoteEnd: 0.5,
 		volume: 0.8
+	},
+	'kick-deep': {
+		waveform: 'sine',
+		frequency: 45,
+		attack: 0.001,
+		decay: 0.4,
+		sustain: 0.15,
+		release: 0.15,
+		midiNoteAttack: 0.001,
+		midiNoteDecay: 0.15,
+		midiNoteStart: 2.5,
+		midiNoteEnd: 0.3,
+		volume: 0.9
+	},
+	'kick-punchy': {
+		waveform: 'sine',
+		frequency: 70,
+		attack: 0.001,
+		decay: 0.2,
+		sustain: 0.05,
+		release: 0.05,
+		midiNoteAttack: 0.001,
+		midiNoteDecay: 0.05,
+		midiNoteStart: 3.0,
+		midiNoteEnd: 0.7,
+		volume: 0.85
 	},
 	'kick-808': {
 		waveform: 'sine',
@@ -57,7 +103,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 	},
 
 	// Snare Drums
-	'snare-classic': {
+	'snare': {
 		waveform: 'triangle',
 		frequency: 200,
 		noiseLevel: 0.6,
@@ -115,7 +161,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 	},
 
 	// Hi-Hats
-	'hihat-closed': {
+	'hihat': {
 		waveform: 'sine',
 		frequency: 10000,
 		noiseLevel: 0.9,
@@ -157,6 +203,20 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		release: 0.02,
 		volume: 0.5
 	},
+	'hihat-closed': {
+		waveform: 'sine',
+		frequency: 10000,
+		noiseLevel: 0.9,
+		noiseColor: 0.9,
+		cutoff: 12000,
+		resonance: 0.5,
+		filterType: 'highpass',
+		attack: 0.001,
+		decay: 0.1,
+		sustain: 0.01,
+		release: 0.05,
+		volume: 0.6
+	},
 	'hihat-dark': {
 		waveform: 'sine',
 		frequency: 6000,
@@ -173,7 +233,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 	},
 
 	// Cymbals
-	'crash-classic': {
+	'crash': {
 		waveform: 'sine',
 		frequency: 300,
 		noiseLevel: 0.7,
@@ -201,7 +261,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		release: 1.0,
 		volume: 0.7
 	},
-	'ride-classic': {
+	'ride': {
 		waveform: 'sine',
 		frequency: 500,
 		noiseLevel: 0.5,
@@ -231,20 +291,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 	},
 
 	// Toms
-	'tom-high': {
-		waveform: 'sine',
-		frequency: 150,
-		attack: 0.001,
-		decay: 0.3,
-		sustain: 0.15,
-		release: 0.2,
-		midiNoteAttack: 0.001,
-		midiNoteDecay: 0.15,
-		midiNoteStart: 1.8,
-		midiNoteEnd: 0.9,
-		volume: 0.65
-	},
-	'tom-mid': {
+	'tom': {
 		waveform: 'sine',
 		frequency: 100,
 		attack: 0.001,
@@ -270,6 +317,32 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		midiNoteEnd: 0.7,
 		volume: 0.75
 	},
+	'tom-mid': {
+		waveform: 'sine',
+		frequency: 100,
+		attack: 0.001,
+		decay: 0.4,
+		sustain: 0.2,
+		release: 0.3,
+		midiNoteAttack: 0.001,
+		midiNoteDecay: 0.2,
+		midiNoteStart: 1.5,
+		midiNoteEnd: 0.8,
+		volume: 0.7
+	},
+	'tom-high': {
+		waveform: 'sine',
+		frequency: 150,
+		attack: 0.001,
+		decay: 0.3,
+		sustain: 0.15,
+		release: 0.2,
+		midiNoteAttack: 0.001,
+		midiNoteDecay: 0.15,
+		midiNoteStart: 1.8,
+		midiNoteEnd: 0.9,
+		volume: 0.65
+	},
 	'tom-floor': {
 		waveform: 'sine',
 		frequency: 60,
@@ -284,8 +357,8 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		volume: 0.8
 	},
 
-	// Percussion
-	'clap-classic': {
+	// Clap
+	'clap': {
 		waveform: 'square',
 		frequency: 200,
 		noiseLevel: 0.8,
@@ -313,6 +386,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		release: 0.15,
 		volume: 0.75
 	},
+	// Rim Shot
 	'rimshot': {
 		waveform: 'square',
 		frequency: 400,
@@ -322,6 +396,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		release: 0.02,
 		volume: 0.6
 	},
+	// Cowbell
 	'cowbell': {
 		waveform: 'square',
 		frequency: 800,
@@ -331,6 +406,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 		release: 0.1,
 		volume: 0.5
 	},
+	// Other
 	'woodblock': {
 		waveform: 'square',
 		frequency: 600,
@@ -356,11 +432,7 @@ export const EXTENDED_DRUM_PRESETS: Record<string, Partial<DrumParams>> = {
 	}
 };
 
-// Combine original presets with extended ones
-export const ALL_DRUM_PRESETS = {
-	...DRUM_PRESETS,
-	...EXTENDED_DRUM_PRESETS
-};
+
 
 /*
 // MIDI note to drum preset mapping (General MIDI standard)
@@ -423,7 +495,7 @@ export const MIDI_DRUM_MAPPING: Record<number, string> = {
 	80: 'woodblock',		 // Mute Triangle
 	81: 'woodblock'			// Open Triangle
 };*/
-export const MIDI_DRUM_MAPPING: Record<number, string> = Object.keys(ALL_DRUM_PRESETS).reduce((acc, preset, index) => {
+export const MIDI_DRUM_MAPPING: Record<number, string> = Object.keys(DRUM_PRESETS).reduce((acc, preset, index) => {
 	acc[index+24+35] = preset;
 	return acc;
 }, {} as Record<number, string>);

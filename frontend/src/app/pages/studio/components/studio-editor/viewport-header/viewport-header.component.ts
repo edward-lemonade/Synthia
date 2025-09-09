@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PlaybackMarkerComponent } from '../viewport-overlay/playback-marker/playback-marker.component';
-import { PlaybackService } from '../../../services/playback.service';
+import { TimelinePlaybackService } from '../../../services/timeline-playback.service';
 
 @Component({
 	selector: 'studio-editor-viewport-header',
@@ -52,7 +52,7 @@ export class ViewportHeaderComponent implements AfterViewInit {
 		private matIconRegistry: MatIconRegistry,
     	private domSanitizer: DomSanitizer,
 		public viewportService: ViewportService,
-		public playbackService: PlaybackService,
+		public playbackService: TimelinePlaybackService,
 	) {
 		this.matIconRegistry.addSvgIcon(
 			'snap-to-grid',

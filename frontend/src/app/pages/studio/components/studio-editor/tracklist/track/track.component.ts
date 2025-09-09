@@ -16,7 +16,7 @@ import { RegionSelectService } from '@src/app/pages/studio/services/region-selec
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
-import { PlaybackService } from '@src/app/pages/studio/services/playback.service';
+import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 
 @Component({
@@ -127,7 +127,7 @@ export class TrackComponent implements OnInit {
 		public tracksService : TracksService,
 		public viewportService : ViewportService,
 		public selectService : RegionSelectService,
-		public playbackService : PlaybackService,
+		public playbackService : TimelinePlaybackService,
 		public cabnetService : CabnetService,
 	) {
 		effect(() => {
