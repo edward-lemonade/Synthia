@@ -18,15 +18,14 @@ import { TimelinePlaybackService } from './services/timeline-playback.service';
 import { StudioCabnetComponent } from "./components/studio-cabnet/studio-cabnet.component";
 import { CabnetService } from './services/cabnet.service';
 import { RenderMidiService } from './services/render-midi.service';
-import { MidiSynthesizerService } from './services/synths/midi-synthesizer.service';
-import { DrumSynthesizerService } from './services/synths/drum-synthesizer.service';
 import { AudioRecordingService } from './services/audio-recording.service';
 import { TimelineExportService } from './services/timeline-export.service';
+import { SynthesizerService } from './services/synthesizer.service';
 
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, RenderWaveformService, TimelinePlaybackService, CabnetService, RenderMidiService, MidiSynthesizerService, AudioRecordingService, DrumSynthesizerService, TimelineExportService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, RenderWaveformService, TimelinePlaybackService, CabnetService, RenderMidiService, AudioRecordingService, TimelineExportService, SynthesizerService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

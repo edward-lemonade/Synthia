@@ -7,11 +7,9 @@ import { RegionService } from './region.service';
 import { TracksService } from './tracks.service';
 import { ObjectStateNode } from '../state/state.factory';
 import { PlaybackMarkerComponent } from '../components/studio-editor/viewport-overlay/playback-marker/playback-marker.component';
-import { MidiSynthesizerService, MidiSource, SynthParams } from './synths/midi-synthesizer.service';
-import { ReverbProcessor } from './synths/effects/Reverb';
+import { ReverbProcessor } from '@shared/audio-processing/synthesis/effects/reverb-handler';
 import { AudioRecording, AudioRecordingService } from './audio-recording.service';
-import { RegionSelectService } from './region-select.service';
-import { DrumSynthesizerService } from './synths/drum-synthesizer.service';
+import { MidiSource, SynthesizerService } from './synthesizer.service';
 
 export interface TrackNodes {
 	gainNode: GainNode,
@@ -39,18 +37,16 @@ export class TimelinePlaybackService { // SINGLETON
 
 	constructor(
 		private injector: Injector,
-		private midiSynth: MidiSynthesizerService,
-		private drumSynth: DrumSynthesizerService,
-		private reverbProcessor: ReverbProcessor
+		private synthesizerService: SynthesizerService,
 	) {
 		TimelinePlaybackService._instance = this;
 		this.audioContext = new AudioContext();
+
 		this.masterGainNode = this.audioContext.createGain();
 		this.masterGainNode.connect(this.audioContext.destination);
 
-		this.midiSynth.initialize(this.audioContext);
-		this.drumSynth.initialize(this.audioContext);
-		this.reverbProcessor.initialize(this.audioContext);
+		this.synthesizerService.initialize(this.audioContext);
+		this.reverbProcessor = new ReverbProcessor();
 	}
 
 	get viewportService() { return ViewportService.instance }
@@ -62,6 +58,7 @@ export class TimelinePlaybackService { // SINGLETON
 	// Fields
 
 	audioContext: AudioContext;
+	declare reverbProcessor: ReverbProcessor;
 	private masterGainNode: GainNode;
 	private activeAudioSources: AudioBufferSourceNode[] = [];
 	private activeMidiSources: MidiSourceInfo[] = [];
@@ -197,7 +194,7 @@ export class TimelinePlaybackService { // SINGLETON
 		this.trackNodes.clear();
 		this.activeAudioSources = [];
 		this.activeMidiSources = [];
-		this.midiSynth.stopAllNotes();
+		this.synthesizerService.stopAllNotes();
 
 		this.tracks().forEach(track => {
 			const trackId = track._id;
@@ -210,7 +207,7 @@ export class TimelinePlaybackService { // SINGLETON
 			const trackPannerNode = this.audioContext.createStereoPanner();
 			
 			// Create reverb mix node if reverb is enabled
-			const reverbMixNode = reverb > 0 ? this.reverbProcessor.createReverbMixNode(reverb) : null;
+			const reverbMixNode = reverb > 0 ? this.reverbProcessor.createReverbMixNode(reverb, false, this.audioContext) : null;
 			
 			const volumeLevel = mute ? 0 : volume / 100;
 			trackGainNode.gain.value = volumeLevel;
@@ -299,12 +296,9 @@ export class TimelinePlaybackService { // SINGLETON
 
 		// Check if this track is a drum track
 		const track = TracksService.instance.getTrack(trackId);
-		const isDrumTrack = track && track.trackType() === MidiTrackType.Drums;
 		
 		// MIDI source -> gain -> reverb -> pan -> master
-		const midiSource = isDrumTrack ? 
-			this.drumSynth.createMidiSource(midiData, regionStart, regionDuration, trackId) :
-			this.midiSynth.createMidiSource(midiData, regionStart, regionDuration, trackId);
+		const midiSource = this.synthesizerService.createMidiSource(midiData, regionStart, regionDuration, trackId, track!.trackType() as MidiTrackType)
 		midiSource.connect(trackGainNode);
 
 		const scheduleTime = this.startAudioTime + (regionStart - playbackTime);
@@ -347,8 +341,7 @@ export class TimelinePlaybackService { // SINGLETON
 			}
 		});
 		this.activeMidiSources = [];
-		this.midiSynth.cleanup();
-		this.drumSynth.cleanup();
+		this.synthesizerService.cleanup();
 		
 		this.trackNodes.clear();
 	}

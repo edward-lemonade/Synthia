@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, ViewChild } from "@angular/core";
 import { MidiEditorService } from "@src/app/pages/studio/services/midi-editor/midi-editor.service";
 import { ViewportService } from "@src/app/pages/studio/services/viewport.service";
-import { MIDI_DRUM_MAPPING } from "@src/app/pages/studio/services/synths/presets/drums";
+import { MIDI_DRUM_MAPPING } from "@shared/audio-processing/synthesis/presets/drums";
 
 @Component({
 	selector: 'midi-drum-editor-keyboard',

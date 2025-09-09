@@ -1,3 +1,41 @@
 @use "theme" as *;
 @use "../../../../studio-vars" as *;
 
+.export-dialog {
+	background: $appbar-bg;
+	border: $border-width solid $border-color !important;
+	border-radius: 0px !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	box-sizing: border-box;
+
+	width: 300px;
+	height: 300px;
+	gap: 50px;
+	padding: 50px;
+
+	.btn {
+		height: 100px;
+		width: 200px;
+		background-color: $accent-orange;
+
+		font-size: 20px;
+		font-weight: 500;
+		color: $appbar-bg !important;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		
+		&:hover {
+			background-color: $accent-orange-l;
+		}
+	}
+}
+

@@ -1,22 +1,14 @@
-import { Injectable } from '@angular/core';
-
-@Injectable({
-	providedIn: 'root'
-})
 export class ReverbProcessor {
 	private impulseResponseCache = new Map<string, AudioBuffer>();
-	private audioContext: AudioContext | null = null;
 
-	initialize(audioContext: AudioContext) {
-		this.audioContext = audioContext;
-	}
+	constructor() {}
 
-	createReverbNode(
+	private createReverbNode(
 		reverbAmount: number, 
 		offline: boolean = false, 
 		audioContext?: AudioContext | OfflineAudioContext
 	): ConvolverNode | null {
-		const ctx = audioContext || this.audioContext;
+		const ctx = audioContext;
 		
 		if (!ctx || reverbAmount <= 0) {
 			return null;
@@ -29,13 +21,13 @@ export class ReverbProcessor {
 		return convolver;
 	}
 
-	updateReverbNode(
+	private updateReverbNode(
 		convolver: ConvolverNode, 
 		reverbAmount: number, 
 		offline: boolean = false, 
 		audioContext?: AudioContext | OfflineAudioContext
 	) {
-		const ctx = audioContext || this.audioContext;
+		const ctx = audioContext;
 		
 		if (!ctx || reverbAmount <= 0) {
 			return;
@@ -50,7 +42,7 @@ export class ReverbProcessor {
 		offline: boolean = false, 
 		audioContext?: AudioContext | OfflineAudioContext
 	): AudioBuffer {
-		const ctx = audioContext || this.audioContext;
+		const ctx = audioContext;
 		
 		if (!ctx) {
 			throw new Error('AudioContext not initialized');
@@ -131,7 +123,7 @@ export class ReverbProcessor {
 	createReverbMixNode(
 		reverbAmount: number, 
 		offline: boolean = false, 
-		audioContext?: AudioContext | OfflineAudioContext
+		audioContext: AudioContext | OfflineAudioContext
 	): {
 		input: GainNode;
 		dryGain: GainNode;
@@ -139,7 +131,7 @@ export class ReverbProcessor {
 		output: GainNode;
 		convolver: ConvolverNode | null;
 	} | null {
-		const ctx = audioContext || this.audioContext;
+		const ctx = audioContext;
 		
 		if (!ctx) {
 			return null;
@@ -209,33 +201,6 @@ export class ReverbProcessor {
 		if (mixNode.convolver && reverbAmount > 0) {
 			this.updateReverbNode(mixNode.convolver, reverbAmount, offline, audioContext);
 		}
-	}
-
-	// Helper method to create reverb for offline export
-	createOfflineReverbMixNode(
-		reverbAmount: number,
-		offlineContext: OfflineAudioContext
-	): {
-		input: GainNode;
-		dryGain: GainNode;
-		wetGain: GainNode;
-		output: GainNode;
-		convolver: ConvolverNode | null;
-	} | null {
-		return this.createReverbMixNode(reverbAmount, true, offlineContext);
-	}
-
-	// Helper method to update reverb for offline export
-	updateOfflineReverbMix(
-		mixNode: {
-			dryGain: GainNode;
-			wetGain: GainNode;
-			convolver: ConvolverNode | null;
-		}, 
-		reverbAmount: number, 
-		offlineContext: OfflineAudioContext
-	) {
-		this.updateReverbMix(mixNode, reverbAmount, offlineContext, true);
 	}
 
 	clearCache() {

@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AudioCacheService } from './audio-cache.service';
 import { ViewportService } from './viewport.service';
-import { MidiSource, MidiSynthesizerService } from './synths/midi-synthesizer.service';
-import { DrumSynthesizerService } from './synths/drum-synthesizer.service';
-import { ReverbProcessor } from './synths/effects/Reverb';
+import { ReverbProcessor } from '@shared/audio-processing/synthesis/effects/reverb-handler';
 import { AudioRegion, MidiRegion, MidiTrackType, RegionType, Track } from '@shared/types';
 import { ObjectStateNode } from '../state/state.factory';
 import { TracksService } from './tracks.service';
@@ -11,14 +9,16 @@ import { StateService } from '../state/state.service';
 import { TimelinePlaybackService } from './timeline-playback.service';
 
 import 'lamejs/lame.min.js';
+import { SynthesizerService } from './synthesizer.service';
 declare const lamejs: any;
 
 @Injectable()
 export class TimelineExportService {
-	constructor(
-		private reverbProcessor: ReverbProcessor
-	) {}
+	constructor() {
+		this.reverbProcessor = new ReverbProcessor();
+	}
 
+	declare reverbProcessor: ReverbProcessor
 	get tracks() { return TracksService.instance.tracks()}
 	get totalDuration() { return StateService.instance.projectDuration()}
 
@@ -27,7 +27,6 @@ export class TimelineExportService {
 
 	async exportProjectAsMP3(): Promise<Blob> {
 		const renderedBuffer = await this.renderTimeline();
-		//return this.encodeAsMP3(renderedBuffer);
 		return this.wavToMp3(this.encodeAsWAV(renderedBuffer))
 	}
 	async exportProjectAsWAV(): Promise<Blob> {
@@ -256,60 +255,19 @@ export class TimelineExportService {
 
 		// Check if this track is a drum track (same logic as playback)
 		const track = TracksService.instance.getTrack(trackId);
-		const isDrumTrack = track && track.trackType() === MidiTrackType.Drums;
-		
+
 		// Create MIDI source for offline context
-		const midiSource = isDrumTrack ? 
-			await this.createOfflineDrumSource(offlineContext, midiData, regionStart, regionDuration, trackId) :
-			await this.createOfflineMidiSource(offlineContext, midiData, regionStart, regionDuration, trackId);
-		
+		const midiSource = await SynthesizerService.instance.createMidiSource(midiData, regionStart, regionDuration, trackId, track!.trackType() as MidiTrackType, true, offlineContext);
 		midiSource.connect(trackGainNode);
 		
 		// Schedule from the region start time
 		midiSource.start(regionStart, 0, regionDuration);
 	}
 
-	// =====================================================================================
-	// Offline Midi Sources
-
 	private createOfflineReverbMixNode(
 		offlineContext: OfflineAudioContext, 
 		reverbAmount: number
 	) {
-		return this.reverbProcessor.createOfflineReverbMixNode(reverbAmount, offlineContext);
-	}
-
-	private createOfflineMidiSource(
-		offlineContext: OfflineAudioContext,
-		midiData: any[],
-		regionStart: number,
-		regionDuration: number,
-		trackId: string
-	): MidiSource {
-		return MidiSynthesizerService.instance.createMidiSource(
-			midiData, 
-			regionStart, 
-			regionDuration, 
-			trackId,
-			true,
-			offlineContext
-		);
-	}
-
-	private createOfflineDrumSource(
-		offlineContext: OfflineAudioContext,
-		midiData: any[],
-		regionStart: number,
-		regionDuration: number,
-		trackId: string
-	): MidiSource {
-		return DrumSynthesizerService.instance.createMidiSource(
-			midiData, 
-			regionStart, 
-			regionDuration, 
-			trackId,
-			true,
-			offlineContext, 
-		);
+		return this.reverbProcessor.createReverbMixNode(reverbAmount, true, offlineContext);
 	}
 }

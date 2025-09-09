@@ -176,7 +176,7 @@ export class ViewportComponent implements AfterViewInit {
 			this.viewportService.pxToPos(x - this.viewportService.posToPx(this.viewportService.smallestUnit())/2) :
 			this.viewportService.pxToPos(x)
 		const duration = this.midiService.drawNoteLength();
-		const velocity = 0;
+		const velocity = 127;
 		const note: MidiNote = {
 			start: start,
 			midiNote: midiNote,

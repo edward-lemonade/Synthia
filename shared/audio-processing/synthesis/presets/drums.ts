@@ -1,4 +1,4 @@
-import { DrumParams } from '../drum-synthesizer.service';
+import { DrumParams } from '../drum-synthesizer';
 
 export const DEFAULT_KICK: DrumParams = {
 	waveform: 'sine',

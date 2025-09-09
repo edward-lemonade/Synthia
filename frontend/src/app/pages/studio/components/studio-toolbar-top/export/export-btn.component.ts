@@ -27,10 +27,7 @@ export class ExportButtonComponent {
 	) {}
 
 	onClick() {
-		const dialogRef = this.dialog.open(ExportDialogComponent, {
-			width: '250px',
-		});
-
+		const dialogRef = this.dialog.open(ExportDialogComponent, {});
 		dialogRef.afterClosed().subscribe(result => this.onExport(result));
 	}
 
