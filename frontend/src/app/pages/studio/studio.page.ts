@@ -12,12 +12,10 @@ import { RegionDragService } from './services/region-drag.service';
 import { AudioCacheService } from './services/audio-cache.service';
 import { StateService } from './state/state.service';
 import { TracksService } from './services/tracks.service';
-import { RenderWaveformService } from './services/render-waveform.service';
 import { RegionService } from './services/region.service';
 import { TimelinePlaybackService } from './services/timeline-playback.service';
 import { StudioCabnetComponent } from "./components/studio-cabnet/studio-cabnet.component";
 import { CabnetService } from './services/cabnet.service';
-import { RenderMidiService } from './services/render-midi.service';
 import { AudioRecordingService } from './services/audio-recording.service';
 import { TimelineExportService } from './services/timeline-export.service';
 import { SynthesizerService } from './services/synthesizer.service';
@@ -25,7 +23,7 @@ import { SynthesizerService } from './services/synthesizer.service';
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, RenderWaveformService, TimelinePlaybackService, CabnetService, RenderMidiService, AudioRecordingService, TimelineExportService, SynthesizerService],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, TimelinePlaybackService, CabnetService, AudioRecordingService, TimelineExportService, SynthesizerService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {

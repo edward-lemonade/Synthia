@@ -35,6 +35,7 @@ export class TimelineExportService {
 	}
 
 	private encodeAsWAV(audioBuffer: AudioBuffer): Blob {
+		console.log("encoding", audioBuffer, audioBuffer.length, audioBuffer.duration)
 		const length = audioBuffer.length;
 		const numberOfChannels = audioBuffer.numberOfChannels;
 		const sampleRate = audioBuffer.sampleRate;

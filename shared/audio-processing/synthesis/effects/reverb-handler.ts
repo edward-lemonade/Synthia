@@ -1,3 +1,5 @@
+import { AudioContext, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+
 export class ReverbProcessor {
 	private impulseResponseCache = new Map<string, AudioBuffer>();
 

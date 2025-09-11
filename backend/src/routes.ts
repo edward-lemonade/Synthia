@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { checkJwt } from "./middleware/auth.middleware";
-import { saveExisting, saveNew, getMine, load, deleteStudio, rename, saveOverwrite } from "./controllers/project.controller";
+import { saveExisting, saveNew, getMine, load, deleteStudio, rename, saveOverwrite, getExport } from "./controllers/project.controller";
 
 import multer from "multer";
 import { loadAudioFiles, saveAudioFiles } from "./controllers/project_files.controller";
@@ -15,6 +15,7 @@ router.post('/api/projects/save_new', checkJwt, saveNew);
 router.post('/api/projects/load', checkJwt, load);
 router.post('/api/projects/delete_studio', checkJwt, deleteStudio);
 router.post('/api/projects/rename', checkJwt, rename);
+router.post('/api/projects/get_export', checkJwt, getExport)
 
 router.post('/api/project_files/save', checkJwt, upload.any(), saveAudioFiles);
 router.post('/api/project_files/load', checkJwt, loadAudioFiles)

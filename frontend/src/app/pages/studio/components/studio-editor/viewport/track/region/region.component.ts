@@ -14,11 +14,11 @@ import { StateService } from '@src/app/pages/studio/state/state.service';
 import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
 
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
-import { RenderWaveformService } from '@src/app/pages/studio/services/render-waveform.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 import { hexToHsl, hslToCss } from '@src/app/utils/color';
-import { RenderMidiService } from '@src/app/pages/studio/services/render-midi.service';
+import { createMidiViewport } from '@src/app/utils/render-midi';
+import { createWaveformViewport } from '@src/app/utils/render-waveform';
 
 type ResizeHandle = 'left' | 'right' | null;
 
@@ -60,7 +60,7 @@ interface MidiRenderConfig {
 			(mousedown)="onMouseDown($event)"
 			(mousemove)="onMouseMove($event)"
 		>
-			<div class="canvas-div">
+			<div #canvasDiv class="canvas-div">
 				<canvas #canvas class="canvas"></canvas>
 			</div>
 
@@ -113,6 +113,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	@Input() trackIndex!: number;
 	@Input() regionIndex!: number;
 	@ViewChild("region", {static: true}) regionRef!: ElementRef<HTMLDivElement>;
+	@ViewChild("canvasDiv", {static: true}) canvasDiv!: ElementRef<HTMLDivElement>;
 	@ViewChild("canvas", { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
 
 	declare type: RegionType;
@@ -131,8 +132,6 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		public dragService: RegionDragService,
 		public viewportService: ViewportService,
 		public audioCacheService: AudioCacheService,
-		public renderWaveformService: RenderWaveformService,
-		public renderMidiService: RenderMidiService,
 		public regionService: RegionService,
 		public cabnetService: CabnetService,
 	) {
@@ -263,6 +262,10 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	private renderMidiPreview(): void {
+		if (!this.canvas?.nativeElement || this.type !== RegionType.Midi) {
+			return;
+		}
+
 		const viewportBounds = this.getViewportBounds();
 		const canvas = this.canvas.nativeElement;
 
@@ -283,11 +286,12 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 		const midiRegion = this.region as StateNode<MidiRegion>;
 		const notes = midiRegion.midiData.snapshot();
 
-		const result = this.renderMidiService.createMidiViewport(
+		const result = createMidiViewport(
 			canvas,
 			notes,
 			startPx,
 			endPx,
+			(pos: number) => ViewportService.instance.posToPx(pos),
 		);
 
 		this.lastViewportBounds = viewportBounds;
@@ -355,14 +359,15 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 				if (ctx) { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 				return;
 			}
+			this.canvasDiv.nativeElement.style.left = startPx+'px';
 			
 			const audioRegion = this.region as StateNode<AudioRegion>;
 			const audioStartTime = audioRegion.audioStartOffset() + relativeVisibleStartTime;
 			const audioEndTime = audioRegion.audioStartOffset() + relativeVisibleEndTime;
 
 			// Render only the visible portion - now passing region bounds
-			const result = await this.renderWaveformService.createWaveformViewport(
-				this.fileId,
+			const result = await createWaveformViewport(
+				this.audioCacheService.getWaveformData(this.fileId)!,
 				canvas,
 				audioStartTime,
 				audioEndTime,

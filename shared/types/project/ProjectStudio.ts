@@ -60,7 +60,7 @@ export interface AudioRegion extends BaseRegion {
 	
 	// Playback modifications
 	volume: number;
-	midiNote: number;
+	pitch: number;
 	timeStretch: number;
 	fadeIn: number;
 	fadeOut: number;

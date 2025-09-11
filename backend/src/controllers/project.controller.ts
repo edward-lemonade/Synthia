@@ -4,10 +4,11 @@ import mongoose, { Document } from "mongoose";
 
 import { deleteMetadataByProjectId, deleteStudioByProjectId, findMetadataByProjectId, findMetadatasByUser, findStudioByProjectId } from "@src/db/mongo_client";
 
-
-import { ProjectState } from "@shared/types";
+import { AudioFileData, ProjectState } from "@shared/types";
 import { ProjectMetadataTransformer, ProjectStudioTransformer } from "@src/transformers/project.transformer";
 import { ProjectMetadataModel, ProjectStudioModel } from "@src/models";
+import { getExportFile, putExportFile } from "@src/db/s3_client";
+import { Renderer } from "@src/audio-processing/Renderer"
 
 
 export async function getMine(req: Request, res: Response) {
@@ -86,6 +87,8 @@ export async function saveOverwrite(req: Request, res: Response) {
 		return;
 	}
 
+	render(state);
+
 	res.json({ success: true });
 
 }
@@ -104,6 +107,8 @@ export async function saveNew(req: Request, res: Response) {
 	const savedStudioDoc = await studioDoc.save();
 
 	if (!savedStudioDoc) { console.error("Failed to save new project studio."); res.json({ success: false }); return }
+
+	render(state);
 
 	res.json({ success: true })
 }
@@ -143,4 +148,18 @@ export async function rename(req: Request, res: Response) {
 	if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
 
 	res.json({ success: true });
+}
+
+export async function getExport(req: Request, res: Response) {
+	const audioFileData: AudioFileData = await getExportFile(req.body.projectId);
+	res.json({ success: true, exportFileData: audioFileData });
+}
+
+// =======================================================================
+// Common pipelines
+
+export async function render(state: ProjectState) {
+	const renderer = await new Renderer(state);
+	const blob = await renderer.exportProjectAsWAV();
+	await putExportFile(state.metadata.projectId, blob);
 }

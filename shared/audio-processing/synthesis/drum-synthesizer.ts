@@ -1,6 +1,8 @@
 import { MidiNote, ProjectStudio } from "../../types";
 import { MIDI_DRUM_MAPPING, DRUM_PRESETS, DEFAULT_KICK } from "./presets/drums";
 
+import { AudioContext, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+
 export interface DrumVoice {
 	oscillators: OscillatorNode[];
 	gainNode: GainNode;

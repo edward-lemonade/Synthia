@@ -65,7 +65,6 @@ export class StudioCabnetComponent {
 			this.cabnetService.closeCabnet();
 		} else {
 			this.cabnetService.openCabnet(tabIndex);
-			console.log(MIDI_DRUM_MAPPING)
 		}
 	}
 }

@@ -108,7 +108,7 @@ export const AUDIO_REGION_SCAFFOLD = {
 	audioStartOffset: 	{_type: NodeType.Prop, value: 0, mutator: M.setRegionAudioStartOffset} as PropScaffold<number>,
 	audioEndOffset: 	{_type: NodeType.Prop, value: -1, mutator: M.setRegionAudioEndOffset} as PropScaffold<number>,
 	volume: 			{_type: NodeType.Prop, value: 100, mutator: M.setRegionVolume} as PropScaffold<number>,
-	midiNote: 				{_type: NodeType.Prop, value: 0, mutator: M.setRegionMidiNote} as PropScaffold<number>,
+	pitch: 				{_type: NodeType.Prop, value: 0, mutator: M.setRegionPitch} as PropScaffold<number>,
 	timeStretch: 		{_type: NodeType.Prop, value: 0, mutator: M.setRegionTimeStretch} as PropScaffold<number>,
 	fadeIn: 			{_type: NodeType.Prop, value: 0, mutator: M.setRegionFadeIn} as PropScaffold<number>,
 	fadeOut: 			{_type: NodeType.Prop, value: 0, mutator: M.setRegionFadeOut} as PropScaffold<number>,

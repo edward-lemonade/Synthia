@@ -1,27 +1,49 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ProjectsLayoutComponent } from './components/projects-layout/projects-layout.component';
-import { ProjectsListComponent } from "./components/projects-list/projects-list.component";
-
+import { ProjectsListItemComponent } from "./components/projects-list-item/projects-list-item.component";
 import { ProjectsService } from './projects.service';
+import { ProjectMetadata } from '@shared/types';
 
 @Component({
 	selector: 'app-projects',
-	imports: [RouterModule, ProjectsLayoutComponent, ProjectsListComponent],
+	imports: [RouterModule, ProjectsLayoutComponent, ProjectsListItemComponent],
 	providers: [ProjectsService],
 	template: `
 		<app-projects-layout>
-			<app-projects-list/>
+			<div class="projects-grid">
+				@for (project of getProjectsList(); track project.projectId; let i = $index) {
+					<app-projects-list-item
+						[project]="project"
+						[index]="i">
+					</app-projects-list-item>
+				}
+			</div>
 		</app-projects-layout>
 	`,
-	styles: ``
+	styles: [`
+		.projects-grid {
+			width: auto;
+			height: auto;
+			overflow-y: auto;
+			display: grid;
+			grid-template-columns: 1fr;
+			grid-auto-rows: min-content;
+			gap: 16px;
+			align-content: start;
+
+			padding: 20px;
+		}
+	`]
 })
 export class ProjectsPage implements OnInit {
-	constructor (
-		private projectsService: ProjectsService,
-	) {}
+	constructor(private projectsService: ProjectsService) {}
 
 	ngOnInit() {
 		this.projectsService.loadProjects();
+	}
+
+	getProjectsList(): ProjectMetadata[] { 
+		return this.projectsService.projectsList(); 
 	}
 }

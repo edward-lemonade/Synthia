@@ -77,13 +77,11 @@ export class TrackComponent{
 		return this.viewportService.posToPx(this.playbackService.basePos());
 	});
 	recordingWidthPx = computed(() => {
-		console.log(this.recordingService.isRecording())
 		if (!this.recordingService.isRecording()) return 0;
 		
 		const deltaPos = this.playbackService.deltaPos();
 		const width = this.viewportService.posToPx(deltaPos);
-		console.log(width);
-		
+
 		return Math.max(0, width); // Ensure width is never negative
 	});
 

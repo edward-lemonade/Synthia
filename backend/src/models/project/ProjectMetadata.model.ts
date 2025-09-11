@@ -16,6 +16,7 @@ const ProjectMetadataSchema = new mongoose.Schema({ // interface ProjectMetadata
 	isRemixOf: 			{ type: String, default: null },
 
 	isReleased: {type: Boolean, default: false},
+	exportFile: {type: String, default: null}
 });
 
 export interface IProjectMetadataDocument extends Document, ProjectMetadata {}
