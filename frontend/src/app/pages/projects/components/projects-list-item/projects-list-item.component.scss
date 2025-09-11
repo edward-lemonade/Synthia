@@ -153,25 +153,77 @@
 				}
 			}
 		}
-	}
-}
 
-.project-metadata {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	font-size: 12px;
-	color: var(--mat-text-secondary, $app-bg);
-	
-	.project-duration {
-		font-weight: 500;
+		.duration {
+			display: flex;
+			
+			height: 40px;
+			width: 50px;
+
+			font-size: 20px;
+			font-weight: 500;
+			opacity: 0.5;
+			color: $app-bg;
+			overflow: visible;
+
+			align-items: center;
+			justify-content: center;
+			line-height: -5;
+		}
 	}
-	
+
 	.project-date {
-		font-weight: 400;
+		position: absolute;
+		margin: 0;
+		font-size: 14px;
+		font-weight: 500;
+		opacity: 0.5;
+		color: $app-bg;
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		bottom: 10px;
 	}
 }
 
 .menu {
 	background-color: $near-white !important;
+}
+
+::ng-deep .extra-options-menu {
+	background: $appbar-bg;
+	border: 2px solid $appbar-text !important;
+	border-radius: 0px !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.extra-options-menu-content {
+	display: flex;
+	flex-direction: column;
+	
+	.extra-options-menu-btn {
+		height: 30px;
+
+		font-size: 14px;
+		font-weight: 500;
+		color: $appbar-text !important;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: left;
+
+		&:hover {
+			background: $appbar-accent-1;
+			border-color: $appbar-accent-1;
+		}
+	}
 }

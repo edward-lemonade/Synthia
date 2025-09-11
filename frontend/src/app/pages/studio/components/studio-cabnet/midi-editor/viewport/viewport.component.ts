@@ -5,7 +5,7 @@ import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 import { EditingMode, MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
 import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
-import { BoxSelectBounds } from '@src/app/pages/studio/services/region-select.service';
+import { BoxSelectBounds, RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 import { ObjectStateNode } from '@src/app/pages/studio/state/state.factory';
@@ -103,6 +103,7 @@ export class ViewportComponent implements AfterViewInit {
 		public playbackService: TimelinePlaybackService,
 		public midiService: MidiEditorService,
 		public selectService: MidiSelectService,
+		public regionSelectService: RegionSelectService,
 		public dragService: MidiDragService,
 		public tracksService: TracksService,
 		public regionService: RegionService,
@@ -184,7 +185,7 @@ export class ViewportComponent implements AfterViewInit {
 			duration: duration,
 		}
 
-		this.midiService.addNote(note);
+		return this.midiService.addNote(note);
 	}
 
 	// ==========================================================================================
@@ -250,8 +251,13 @@ export class ViewportComponent implements AfterViewInit {
 
 	onClick(event: MouseEvent) {
 		event.stopPropagation();
+
 		if (this.editingMode == EditingMode.Draw && !this.dragService.isDragging()) {
-			this.placeNote(event);
+			const noteNode = this.placeNote(event);
+			this.selectService.setSelectedNote(noteNode);
+		} else {
+			const regionNode = this.midiService.getRegionOfPx(this.viewportService.mouseXToPx(event.clientX));
+			this.regionSelectService.setSelectedRegion(regionNode);
 		}
 	}
 

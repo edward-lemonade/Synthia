@@ -69,6 +69,7 @@ export class TimelinePlaybackService { // SINGLETON
 	playbackPx = computed(() => ViewportService.instance.posToPx(this.playbackPos()));
 	basePos = signal(0);
 	deltaPos = signal(0);
+	playbackTimeDisplay = computed(() => this.playbackTime() + ViewportService.instance.posToTime(this.deltaPos()))
 
 	setPlaybackPos(pos: number, dontSnap = false, viewportService: ViewportService = ViewportService.instance) { 
 		const wasPlaying = this.isPlaying();
@@ -160,6 +161,7 @@ export class TimelinePlaybackService { // SINGLETON
 
 			const elapsedSec = (now - this.startClockTime) / 1000;
 			const deltaPos = this.viewportService.timeToPos(elapsedSec);
+
 			this.deltaPos.set(deltaPos);
 
 			if (playbackLine) {playbackLine.updateTransform(deltaPos)};
@@ -177,6 +179,7 @@ export class TimelinePlaybackService { // SINGLETON
 		const elapsedSec = (now - this.startClockTime) / 1000;
 		const deltaPos = this.viewportService.timeToPos(elapsedSec);
 
+		this.deltaPos.set(0);
 		this.setPlaybackPos(this.basePos() + deltaPos, true);
 
 		const playbackLine = this.playbackLineRef?.deref(); 

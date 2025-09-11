@@ -33,8 +33,12 @@ export class ProjectsService {
 			);
 
 			if (res.data.projects) {
-				this.projectsList.set(res.data.projects);
-				res.data.projects.forEach((projectMetadata) => {
+				const sortedProjects = res.data.projects.sort((a, b) => 
+					new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+				);
+				
+				this.projectsList.set(sortedProjects);
+				sortedProjects.forEach((projectMetadata) => {
 					this.loadExport(projectMetadata.projectId);
 				});
 			}

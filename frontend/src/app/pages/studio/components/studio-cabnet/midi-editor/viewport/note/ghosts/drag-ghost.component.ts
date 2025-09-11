@@ -2,9 +2,7 @@ import { Component, Input, ChangeDetectionStrategy, computed, OnInit } from '@an
 import { CommonModule } from '@angular/common';
 import { MidiNote, Region, Track } from '@shared/types';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
-import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { StateNode } from '@src/app/pages/studio/state/state.factory';
-import { getRegionGhostColor } from '@src/app/utils/color';
 import { MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
 import { MidiDragService } from '@src/app/pages/studio/services/midi-editor/midi-drag.service';
 
@@ -17,7 +15,7 @@ import { MidiDragService } from '@src/app/pages/studio/services/midi-editor/midi
 	template: `
 		<div 
 			class="note-ghost"
-			[style.left.px]="viewportService.posToPx(note.start() + dragService.dragInfo()!.deltaPosX)"
+			[style.left.px]="viewportService.posToPx(note.gp().start() + note.start() + dragService.dragInfo()!.deltaPosX)"
 			[style.width.px]="viewportService.posToPx(note.duration())"
 			[style.top.px]="midiService.midiNoteToPx(note.midiNote() + dragService.dragInfo()!.deltaMidiNote)"
 			[style.height.px]="HEIGHT_PX"

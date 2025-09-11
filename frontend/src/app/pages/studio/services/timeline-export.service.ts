@@ -20,7 +20,7 @@ export class TimelineExportService {
 
 	declare reverbProcessor: ReverbProcessor
 	get tracks() { return TracksService.instance.tracks()}
-	get totalDuration() { return StateService.instance.projectDuration()}
+	get totalDurationTime() { return ViewportService.instance.posToTime(StateService.instance.projectDuration())}
 
 	// =====================================================================================
 	// Encodings
@@ -35,7 +35,7 @@ export class TimelineExportService {
 	}
 
 	private encodeAsWAV(audioBuffer: AudioBuffer): Blob {
-		console.log("encoding", audioBuffer, audioBuffer.length, audioBuffer.duration)
+		//console.log("encoding", audioBuffer, audioBuffer.length, audioBuffer.duration)
 		const length = audioBuffer.length;
 		const numberOfChannels = audioBuffer.numberOfChannels;
 		const sampleRate = audioBuffer.sampleRate;
@@ -146,7 +146,7 @@ export class TimelineExportService {
 	// Render
 
 	private async renderTimeline(): Promise<AudioBuffer> {
-		const totalDuration = this.totalDuration;
+		const totalDuration = this.totalDurationTime;
 		const tracks = this.tracks;
 
 		const sampleRate = TimelinePlaybackService.instance.audioContext.sampleRate;
@@ -237,6 +237,7 @@ export class TimelineExportService {
 		const audioStart = audioRegion.audioStartOffset();
 		const audioEnd = audioRegion.audioEndOffset();
 		const duration = audioEnd - audioStart;
+		console.log(duration, regionStart);
 
 		// For offline rendering, schedule everything from timeline position 0
 		source.start(regionStart, audioStart, duration);

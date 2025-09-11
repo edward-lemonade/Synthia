@@ -69,7 +69,7 @@ export class PlaybackMarkerComponent {
 	// Update Methods
 
 	updatePosition(clientX: number): void {
-		const newPlaybackPx = this.viewportService.mouseXToPx(clientX, true);
+		const newPlaybackPx = this.viewportService.mouseXToPx(clientX);
 		let constrainedPx = Math.max(0, Math.min(newPlaybackPx, this.viewportService.totalWidth()));
 
 		this.markerRef.nativeElement.style.left = constrainedPx + 'px';

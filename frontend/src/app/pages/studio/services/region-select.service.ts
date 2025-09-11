@@ -26,8 +26,7 @@ export class RegionSelectService {
 			effect(() => {
 				const regions = this.selectedRegions();
 				this.cleanupSelectedRegions();
-
-				this.selectedTrack.set(this.tracksWithSelectedRegions()[this.tracksWithSelectedRegions().length-1])
+				if (this.selectedRegions().length > 0) this.selectedTrack.set(this.tracksWithSelectedRegions()[this.tracksWithSelectedRegions().length-1])
 			})
 		})
 	}
@@ -198,9 +197,10 @@ export class RegionSelectService {
 		if (validSelections.length !== current.length) {
 			this.selectedRegions.set(validSelections);
 
+			/*
 			if (validSelections.length === 0) {
 				this.selectedTrack.set(null);
-			}
+			}*/
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { computed, effect, Injectable, Injector, runInInjectionContext, signal } from "@angular/core";
+import { computed, effect, Injectable, Injector, runInInjectionContext, signal, untracked } from "@angular/core";
 import { AudioTrackType, MidiTrackType, Track, TrackType } from "@shared/types";
 import { RegionSelectService } from "./region-select.service";
 import { MidiEditorComponent } from "../components/studio-cabnet/midi-editor/midi-editor.component";
@@ -25,7 +25,12 @@ export class CabnetService { // SINGLETON
 		runInInjectionContext(this.injector, () => {
 			effect(() => {
 				const trackType = this.trackType();
-				this.closeCabnet();
+
+				untracked(() => {
+					const isOpen = this.isOpen();
+					this.closeCabnet();
+					if (isOpen) this.openCabnet();
+				});
 			});
 		});
 	}
@@ -39,9 +44,12 @@ export class CabnetService { // SINGLETON
 		2: {index: 2, name: "MIDI Editor", component: MidiDrumEditorComponent}, // Drums
 		3: {index: 3, name: "Instrument", component: InstrumentControlsComponent}, // Drums
 	}
-	INSTRUMENT_TABS = [0, 1];
-	DRUM_TABS = [2, 3];
-
+	TAB_OPTIONS = {
+		[MidiTrackType.Instrument]: [0, 1],
+		[MidiTrackType.Drums]: [2, 3],
+		[AudioTrackType.Audio]: [],
+		[AudioTrackType.Microphone]: [],
+	};
 	// ==============================================================================================
 	// Fields
 
@@ -52,7 +60,7 @@ export class CabnetService { // SINGLETON
 	selectedTabComponent = computed(() => { return this.selectedTabIndex() != null ? this.TABS[this.selectedTabIndex()!].component : null})
 	trackType = computed<TrackType|null>(() => { return RegionSelectService.instance.selectedTrack()?.trackType() ?? null });
 
-	openCabnet(tabOption: number = 0) {
+	openCabnet(tabOption: number = this.TAB_OPTIONS[this.trackType()!][0]) {
 		this.isOpen.set(true);
 		this.selectedTabIndex.set(tabOption);
 	}
@@ -63,10 +71,6 @@ export class CabnetService { // SINGLETON
 
 	tabOptions = computed(() => {
 		const trackType = this.trackType();
-		return (
-			trackType == MidiTrackType.Instrument ? this.INSTRUMENT_TABS :
-			trackType == MidiTrackType.Drums ? this.DRUM_TABS :
-			[]
-		)
+		return (trackType ? this.TAB_OPTIONS[trackType!] : [])
 	})
 }

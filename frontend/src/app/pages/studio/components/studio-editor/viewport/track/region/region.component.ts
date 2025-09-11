@@ -29,17 +29,6 @@ interface ViewportBounds {
 	endPx: number;
 }
 
-interface MidiRenderConfig {
-	noteHeight: number;
-	minmidiNote: number;
-	maxmidiNote: number;
-	noteColors: {
-		fill: string;
-		stroke: string;
-	};
-}
-
-
 @Component({
 	selector: 'viewport-track-region',
 	imports: [CommonModule, MatMenuModule, MatIconModule, DragGhostComponent, ResizeGhostComponent],
@@ -282,6 +271,8 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			if (ctx) { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 			return;
 		}
+		this.canvasDiv.nativeElement.style.left = startPx+'px';
+		this.canvasDiv.nativeElement.style.width = (endPx-startPx)+'px'
 		
 		const midiRegion = this.region as StateNode<MidiRegion>;
 		const notes = midiRegion.midiData.snapshot();
@@ -360,6 +351,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 				return;
 			}
 			this.canvasDiv.nativeElement.style.left = startPx+'px';
+			this.canvasDiv.nativeElement.style.width = (endPx-startPx)+'px'
 			
 			const audioRegion = this.region as StateNode<AudioRegion>;
 			const audioStartTime = audioRegion.audioStartOffset() + relativeVisibleStartTime;
@@ -552,11 +544,10 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	openMidiEditor() {
 		if (this.isMidi()) {
-			if (this.track.trackType() == MidiTrackType.Instrument) {
-				this.cabnetService.openCabnet(this.cabnetService.INSTRUMENT_TABS[0]);
-			} else if (this.track.trackType() == MidiTrackType.Drums) {
-				this.cabnetService.openCabnet(this.cabnetService.DRUM_TABS[0]);
-			} 
+			this.selectionService.setSelectedRegion(this.region);
+			this.selectionService.setSelectedTrack(this.track);
+
+			this.cabnetService.openCabnet();
 		}
 	}
 

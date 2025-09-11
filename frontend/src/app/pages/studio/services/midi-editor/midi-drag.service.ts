@@ -1,8 +1,9 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
 import { ViewportService } from '../viewport.service';
-import { MidiNote } from '@shared/types';
+import { MidiNote, MidiRegion } from '@shared/types';
 import { MidiEditorService } from './midi-editor.service';
 import { MidiSelectService } from './midi-select.service';
+import { ObjectStateNode } from '../../state/state.factory';
 
 export interface DragInfo { // in beat/measure units for X, midiNote units for Y
 	startPosX: number;
@@ -16,6 +17,7 @@ export interface DragInfo { // in beat/measure units for X, midiNote units for Y
 	minMidiNoteOffset: number;
 	maxMidiNoteOffset: number;
 	heldNote: MidiNote;
+	region: ObjectStateNode<MidiRegion>;
 }
 
 @Injectable()
@@ -35,10 +37,11 @@ export class MidiDragService {
 	readonly isDragging = signal<boolean>(false);
 	readonly dragInfo = signal<DragInfo | null>(null);
 
-	public prepareDrag(startPosX: number, startMidiNote: number, note: MidiNote) { // mouse down on note, but not moving yet
+	public prepareDrag(startPosX: number, startMidiNote: number, note: ObjectStateNode<MidiNote>) { // mouse down on note, but not moving yet
+		const noteSnapshot = note.snapshot();
 		const selectedNotes = this.selectService.selectedNotes();
-		const lowestMidiNote = selectedNotes.reduce((min, n) => Math.min(min, n.midiNote()), note.midiNote);
-		const highestMidiNote = selectedNotes.reduce((min, n) => Math.max(min, n.midiNote()), note.midiNote);
+		const lowestMidiNote = selectedNotes.reduce((min, n) => Math.min(min, n.midiNote()), noteSnapshot.midiNote);
+		const highestMidiNote = selectedNotes.reduce((min, n) => Math.max(min, n.midiNote()), noteSnapshot.midiNote);
 		
 		this.isDragReady.set(true);
 		this.dragInfo.set({
@@ -48,11 +51,12 @@ export class MidiDragService {
 			currentMidiNote: startMidiNote,
 			deltaPosX: 0,
 			deltaMidiNote: 0,
-			mouseOffsetPosX: startPosX - note.start,
+			mouseOffsetPosX: startPosX - noteSnapshot.start,
 			mouseOffsetMinPosX: startPosX - this.selectService.leftmostSelectedNote().start(),
-			minMidiNoteOffset: note.midiNote - lowestMidiNote,
-			maxMidiNoteOffset: highestMidiNote - note.midiNote,
-			heldNote: note,
+			minMidiNoteOffset: noteSnapshot.midiNote - lowestMidiNote,
+			maxMidiNoteOffset: highestMidiNote - noteSnapshot.midiNote,
+			heldNote: noteSnapshot,
+			region: note.gp(),
 		});
 	}
 
@@ -67,6 +71,7 @@ export class MidiDragService {
 		if (dragInfo && this.isDragging()) {
 			let finalPosX = mousePosX;
 			let finalMidiNote = midiNote;
+			const regionStartPos = this.viewportService.pxToPos(dragInfo.region.start());
 
 			if (this.viewportService.snapToGrid()) {
 				const mouseOffsetPosX = dragInfo.mouseOffsetPosX;

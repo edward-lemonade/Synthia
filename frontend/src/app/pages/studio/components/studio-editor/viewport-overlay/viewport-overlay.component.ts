@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PlaybackMarkerComponent } from "./playback-marker/playback-marker.component";
+import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-editor-viewport-overlay',
@@ -39,6 +40,7 @@ export class ViewportOverlayComponent implements AfterViewInit {
 				if (this.scrollContainerRef?.nativeElement && this.scrollContainerRef.nativeElement.scrollLeft !== posX) {
 					this.scrollContainerRef.nativeElement.scrollLeft = posX;
 				}
+
 			});
 		});
 

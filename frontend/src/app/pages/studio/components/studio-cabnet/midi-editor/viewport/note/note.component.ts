@@ -10,12 +10,19 @@ import { MidiDragService } from '@src/app/pages/studio/services/midi-editor/midi
 import { EditingMode, MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { AudioCacheService } from '@src/app/pages/studio/services/audio-cache.service';
-import { MidiNote } from '@shared/types';
+import { MidiNote, Region } from '@shared/types';
 import { ObjectStateNode } from '@src/app/pages/studio/state/state.factory';
 import { DragGhostComponent } from "./ghosts/drag-ghost.component";
 import { ResizeGhostComponent } from "./ghosts/resize-ghost.component";
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 
 type ResizeHandle = 'left' | 'right' | null;
+
+export interface GhostNote {
+	start: number;
+	duration: number;
+	region: ObjectStateNode<Region>;
+}
 
 @Component({
 	selector: 'midi-editor-note',
@@ -47,9 +54,9 @@ type ResizeHandle = 'left' | 'right' | null;
 		
 		<!-- Resize ghost -->	
 		<midi-note-resize-ghost
-			*ngIf="viewportService.isResizingRegion() && ghostRegion()"
+			*ngIf="viewportService.isResizingRegion() && ghostNote()"
 			[note]="note"
-			[ghost]="ghostRegion()"/>
+			[ghost]="ghostNote()"/>
 
 		<!-- Drag ghost -->	
 		<midi-note-drag-ghost
@@ -66,6 +73,7 @@ export class NoteComponent {
 		public stateService: StateService,
 		public tracksService: TracksService,
 		public selectionService: MidiSelectService,
+		public regionSelectService: RegionSelectService,
 		public dragService: MidiDragService,
 		public viewportService: ViewportService,
 		public audioCacheService: AudioCacheService,
@@ -105,14 +113,14 @@ export class NoteComponent {
 	private resizeStartPx = signal(0);
 	private originalNote: MidiNote | null = null;
 
-	ghostRegion = signal<{ start: number; duration: number } | null>(null);
+	ghostNote = signal<GhostNote | null>(null);
 	ghostWidth = computed(() => {
-		const ghost = this.ghostRegion();
-		return ghost ? `${ghost.duration * this.viewportService.measureWidth()}px` : '0px';
+		const ghost = this.ghostNote();
+		return ghost ? `${this.viewportService.posToPx(ghost.duration)}px` : '0px';
 	});
 	ghostStartPos = computed(() => {
-		const ghost = this.ghostRegion();
-		return ghost ? `${ghost.start * this.viewportService.measureWidth()}px` : '0px';
+		const ghost = this.ghostNote();
+		return ghost ? `${this.viewportService.posToPx(ghost.start)}px` : '0px';
 	});
 
 	onResizeHandleMouseDown(event: MouseEvent, handle: ResizeHandle) {
@@ -129,9 +137,10 @@ export class NoteComponent {
 		
 		this.originalNote! = this.note.snapshot();
 		
-		this.ghostRegion.set({
+		this.ghostNote.set({
 			start: this.note.start(),
-			duration: this.note.duration()
+			duration: this.note.duration(),
+			region: this.note.gp(),
 		});
 		
 		document.addEventListener('mousemove', this.onResizeMove);
@@ -145,32 +154,34 @@ export class NoteComponent {
 
 		const deltaPx = event.clientX - this.resizeStartPx() + 8;
 		const deltaPos = deltaPx / this.viewportService.measureWidth();
-		
+		const regionStart = this.ghostNote()!.region.start();
+
 		const handle = this.resizeHandle();
-		let newStart = this.originalNote.start;
+		let newAbsStart = regionStart + this.originalNote.start;
 		let newDuration = this.originalNote.duration;
-		let newEnd = this.originalNote.start + this.originalNote.duration;
+		let newAbsEnd = regionStart + this.originalNote.start + this.originalNote.duration;
 		
 		if (handle === 'left') {
-			newStart = this.viewportService.snapToGrid() ?
-				Math.max(0, this.viewportService.snap(this.originalNote.start + deltaPos)) :
-				Math.max(0, this.originalNote.start + deltaPos);
+			newAbsStart = this.viewportService.snapToGrid() ?
+				Math.max(0, this.viewportService.snap(regionStart + this.originalNote.start + deltaPos)) :
+				Math.max(0, regionStart + this.originalNote.start + deltaPos);
 		} else if (handle === 'right') {
-			newEnd = this.viewportService.snapToGrid() ?
-				Math.max(0, this.viewportService.snap(this.originalNote.start + this.originalNote.duration + deltaPos)) :
-				Math.max(0, this.originalNote.start + this.originalNote.duration + deltaPos);
+			newAbsEnd = this.viewportService.snapToGrid() ?
+				Math.max(0, this.viewportService.snap(regionStart + this.originalNote.start + this.originalNote.duration + deltaPos)) :
+				Math.max(0, regionStart + this.originalNote.start + this.originalNote.duration + deltaPos);
 		}
-		newDuration = Math.max(0.1, newEnd - newStart);
+		newDuration = Math.max(0.1, newAbsEnd - newAbsStart);
 
-		this.ghostRegion.set({
-			start: newStart,
-			duration: newDuration
+		this.ghostNote.set({
+			start: newAbsStart - regionStart,
+			duration: newDuration,
+			region: this.note.gp(),
 		});
 	};
 
 	private onResizeFinish = (event: MouseEvent) => {
 		// Commit the final size from ghost to actual region
-		const ghost = this.ghostRegion();
+		const ghost = this.ghostNote();
 		if (ghost) {
 			this.midiService.resizeNote(this.note, ghost.start, ghost.duration);
 		}
@@ -178,7 +189,7 @@ export class NoteComponent {
 		this.viewportService.isResizingRegion.set(false);
 		this.resizeHandle.set(null);
 		this.originalNote = null;
-		this.ghostRegion.set(null);
+		this.ghostNote.set(null);
 		
 		document.removeEventListener('mousemove', this.onResizeMove);
 		document.removeEventListener('mouseup', this.onResizeFinish);
@@ -191,6 +202,7 @@ export class NoteComponent {
 		event.preventDefault();
 		event.stopPropagation();
 
+		this.regionSelectService.setSelectedRegion(this.note.gp());
 		if (this.midiService.editingMode() == EditingMode.Select && !this.dragService.isDragging()) {
 			if (event.ctrlKey || event.metaKey) {
 				this.selectionService.toggleSelectedNote(this.note);
@@ -233,7 +245,7 @@ export class NoteComponent {
 				const mousePosX = this.viewportService.pxToPos(mousePxX, false);
 				const mousePxY = this.viewportService.mouseYToPx(event.clientY);
 				const midiNote = this.midiService.pxToMidiNote(mousePxY);
-				this.dragService.prepareDrag(mousePosX, midiNote, this.note.snapshot());
+				this.dragService.prepareDrag(mousePosX, midiNote, this.note);
 			} else {
 				event.stopPropagation();
 			}

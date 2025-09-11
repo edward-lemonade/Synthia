@@ -24,7 +24,7 @@ export class ViewportService { // SINGLETON
 
 	BASE_PIXELS_PER_MEASURE = 100;
 
-	lastMeasure = signal(60);
+	lastMeasure = computed(() => Math.max(60, StateService.instance.projectDuration()+4));
 
 	windowPosX = signal(0);
 	windowPosY = signal(0);

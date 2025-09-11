@@ -1,12 +1,13 @@
 import { computed, Injectable, Injector, signal } from "@angular/core";
 import { RegionService } from "../region.service";
-import { BoxSelectBounds } from "../region-select.service";
+import { BoxSelectBounds, RegionSelectService } from "../region-select.service";
 import { CabnetService } from "../cabnet.service";
-import { MidiNote, MidiRegion } from "@shared/types";
+import { MidiNote, MidiRegion, Region } from "@shared/types";
 import { ObjectStateNode } from "../../state/state.factory";
 import { v4 as uuid } from "uuid";
 import { MidiSelectService } from "./midi-select.service";
 import { ViewportService } from "../viewport.service";
+import { TracksService } from "../tracks.service";
 
 export enum EditingMode {Select, Draw, Velocity, Erase}
 
@@ -63,32 +64,41 @@ export class MidiEditorService { // SINGLETON
 		}
 		const region = this.getOrMakeRegionForNote(props.start || 0, props.duration || 1, actionId);
 		props.start = props.start! - region.start(); 
-		region.midiData.insertValue(props, undefined, actionId);
+		RegionSelectService.instance.setSelectedRegion(region);
+		return region.midiData.insertValue(props, undefined, actionId);
+	}
+	updateRegionBoundsForNoteBounds(region: ObjectStateNode<Region>, start: number, duration: number, actionId?: string) {
+		const newStart = Math.min(region.start(), start);
+		const newEnd = Math.max(region.start()+region.duration(), start+duration);
+		RegionService.instance.resizeRegion(region, newStart, newEnd-newStart, actionId);
 	}
 	getOrMakeRegionForNote(start: number, duration: number, actionId = uuid()): ObjectStateNode<MidiRegion> {
 		let chosenRegionFull = null;
 		let chosenRegionPartial = null;
-
-		for (const region of this.track()?.regions.getAll() ?? []) {
-			const regionStart = region.start()-0.001;
-			const regionEnd = regionStart + region.duration()+0.001;
-			const end = start + duration;
-			if (regionStart <= start && end <= regionEnd) {	 // in			
-				chosenRegionFull = region;
-				break;
-			} else if (regionStart <= start && start <= regionEnd && regionEnd <= end) { // right
-				chosenRegionPartial = region;
-			} else if (start <= regionStart && regionStart <= end && end <= regionEnd) { // left
-				
-			} else if (start < regionStart && regionEnd < end) { // overlap
-				
+		if (RegionSelectService.instance.selectedRegions().length == 1) {
+			chosenRegionPartial = RegionSelectService.instance.selectedRegions()[0]! as ObjectStateNode<MidiRegion>;
+		} else {
+			for (const region of this.track()?.regions.getAll() ?? []) {
+				const regionStart = region.start()-0.001;
+				const regionEnd = regionStart + region.duration()+0.001;
+				const end = start + duration;
+				if (regionStart <= start && end <= regionEnd) {	 // in			
+					chosenRegionFull = region;
+					break;
+				} else if (regionStart <= start && start <= regionEnd && regionEnd <= end) { // right
+					chosenRegionPartial = region;
+				} else if (start <= regionStart && regionStart <= end && end <= regionEnd) { // left
+					
+				} else if (start < regionStart && regionEnd < end) { // overlap
+					
+				}
 			}
 		}
 
 		if (chosenRegionFull) {
 			return chosenRegionFull as ObjectStateNode<MidiRegion>;
 		} else if (chosenRegionPartial) {
-			chosenRegionPartial.duration.set(start+duration - chosenRegionPartial.start(), actionId);
+			this.updateRegionBoundsForNoteBounds(chosenRegionPartial, start, duration, actionId);
 			return chosenRegionPartial as ObjectStateNode<MidiRegion>;
 		}
 		const snappedLeft = this.viewportService.snapFloor(start+0.001);
@@ -116,9 +126,10 @@ export class MidiEditorService { // SINGLETON
 		});
 	}
 	moveNote(note: ObjectStateNode<MidiNote>, newStart: number, newMidiNote: number, actionId = uuid()) {
-		note.start.set(newStart, actionId);
+		const absStart = newStart + note.gp().start();
+		const region = this.getOrMakeRegionForNote(absStart, note.duration(), actionId);
+		note.start.set(absStart-region.start(), actionId);
 		note.midiNote.set(newMidiNote, actionId);
-		const region = this.getOrMakeRegionForNote(note.start() || 0, note.duration() || 1, actionId);
 	}
 	moveNotes(notes: ObjectStateNode<MidiNote>[], startOffset: number, midiNoteOffset: number, actionId = uuid()) {
 		notes.forEach(note => {
@@ -126,11 +137,23 @@ export class MidiEditorService { // SINGLETON
 		});
 	}
 	resizeNote(note: ObjectStateNode<MidiNote>, newStart: number, newDuration: number, actionId = uuid()) {		
+		const region = note.gp() as ObjectStateNode<MidiRegion>;
 		note.start.set(newStart, actionId);
 		note.duration.set(newDuration, actionId);
+		this.updateRegionBoundsForNoteBounds(region, newStart+region.start(), newDuration, actionId);
 	}
 	duplicateNote(note: ObjectStateNode<MidiNote>) {
 		const duped = { ...note.snapshot() };
 		note._parent.insertValue(duped);
+	}
+	getRegionOfPx(px: number) {
+		for (const el of RegionSelectService.instance.selectedTrack()?.regions.getAll() ?? []) {
+			const pos = this.viewportService.pxToPos(px);
+			const regionNode = el as ObjectStateNode<MidiRegion>;
+			if (regionNode.start() <= pos && pos <= regionNode.start()+regionNode.duration()) {
+				return regionNode;
+			}
+		}
+		return null;
 	}
 }

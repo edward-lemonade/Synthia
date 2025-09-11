@@ -6,6 +6,7 @@ import { RegionDragService } from '@src/app/pages/studio/services/region-drag.se
 import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
 import { getRegionGhostColor } from '@src/app/utils/color';
 import { MidiEditorService } from '@src/app/pages/studio/services/midi-editor/midi-editor.service';
+import { GhostNote } from '../note.component';
 
 @Component({
 	selector: 'midi-note-resize-ghost',
@@ -15,7 +16,7 @@ import { MidiEditorService } from '@src/app/pages/studio/services/midi-editor/mi
 	template: `
 		<div 
 			class="note-ghost"
-			[style.left.px]="viewportService.posToPx(ghost!.start)"
+			[style.left.px]="viewportService.posToPx(ghost!.region.start() + ghost!.start)"
 			[style.width.px]="viewportService.posToPx(ghost!.duration)"
 			[style.top.px]="TOP_PX"
 			[style.height.px]="HEIGHT_PX"
@@ -27,7 +28,7 @@ import { MidiEditorService } from '@src/app/pages/studio/services/midi-editor/mi
 
 export class ResizeGhostComponent {
 	@Input() note!: ObjectStateNode<MidiNote>;
-	@Input() ghost!: { start: number; duration: number } | null
+	@Input() ghost!: GhostNote | null
 
 	constructor (
 		public viewportService: ViewportService,

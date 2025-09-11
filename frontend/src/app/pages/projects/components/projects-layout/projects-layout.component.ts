@@ -17,23 +17,6 @@ import { ProjectsService } from '../../projects.service';
 				[fixedInViewport]="true" 
 				[fixedTopGap]="64" [fixedBottomGap]="0">
 				<mat-nav-list >
-					<button mat-button class="sidebar-btn" routerLink="/projects/all-projects" routerLinkActive="sidebar-btn-active">
-						<mat-icon>folder</mat-icon>
-						All Projects
-					</button>
-					<button mat-button class="sidebar-btn" routerLink="/projects/my-projects" routerLinkActive="sidebar-btn-active">
-						<mat-icon>person</mat-icon>
-						My Projects
-					</button>
-					<button mat-button class="sidebar-btn" routerLink="/projects/collabs" routerLinkActive="sidebar-btn-active">
-						<mat-icon>group</mat-icon>
-						Collabs
-					</button>
-					<button mat-button class="sidebar-btn" routerLink="/projects/remixes" routerLinkActive="sidebar-btn-active">
-						<mat-icon>loop</mat-icon>
-						Remixes
-					</button>
-
 					<button mat-button class="sidebar-btn2" (click)="newProjectOnClick()">
 						<mat-icon>add</mat-icon>	
 						New Project
@@ -58,3 +41,23 @@ export class ProjectsLayoutComponent {
 		this.projectsService.newProject();
 	}
 } 
+
+/*
+<button mat-button class="sidebar-btn" routerLink="/projects/all-projects" routerLinkActive="sidebar-btn-active">
+	<mat-icon>folder</mat-icon>
+	All Projects
+</button>
+<button mat-button class="sidebar-btn" routerLink="/projects/my-projects" routerLinkActive="sidebar-btn-active">
+	<mat-icon>person</mat-icon>
+	My Projects
+</button>
+<button mat-button class="sidebar-btn" routerLink="/projects/collabs" routerLinkActive="sidebar-btn-active">
+	<mat-icon>group</mat-icon>
+	Collabs
+</button>
+<button mat-button class="sidebar-btn" routerLink="/projects/remixes" routerLinkActive="sidebar-btn-active">
+	<mat-icon>loop</mat-icon>
+	Remixes
+</button>
+
+*/

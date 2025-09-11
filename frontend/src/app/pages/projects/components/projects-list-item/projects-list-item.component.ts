@@ -8,10 +8,11 @@ import { ProjectMetadata } from '@shared/types';
 import { ProjectsService } from '../../projects.service';
 import { CachedAudioFile } from '@src/app/utils/audio';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
+import { DatePipe } from '@angular/common';
 
 @Component({
 	selector: 'app-projects-list-item',
-	imports: [MatIconModule, MatMenuModule, MatFormFieldModule, FormsModule, MatInputModule],
+	imports: [MatIconModule, MatMenuModule, MatFormFieldModule, FormsModule, MatInputModule, DatePipe],
 	template: `
 		<div class="project-item">		
 			@if (projectsService.isRenaming(project.projectId)) {
@@ -69,23 +70,31 @@ import { createWaveformViewport } from '@src/app/utils/render-waveform';
 						</div>
 					</div>
 
+					<div class="duration">
+						{{ cachedAudioData ? formatDuration(cachedAudioData.duration) : "" }}
+					</div>
+
 					<button mat-icon-button 
 						class="icon-button"
 						[attr.aria-label]="'Settings ' + project.title"
 						[matMenuTriggerFor]="extraSettings">
 						<mat-icon>more_vert</mat-icon>
 					</button>
-					<mat-menu #extraSettings="matMenu" class="menu">
-						<button mat-menu-item class="menuItem" (click)="onRenameButton()">
-							<mat-icon>edit</mat-icon>
-							Rename
-						</button>
-						<button mat-menu-item class="menuItem" (click)="onDeleteButton()">
-							<mat-icon color="red">delete</mat-icon>
-							Delete
-						</button>
+					<mat-menu #extraSettings="matMenu" class="extra-options-menu">
+						<div class="extra-options-menu-content">
+							<button mat-menu-item class="extra-options-menu-btn" (click)="onRenameButton()">
+								<mat-icon>edit</mat-icon>
+								Rename
+							</button>
+							<button mat-menu-item class="extra-options-menu-btn" (click)="onDeleteButton()">
+								<mat-icon color="red">delete</mat-icon>
+								Delete
+							</button>
+						</div>
 					</mat-menu>
 				</div>
+
+				<p class="project-date">{{ project.updatedAt | date:'short' }}</p>
 			}
 		</div>
 	`,
@@ -302,5 +311,17 @@ export class ProjectsListItemComponent implements AfterViewInit, OnDestroy {
 			this.projectsService.cancelRename();
 		}
 		this.tempProjectName = '';
+	}
+
+	// ==================================================================================================
+	// Helpers
+	
+	formatDuration(seconds: number): string {
+		if (!seconds || isNaN(seconds)) return '';
+		
+		const minutes = Math.floor(seconds / 60);
+		const remainingSeconds = Math.floor(seconds % 60);
+		
+		return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 	}
 }
