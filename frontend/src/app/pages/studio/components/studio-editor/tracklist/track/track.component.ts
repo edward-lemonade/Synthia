@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
 import { Track } from '@shared/types';
@@ -6,14 +6,18 @@ import { Track } from '@shared/types';
 import { MatIconModule } from '@angular/material/icon';
 
 import { FormsModule } from '@angular/forms';
-import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { RotaryKnobComponent } from '@src/app/components/rotary-knob/rotary-knob.component';
 import { MatDivider } from "@angular/material/divider";
 import { MatMenuModule } from '@angular/material/menu';
-import { SelectionService } from '@src/app/pages/studio/services/selection.service';
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
+import { StateService } from '@src/app/pages/studio/state/state.service';
+import { TracksService } from '@src/app/pages/studio/services/tracks.service';
+import { StateNode } from '@src/app/pages/studio/state/state.factory';
+import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
+import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 
 @Component({
 	selector: 'tracklist-track',
@@ -51,6 +55,11 @@ import { SelectionService } from '@src/app/pages/studio/services/selection.servi
 
 					<mat-menu #trackOptionsMenu="matMenu" [class]="'track-options-menu'">
 						<div class="track-options-menu-content">
+							<button class="track-options-menu-btn" (click)="openEditor()">
+								<mat-icon>edit</mat-icon>
+								<p>Edit</p>
+							</button>
+							<mat-divider class="divider"></mat-divider>
 							<button class="track-options-menu-btn" (click)="menuMoveUp()">
 								<mat-icon>keyboard_arrow_up</mat-icon>
 								<p>Move up</p>
@@ -74,7 +83,7 @@ import { SelectionService } from '@src/app/pages/studio/services/selection.servi
 
 				<div class="row lower-controls">
 					<div class="volume-slider-container">
-						<mat-slider min="0" max="100" step="1" class="volume-slider" [style.--slider-color]="color()">
+						<mat-slider min="0" max="100" step="1" class="volume-slider">
 							<input matSliderThumb 
 								[(ngModel)]="volumeInput" 
 								(change)="updateVolume()"
@@ -91,8 +100,7 @@ import { SelectionService } from '@src/app/pages/studio/services/selection.servi
 						[precision]="1"
 						[size]="24"
 						[color]="color()"
-						>
-					</app-rotary-knob>
+						/>
 					
 					<mat-button-toggle-group multiple class="ms-btn-group">
 						<button 	class="ms-btn" [class.selected]="mute()" (click)="toggleMute()">M</button>
@@ -108,60 +116,79 @@ import { SelectionService } from '@src/app/pages/studio/services/selection.servi
 })
 
 export class TrackComponent implements OnInit {
-	@Input() track!: Track;
+	@Input() track!: StateNode<Track>;
 	@Input() index!: number;
 
 	DEFAULT_ICON = `assets/icons/microphone.svg`;
 	iconPath = this.DEFAULT_ICON;
 
 	constructor (
-		public projectState : ProjectState,
+		public stateService : StateService,
+		public tracksService : TracksService,
 		public viewportService : ViewportService,
-		public trackSelectService : SelectionService,
-	) {}
-
-	ngOnInit() {
-		this.iconPath = `assets/icons/${this.track.type}.svg`;
-		this.trackNameInput.set(this.track.name);
-		this.volumeInput.set(this.track.volume);
-		this.panInput.set(this.track.pan);
+		public selectService : RegionSelectService,
+		public playbackService : TimelinePlaybackService,
+		public cabnetService : CabnetService,
+	) {
+		effect(() => {
+			this.volumeInput.set(this.track.volume());
+		});
+		effect(() => {
+			this.panInput.set(this.track.pan());
+		});
+		effect(() => {
+			this.trackNameInput.set(this.track.name());
+		});
 	}
 
-	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color));
-	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
-	select() { this.trackSelectService.setSelectedTrack(this.index); }
+	ngOnInit() {
+		this.iconPath = `assets/icons/${this.track.trackType()}.svg`;
+		this.trackNameInput.set(this.track.name());
+		this.volumeInput.set(this.track.volume());
+		this.panInput.set(this.track.pan());
+	}
+
+	color = computed(() => this.track.color());
+	colorSelectedBg = computed(() => this.selectService.selectedTrackBgColor(this.track.color()));
+	isSelected = computed(() => this.selectService.selectedTrack()?._id == this.track._id);
+	select() { this.selectService.setSelectedTrack(this.track); }
 
 	trackNameInput = signal('');
 	updateTrackName() {
-		this.projectState.tracksState.modifyTrack(this.index, "name", this.trackNameInput());
+		this.track.name.set(this.trackNameInput());
 	}
 
 	volumeInput = signal(100);
 	updateVolume() {
-		this.projectState.tracksState.modifyTrack(this.index, "volume", this.volumeInput());
+		this.track.volume.set(this.volumeInput());
+		this.playbackService.updateNodeVolumeMute(this.track._id, this.volumeInput(), this.mute());
 	}
 
 	panInput = signal(0);
 	updatePan() {
-		this.projectState.tracksState.modifyTrack(this.index, "pan", this.panInput());
+		this.track.pan.set(this.panInput());
+		this.playbackService.updateNodePan(this.track._id, this.panInput());
 	}
 
-	mute = computed(() => this.track.mute);
-	toggleMute() { this.projectState.tracksState.modifyTrack(this.index, "mute", !this.mute()); console.log(this.mute()) }
-	solo = computed(() => this.track.solo);
-	toggleSolo() { this.projectState.tracksState.modifyTrack(this.index, "solo", !this.solo()); console.log(this.solo()) }
+	mute = computed(() => this.track.mute());
+	toggleMute() { this.track.mute.update(m => !m);this.playbackService.updateNodeVolumeMute(this.track._id, this.volumeInput(), this.mute()); }
+	solo = computed(() => this.track.solo());
+	toggleSolo() { this.track.solo.update(s => !s) }
 
 	menuMoveUp() {
-		this.projectState.tracksState.moveTrack(this.index, Math.max(0, this.index-1))
+		this.tracksService.moveTrack(this.index, Math.max(0, this.index-1))
 	}
 	menuMoveDown() {
-		this.projectState.tracksState.moveTrack(this.index, Math.min(this.projectState.tracksState.numTracks()-1, this.index+1))
+		this.tracksService.moveTrack(this.index, Math.min(this.tracksService.numTracks()-1, this.index+1))
 	}
 	menuDuplicate() {
-		this.projectState.tracksState.duplicateTrack(this.index);
+		this.tracksService.duplicateTrack(this.index);
 	}
 	menuDelete() {
-		this.projectState.tracksState.deleteTrack(this.index);
+		this.tracksService.deleteTrack(this.index);
+	}
+
+	openEditor() {
+		this.cabnetService.openCabnet();
 	}
 }

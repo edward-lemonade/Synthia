@@ -1,18 +1,20 @@
 import { IProjectFrontDocument, IProjectMetadataDocument, IProjectStudioDocument, } from "@src/models";
-import { ProjectFront, ProjectMetadata, ProjectStudio } from "@shared/types";
+import { AudioFileRef, BaseFileRef, ProjectFront, ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
 import mongoose from "mongoose";
+import { getAudioFile } from "@src/db/s3_client";
+import { RegionType } from "@src/models/project/Track.model";
 
 export class ProjectMetadataTransformer {
 	static fromDoc(docMeta: IProjectMetadataDocument): ProjectMetadata {
 		return docMeta.toObject();
 	}
-	static toSchema(objMeta: ProjectMetadata) {
+	static toDoc(objMeta: ProjectMetadata) {
 		return objMeta as IProjectMetadataDocument
 	}
 }
 
 export class ProjectFrontTransformer {
-	static fromDocs(docFront: IProjectFrontDocument, docMeta: IProjectMetadataDocument): ProjectFront {
+	static fromDocs(docMeta: IProjectMetadataDocument, docFront: IProjectFrontDocument): ProjectFront {
 		const { projectId, projectMetadataId, ...rest } = docFront.toObject();
 
 		return {
@@ -20,25 +22,28 @@ export class ProjectFrontTransformer {
 			...rest,
 		}
 	}
+	static toDoc(objMeta: ProjectFront) {
+		return objMeta as IProjectFrontDocument
+	}
 }
 
 export class ProjectStudioTransformer {
-	static fromDocs(docStudio: IProjectStudioDocument, docMeta: IProjectMetadataDocument): ProjectStudio {
+	static toState(docMeta: IProjectMetadataDocument, docStudio: IProjectStudioDocument): {metadata: ProjectMetadata, studio: ProjectStudio} {
 		const { projectId, projectMetadataId, ...rest } = docStudio.toObject();
 
 		return {
 			metadata: ProjectMetadataTransformer.fromDoc(docMeta),
-			...rest,
+			studio: {...rest},
 		}
 	}
-	static toSchema(objState: ProjectStudio, metadataId: mongoose.Types.ObjectId): [IProjectStudioDocument, IProjectMetadataDocument] {
-		const { metadata, ...rest } = objState;
+	static toDoc(docMeta: IProjectMetadataDocument, objStudio: ProjectStudio): IProjectStudioDocument {
+		const { _id, projectId, ...rest } = docMeta;
 		const studio = {
-			projectId: objState.metadata.projectId,
-			projectMetadataId: metadataId,
-			...rest,
+			projectId: projectId,
+			projectMetadataId: _id,
+			...objStudio,
 		}
 
-		return [studio as IProjectStudioDocument, metadata as IProjectMetadataDocument]
+		return studio as IProjectStudioDocument
 	}
 }

@@ -1,0 +1,80 @@
+@use "theme" as *;	
+@use "../../../../studio-vars" as *;
+
+.marker {
+	position: absolute;
+	top: 0;
+	width: 2px;
+	height: 100vh; // Extends to full viewport height
+	pointer-events: none; // Allow clicks to pass through except on the handle
+	z-index: 1000; // Ensure it's above other content
+
+	overflow-x: visible;
+	overflow-y: visible;
+	overscroll-behavior: none; 
+	
+	&.dragging {
+		.line-marker-handle {
+			background-color: #2196f3;
+			transform: scale(1.2);
+		}
+		
+		.line-marker-line {
+			background-color: #2196f3;
+		}
+	}
+
+	.marker-handle {
+		position: absolute;
+		z-index: 1000;
+
+		top: 0;
+		left: -8px; // Center the handle on the line
+		width: 14px;
+		height: 14px;
+		background-color: #e9616177;
+		border: 2px solid rgb(255, 72, 72);
+		border-radius: 50%;
+		cursor: ew-resize;
+		pointer-events: auto; // Enable pointer events on the handle
+		transform: translateY(-50%);
+		transition: all 0.2s ease;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+		
+		&:hover {
+			background-color: #e96161c8;
+			transform: translateY(-50%) scale(1.1);
+		}
+	}
+
+	.marker-line {
+		position: absolute;
+		z-index: 1000;
+
+		top: 0;
+		left: -6px; // Offset to center the wider hitbox
+		width: 14px; // Wider hitbox (same as handle width)
+		height: 100%;
+		pointer-events: auto;
+		transition: background-color 0.2s ease;
+		cursor: ew-resize;
+
+		// Create the visual line using a pseudo-element
+		&::before {
+			content: '';
+			position: absolute;
+			left: 50%;
+			top: 0;
+			width: 2px;
+			height: 100%;
+			background-color: #e25151;
+			transform: translateX(-50%);
+			box-shadow: 0 0 3px rgba(0,0,0,0.3);
+			transition: background-color 0.2s ease;
+		}
+
+		&:hover::before {
+			background-color: #e96161c8;
+		}
+	}
+}

@@ -1,0 +1,54 @@
+@use "theme" as *;	
+@use "../../../../../studio-vars" as *;
+
+.btn-group {
+	display: flex;
+	overflow: hidden;
+	background: transparent;
+	height: 40px;
+	border-radius: 20px;
+	border: none;
+	gap: 4px;
+}
+
+.btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 40px !important;
+	max-width: 40px !important;
+	border-radius: 0;
+
+	border: $border-width solid $border-color;
+	background: $appbar-accent-3;
+	color: $appbar-text;
+
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.btn mat-icon {
+	font-size: 20px; // inherit from .btn
+	width: 1em;
+	height: 1em;
+	margin: 0 !important;
+}
+
+.btn:hover {
+	background: $appbar-accent-2;
+}
+
+.btn.selected {
+	background: rgb(255, 255, 255) !important; 
+	color: $app-bg !important;
+}
+
+.btn.selected:hover {
+	background: rgb(201, 201, 201) !important; // Darker shade for hover
+}
+
+/* Pill shape */
+.btn:first-child { border-top-left-radius: 40px; border-bottom-left-radius: 40px; }
+.btn:not(:first-child):not(:last-child) { border-radius: 0; width: 40px; }
+.btn:last-child { border-top-right-radius: 40px; border-bottom-right-radius: 40px; }

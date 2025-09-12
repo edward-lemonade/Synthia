@@ -2,6 +2,7 @@
   "name": "shared",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,7 +11,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "isomorphic-web-audio-api": "^1.0.2",
+    "mongoose": "^8.17.2",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "web-audio-api": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0"
   }
 }

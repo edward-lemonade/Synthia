@@ -1,0 +1,98 @@
+@use "theme" as *;	
+@use "../../../../studio-vars" as *;
+
+.container {
+	position: relative;
+	overflow: none;
+
+	display: flex;
+	flex: 1 0 auto;
+	width: 100%;
+	height: 100%;
+
+	user-select: none;
+
+	.canvas {
+		position: absolute;
+		top: 0;
+    	left: 0;
+
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	.scroll-container {
+		position: relative;
+		flex: 1 0 auto;
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+
+		// rows
+
+		.row {
+			border-bottom: $border-width solid $border-color;
+			box-sizing: border-box;
+		}
+		.white-row {
+			background: rgb(52, 52, 52)
+		}
+		.black-row {
+			background: rgb(37, 37, 37)
+		}
+
+		// region
+
+		.region {
+			position: absolute;
+			height: 100%;
+			border: 2px solid;
+			top: 0px;
+			bottom: 0px;
+			box-sizing: border-box;
+		}
+
+		// scrollbar
+
+		&::-webkit-scrollbar {
+			width: 8px; // Width of the scrollbar
+			height: 8px; 
+		}
+		&::-webkit-scrollbar-track {
+			background: $app-bg-l; // Track background
+			border-radius: 10px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background: $app-bg-ll; // Thumb color
+			border-radius: 10px;
+			
+			&:hover {
+				background: $near-white; // Hover color
+			}
+		}
+		&::-webkit-scrollbar-corner {
+			background: transparent; // Corner where scrollbars meet
+		}
+
+		// box select
+
+		.box-selection-overlay {
+			position: absolute;
+			border: 2px dashed #007bff;
+			background: rgba(0, 123, 255, 0.1);
+			pointer-events: none;
+			z-index: 1000;
+			border-radius: 2px;
+		}
+	}
+}
+
+.notes {
+	position: absolute;
+	top: 0;
+
+	midi-editor-note {
+		position: absolute;
+		top: 0;	
+	}
+}

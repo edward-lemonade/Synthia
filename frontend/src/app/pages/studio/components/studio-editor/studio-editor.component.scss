@@ -2,90 +2,96 @@
 @use "../../studio-vars" as *;
 
 :host {
-  	display: flex;
-	flex-direction: column;
-	flex: 1;         /* Take up remaining parent space */
-  	min-height: 0;
+	display: flex;
+	flex-direction: row;
+	flex: 1;        /* fills remaining parent space */
+	min-height: 0;  /* prevents children from expanding host */
+	min-width: 0;
+	overflow-y: visible;
 }
 
-.container {
-	height: 100%; 
-	width: 100%;
-	box-sizing: border-box;
-}
-
-.headers {
+.header {
 	background: $appbar-bg;
 	color: $appbar-text;
 	position: sticky;
 	top: 0;
 	width: 100%;
-	height: $viewport-header-height;
+	height: $viewport-header-height !important;
 
 	display: flex;
 	flex-direction: row;
-	
-	padding: 0px !important;
 
 	border-bottom: $border-width solid $border-color;
-
-	.headers-tracklist-container {
-		padding-left: 16px;
-		padding-right: 16px;
-		padding-top: 0px;
-		padding-bottom: 0px;
-
-		width: $tracklist-width;
-
-		display: flex;
-		justify-content: left;
-		align-items: center;
-	}
-	.headers-viewport-container {
-		flex: 1;
-		flex-direction: row;
-		display: flex;
-		justify-content: left;
-		align-items: center;
-
-		height: 100%;
-		width: 100%;
-		
-		border-left: $border-width solid $border-color;
-		overflow-x: hidden;
-		overflow-y: hidden;
-	}
+	flex-shrink: 0; /* prevents header from collapsing */
 }
 
-.body {
-	background: $appbar-bg;
-	color: $appbar-text;
 
-	flex: 1 1 0; 
+.tracklist {
 	display: flex;
-	flex-direction: row;
-	width: 100%;
+	flex-direction: column;
 
-    min-height: 0;
+	width: $tracklist-width;   /* fixed */
+	flex: 0 0 $tracklist-width; /* lock it to this width */
+	min-height: 0;
+	height: 100%;	
 
-	padding: 0px !important;
-	border-bottom: $border-width solid $border-color;
+	box-sizing: border-box;
 
-	.body-tracklist {
-		height: 100%;
-		width: $tracklist-width;
+	.tracklist-header {
+		padding: 0 $left-padding;
+		width: 100%;
 
+		display: flex;
+		justify-content: left;
+		align-items: center;
+		box-sizing: border-box;
+		flex-shrink: 0;   /* header never shrinks */
+	}
+	.tracklist-body {
+		flex: 1;          /* takes remaining height */
+		min-height: 0;    /* prevents content growth */
+		width: 100%;
+
+		display: flex;
 		justify-content: left;
 		align-items: start;
 
 		box-sizing: border-box;
-		overflow: hidden;
+		overflow: auto;   /* scroll instead of growing */
 	}
-	.body-viewport {
-		flex: 1;
-		min-height: 0;
+}
+.viewport {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+
+	flex: 1;           /* fill remaining width */
+	min-width: 0;
+	min-height: 0;     /* prevents vertical growth */
+	height: 100%;
+
+	box-sizing: border-box;
+
+	.viewport-header {
+		display: flex;
+		flex-shrink: 0;
+		flex-direction: row;
+		justify-content: left;
+		align-items: center;
 
 		border-left: $border-width solid $border-color;
-		overflow: hidden;
+
+		box-sizing: border-box;
+	}
+	.viewport-body {
+		display: flex;
+		flex: 1;
+		min-height: 0;
+		align-self: stretch;
+
+		border-left: $border-width solid $border-color;
+
+		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 }

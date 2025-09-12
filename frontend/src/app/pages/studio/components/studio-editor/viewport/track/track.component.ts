@@ -1,15 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
-import { Track } from '@shared/types';
+import { RegionType, Track } from '@shared/types';
 
-import { ProjectState } from '@src/app/pages/studio/services/project-state.service';
-import { SelectionService } from '@src/app/pages/studio/services/selection.service';
+import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 import { RegionComponent } from "./region/region.component";
 
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { ProjectStateTracks } from '@src/app/pages/studio/services/substates';
+import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
+import { TracksService } from '@src/app/pages/studio/services/tracks.service';
+import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
+import { StateService } from '@src/app/pages/studio/state/state.service';
+import { RegionService } from '@src/app/pages/studio/services/region.service';
+import { AudioRecordingService } from '@src/app/pages/studio/services/audio-recording.service';
+import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 
 @Component({
 	selector: 'viewport-track',
@@ -19,29 +24,31 @@ import { ProjectStateTracks } from '@src/app/pages/studio/services/substates';
 		<div class="track"
 			[style.--highlight-color]="color()"
 			[style.background-color]="isSelected() ? colorSelectedBg() : 'transparent'"
-			(click)="selectTrack()"
-			(contextmenu)="selectTrack(); onContextMenu($event)"
+			(click)="onClick()"
+			(contextmenu)="onClick(); onContextMenu($event)"
 			[matContextMenuTriggerFor]="menu">
 
 			<viewport-track-region 
-				*ngFor="let region of getRegions(); let i = index"
-				class="track"
+				*ngFor="let region of track.regions(); let i = index"
 				[track]="track"
 				[region]="region"
 				[trackIndex]="index"
 				[regionIndex]="i"
 			/>
+
+			<div *ngIf="this.recordingService.recordingTrack() == track && recordingService.isRecording() && playbackService.isPlaying()" 
+				class="recording-progress"
+				[style.left.px]="recordingStartPx()"
+				[style.width.px]="recordingWidthPx()">
+			</div>
+
 		</div>
 
 		<mat-menu #menu [class]="'track-menu'">
 			<div class="track-menu-content">
 				<button class="track-menu-btn" mat-menu-item (click)="createRegion()">
 					<mat-icon>add</mat-icon>
-					Create region
-				</button>
-				<button class="track-menu-btn" mat-menu-item (click)="createRegion()">
-					<mat-icon>add</mat-icon>
-					Create region
+					<p>Create region</p>
 				</button>
 			</div>
 		</mat-menu>
@@ -49,37 +56,66 @@ import { ProjectStateTracks } from '@src/app/pages/studio/services/substates';
 	styleUrl: './track.component.scss'
 })
 
-export class TrackComponent {
-	@Input() track!: Track;
+export class TrackComponent{
+	@Input() track!: ObjectStateNode<Track>;
 	@Input() index!: number;
 	@ViewChild('trackMenuTrigger', { static: true }) trackMenuTrigger!: MatMenuTrigger;
 
-	declare tracksState : ProjectStateTracks
-
 	constructor (
-		public projectState : ProjectState,
+		public stateService : StateService,
 		public viewportService : ViewportService,
-		public trackSelectService : SelectionService,
-	) {
-		this.tracksState = projectState.tracksState;
+		public selectService : RegionSelectService,
+		public dragService : RegionDragService,
+		public tracksService : TracksService,
+		public regionService : RegionService,
+		public recordingService : AudioRecordingService,
+		public playbackService : TimelinePlaybackService
+	) {}
+
+	recordingStartPx = computed(() => {
+		if (!this.recordingService.isRecording()) return 0;
+		return this.viewportService.posToPx(this.playbackService.basePos());
+	});
+	recordingWidthPx = computed(() => {
+		if (!this.recordingService.isRecording()) return 0;
+		
+		const deltaPos = this.playbackService.deltaPos();
+		const width = this.viewportService.posToPx(deltaPos);
+
+		return Math.max(0, width); // Ensure width is never negative
+	});
+
+	
+	color = computed(() => this.track.color);
+	colorSelectedBg = computed(() => this.selectService.selectedTrackBgColor(this.track.color()));
+	isSelected = computed(() => this.selectService.selectedTrack()?._id == this.track._id);
+	onClick() { 
+		this.selectService.setSelectedTrack(this.track); 
 	}
 
-	color = computed(() => this.track.color);
-	colorSelectedBg = computed(() => this.trackSelectService.selectedTrackBgColor(this.track.color));
-	isSelected = computed(() => this.trackSelectService.selectedTrack() == this.index);
-	selectTrack() { this.trackSelectService.setSelectedTrack(this.index); }
-
-
-	mouseX = 0; //  relative to this track div
+	mouseX = 0; 
 	onContextMenu(event: MouseEvent) {
-		const target = event.currentTarget as HTMLElement;
-  		const rect = target.getBoundingClientRect();
-		this.mouseX = event.clientX - rect.left;
+		if (event.target === event.currentTarget) {
+			const target = event.currentTarget as HTMLElement;
+			const rect = target.getBoundingClientRect();
+			this.mouseX = event.clientX - rect.left;
+		} else {
+			event.preventDefault();
+			event.stopPropagation();
+		}
 	} 
 
 	getRegions() { return this.track.regions; }
 	createRegion() {
-		const pos = this.viewportService.mouseToPos(this.mouseX);
-		this.tracksState.addRegion(this.index, this.track.isMidi, pos);
+		let pos = this.viewportService.pxToPos(this.mouseX, false);
+		if (this.viewportService.snapToGrid()) {
+			pos = this.viewportService.snapFloor(pos);
+		}
+
+		if (this.track.regionType() == RegionType.Audio) {
+			this.regionService.addAudioRegion(this.track, {start: pos});
+		} else {
+			this.regionService.addMidiRegion(this.track, {start: pos});
+		}
 	}
 }
