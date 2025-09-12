@@ -25,7 +25,13 @@
 	cursor: pointer;
 	transition: all 0.2s ease;
 }
-
+.btn:disabled {
+	background: $appbar-accent-2;
+	color: gray;
+}
+.btn:not(:disabled):hover {
+	background: $appbar-accent-3;
+}
 .btn mat-icon {
 	font-size: 20px; // inherit from .btn
 	width: 1em;
@@ -33,8 +39,27 @@
 	margin: 0 !important;
 }
 
-.btn:hover {
-	background: $appbar-accent-3;
+
+.record-btn.recording {
+	background-color: rgb(112, 62, 70) !important;
+	transition: 0.1;
+}
+mat-icon.pulsing {
+	animation: pulse 1.5s infinite ease-in-out;
+}
+@keyframes pulse {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.1);
+		opacity: 0.7;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
 }
 
 /* Pill shape */
@@ -45,4 +70,38 @@
 .divider {
 	border-width: 2px !important;
 	border-color: $appbar-accent-1 !important;
+}
+
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  background-color: #333;
+  color: white;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 12px;
+  position: absolute;
+  z-index: 1000;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  transition: opacity 0.3s, visibility 0.3s;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+.record-btn-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
 }

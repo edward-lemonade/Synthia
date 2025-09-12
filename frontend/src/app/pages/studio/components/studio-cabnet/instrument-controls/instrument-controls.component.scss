@@ -1,0 +1,32 @@
+@use "theme" as *;	
+@use "../../../studio-vars" as *;
+@use '@angular/material' as mat;
+@use 'sass:color';
+
+
+.container {
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	height: 100%;
+
+	align-items: center;
+	justify-content: start;
+
+	border-bottom: $border-width solid $border-color;
+	--highlight-color: #{$accent-orange};
+}
+
+
+controls {
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	height: 100%;
+
+	align-items: center;
+	justify-content: start;
+
+	border-bottom: $border-width solid $border-color;
+	--highlight-color: #{$accent-orange};
+}

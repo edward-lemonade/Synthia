@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { TimelinePlaybackService } from '../../../services/timeline-playback.service';
 
 @Component({
 	selector: 'studio-toolbar-details-time',
@@ -6,24 +7,18 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class='time-container'>
-			{{ timeFormatted }}
+			{{ formatTime(this.playbackService.playbackTimeDisplay()) }}
 		</div>
 	`,
 	styleUrl: './time.component.scss'
 })
 export class TimeComponent {
-	time = 0;
-	timeFormatted = '00:00.0';
+	constructor(public playbackService: TimelinePlaybackService) {}
 
-	setTime(t: number) {
-		this.time = t;
-		this.formatTime();
-	}
-	formatTime() {
-		let secs = Math.floor(this.time);
-		let frac = this.time - secs;
-		let minutes = Math.floor(this.time / 60);
-		secs = secs - minutes;
-		return `${minutes}${secs}${frac}`
+	formatTime(time: number): string {
+		const minutes = Math.floor(time / 60);
+		const seconds = time % 60;
+		
+		return `${minutes}:${seconds.toFixed(2).padStart(5, '0')}`;
 	}
 }

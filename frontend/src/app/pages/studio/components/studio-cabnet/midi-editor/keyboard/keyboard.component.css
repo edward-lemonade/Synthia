@@ -1,0 +1,59 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0; /* lock it to this width */
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.keyboard {
+  display: flex;
+  flex-shrink: 0;
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.keyboard::-webkit-scrollbar {
+  display: none;
+}
+.key {
+  border: 1px solid rgba(200, 200, 200, 0.5);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  font-size: 10px;
+  padding-right: 8px;
+}
+
+.scale {
+  position: relative;
+  height: 200px;
+  width: 80px;
+}
+.scale .white-key {
+  position: relative;
+  background: white;
+  width: 80px;
+  z-index: 1;
+  color: gray;
+}
+.scale .black-key {
+  position: absolute;
+  background: black;
+  width: 40px;
+  z-index: 2;
+  color: white;
+}
+
+.drum-key {
+  position: relative;
+  background: white;
+  width: 80px;
+  z-index: 1;
+  color: rgb(77, 77, 77);
+  font-size: 10px;
+}/*# sourceMappingURL=keyboard.component.css.map */

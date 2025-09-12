@@ -1,4 +1,5 @@
-import { Author } from "..";
+import { Author } from "../core";
+
 
 export interface ProjectMetadata { // common data for frequent fetches / project page
 	projectId: string;

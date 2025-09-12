@@ -1,36 +1,41 @@
 import { Injectable, signal, computed, effect, Injector, runInInjectionContext } from '@angular/core';
-import { ProjectState } from './project-state.service';
-import { ProjectStateGlobals } from './substates';
+import { StateService } from '../state/state.service';
 
 @Injectable()
-export class ViewportService {
-	declare globalsState: ProjectStateGlobals;
+export class ViewportService { // SINGLETON
+	private static _instance: ViewportService;
+	static get instance(): ViewportService { return ViewportService._instance; }
 
-	BASE_PIXELS_PER_MEASURE = 100;
+	static snapToGrid = signal(false);
 
 	constructor(
 		private injector: Injector,
-		private projectState: ProjectState,
 	) {
-		this.globalsState = projectState.globalsState;
+		if (!ViewportService._instance) {
+			ViewportService._instance = this;
+		}
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// FIELDS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	get studioState() { return StateService.instance.state.studio; }
+	get snapToGrid() { return ViewportService.snapToGrid }
+ 
+	// ==============================================================================================
+	// Fields
 
-	lastMeasure = signal(60);
+	BASE_PIXELS_PER_MEASURE = 100;
+
+	lastMeasure = computed(() => Math.max(60, StateService.instance.projectDuration()+4));
 
 	windowPosX = signal(0);
 	windowPosY = signal(0);
 	zoomFactor = signal(1);
 
 	measureWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor());
-	beatWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor() / this.globalsState.timeSignature().N)
+	beatWidth = computed(() => this.BASE_PIXELS_PER_MEASURE * this.zoomFactor() / this.studioState.timeSignature().N)
 	totalWidth = computed(() => this.measureWidth() * this.lastMeasure() );
+	viewportWidth = signal(0);
 	measurePosX = computed(() => this.windowPosX() / this.measureWidth() );
 
-	snapToGrid = signal(false);
 	smallestUnit = signal(1);
 
 	CANVAS_PADDING = 30;
@@ -39,16 +44,18 @@ export class ViewportService {
 	setWindowPosY(position : number) { this.windowPosY.set(position); }
 	setZoom(factor: number) { this.zoomFactor.set(Math.max(0.1, factor)); }
 
+	MIN_MEASURE_WIDTH = 60;
+	MAX_MEASURE_LENGTH = 1024;
+
 	adjustZoom(direction: number, mousePos: number, zoomSpeed = 0.02) {
 		if (!this.VPHeaderContainer) return;
 
 		const minMeasureLength = this.VPHeaderContainer.clientWidth / this.lastMeasure();
-		const maxMeasureLength = 512;
 
 		// calculate new zoom factor
 		const currentMeasureWidth = this.measureWidth();
 		const newMeasureWidth = Math.exp(Math.log(currentMeasureWidth) + direction * zoomSpeed);
-		const clampedMeasureWidth = Math.max(minMeasureLength, Math.min(maxMeasureLength, newMeasureWidth));
+		const clampedMeasureWidth = Math.max(minMeasureLength, Math.min(this.MAX_MEASURE_LENGTH, newMeasureWidth));
 		const newZoomFactor = clampedMeasureWidth / this.BASE_PIXELS_PER_MEASURE;
 
 		// keep mouse position centered
@@ -63,25 +70,55 @@ export class ViewportService {
 		this.setWindowPosX(clampedWindowPosX);
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// CONVERSIONS
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	isResizingRegion = signal(false);
 
-	mouseToPos(x: number, snap = this.snapToGrid()) {
-		let pos = (this.windowPosX() + x) / this.measureWidth();
-		if (snap) { pos = Math.floor(pos / this.smallestUnit()) * this.smallestUnit(); }
+	// ==============================================================================================
+	// Conversions
+	
+	pxToPos(x: number, snap = this.snapToGrid()) {
+		let pos = (x) / this.measureWidth();
+		if (snap) { pos = this.snap(pos) }
 		return pos;
 	}
 	posToTime(pos: number) {
-		return pos * this.globalsState.timeSignature().N  / this.globalsState.bpm() * 60; // in seconds
+		return pos * this.studioState.timeSignature().N  / this.studioState.bpm() * 60; // in seconds
+	}
+	pxToTime(x: number) {
+		return this.posToTime(this.pxToPos(x))
 	}
 	timeToPos(time: number) {
-		return time/60 * this.globalsState.bpm() / this.globalsState.timeSignature().N; // in measures
+		return time/60 * this.studioState.bpm() / this.studioState.timeSignature().N; // in measures
+	}
+	timeToPx(time: number) {
+		return this.posToPx(this.timeToPos(time));
+	}
+	posToPx(pos: number) {
+		return pos * this.measureWidth();
+	}
+	mouseToPos(x: number, snap = this.snapToGrid()) {
+		let pos = (x - this.VPContainer!.getBoundingClientRect().left + this.windowPosX()) / this.measureWidth();
+		if (snap) { pos = this.snap(pos) }
+		return pos;
+	}
+	mouseXToPx(x: number, snap = this.snapToGrid()) {
+		let pos = (x - this.VPContainer!.getBoundingClientRect().left + this.windowPosX());
+		if (snap) { pos = this.posToPx(this.snap(this.pxToPos(pos))) }
+		return pos;
+	}
+	mouseYToPx(y: number) {
+		let pos = (y - this.VPContainer!.getBoundingClientRect().top + this.windowPosY());
+		return pos;
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// TRACKLIST SCROLL SYNC (vertical)
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	snap(pos: number) {
+		return Math.max(Math.round(pos / this.smallestUnit()) * this.smallestUnit(), 0);
+	}
+	snapFloor(pos: number) {
+		return Math.max(Math.floor(pos / this.smallestUnit()) * this.smallestUnit(), 0);
+	}
+
+	// ==============================================================================================
+	// Tracklist Scroll Sync (vertical)
 
 	private tracklistScrollable?: HTMLDivElement;
 	registerTracklistScrollable(el: HTMLDivElement) { 
@@ -94,9 +131,8 @@ export class ViewportService {
 	}
 
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// CANVASES
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==============================================================================================
+	// Canvases
 
 	private VPHeaderContainer?: HTMLDivElement; // VIEWPORT HEADER
 	private VPHeaderCanvas?: HTMLCanvasElement;
@@ -115,6 +151,7 @@ export class ViewportService {
 		this.VPHeaderCtx = ctx;	
 
 		this.setupCanvas(canvas, ctx, width, height, "header");
+		this.viewportWidth.set(container.clientWidth);
 
 		runInInjectionContext(this.injector, () => { // horizontal scroll sync
 			effect(() => {
@@ -148,13 +185,12 @@ export class ViewportService {
 		this.drawLines();
 	}
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	// LINE DRAWING
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ==============================================================================================
+	// Line Drawing
 
 	private onViewportChanged = effect(() => {
 		const startPos = this.windowPosX() - this.CANVAS_PADDING;
-		const endPos = this.windowPosX() + this.VPHeaderCanvas!.width + this.CANVAS_PADDING;
+		const endPos = this.windowPosX() + (this.VPHeaderCanvas?.width ?? 0) + this.CANVAS_PADDING;
 		const measureWidth = this.measureWidth();
 		const beatWidth = this.beatWidth();
 		const zoom = this.zoomFactor();
@@ -179,7 +215,6 @@ export class ViewportService {
 		)
 
 		const MAX_INTERVAL_WIDTH = 100;
-		const MIN_MEASURE_WIDTH = 60;
 
 		const startPos = this.windowPosX() - this.CANVAS_PADDING;
 		const endPos = this.windowPosX() + canvas1.width + this.CANVAS_PADDING;
@@ -187,7 +222,7 @@ export class ViewportService {
 		// MEASURES
 		const measureWidth = this.measureWidth();
 		const drawMeasures: boolean = true;
-		const stepSize = Math.max(1, Math.pow(2, Math.ceil(-Math.log2(measureWidth / MIN_MEASURE_WIDTH))));
+		const stepSize = Math.max(1, Math.pow(2, Math.ceil(-Math.log2(measureWidth / this.MIN_MEASURE_WIDTH))));
 		const startMeasure = Math.ceil(startPos / measureWidth);
 		const endMeasure = Math.floor(endPos / measureWidth);
 		
@@ -198,8 +233,8 @@ export class ViewportService {
 		const endBeat = Math.ceil(endPos / beatWidth);
 
 		// SUBDIVISIONS
-		const numSubdivisions = Math.log2(beatWidth / MAX_INTERVAL_WIDTH);
-		const subdivisionWidth = (beatWidth / Math.pow(2, Math.ceil(numSubdivisions)))
+		const numSubdivisions = Math.ceil(Math.log2(beatWidth / MAX_INTERVAL_WIDTH));
+		const subdivisionWidth = (beatWidth / Math.pow(2, numSubdivisions))
 		const drawSubdivisions: boolean = (numSubdivisions > 0);
 		const startSubdivision = Math.ceil(startPos / subdivisionWidth);
 		const endSubdivision = Math.floor(endPos / subdivisionWidth);
@@ -235,7 +270,7 @@ export class ViewportService {
 			}
 		}
 		if (drawBeats) {
-			smallestUnit = 1.0 / this.globalsState.timeSignature().N;
+			smallestUnit = 1.0 / this.studioState.timeSignature().N;
 
 			for (let i = startBeat; i <= endBeat; i += 1) {
 				const x = i * beatWidth - startPos;
@@ -246,7 +281,7 @@ export class ViewportService {
 			}
 		}
 		if (drawSubdivisions) {
-			smallestUnit = (1.0 / this.globalsState.timeSignature().N) / numSubdivisions;
+			smallestUnit = (1.0 / this.studioState.timeSignature().N) / Math.pow(2,numSubdivisions);
 
 			for (let i = startSubdivision; i <= endSubdivision; i += 1) {
 				const x = i * subdivisionWidth - startPos;
@@ -286,8 +321,8 @@ export class ViewportService {
 	private drawSmallLine(ctx: CanvasRenderingContext2D, x: number, y=30, length=10) {
 		if (!ctx) return
 
-		ctx.strokeStyle = "rgba(90, 90, 90, 0.2)"
-		ctx.fillStyle = "rgba(90, 90, 90, 0.2)"
+		ctx.strokeStyle = "rgba(120, 120, 120, 0.2)"
+		ctx.fillStyle = "rgba(120, 120, 120, 0.2)"
 		ctx.lineWidth = 1
 
 		ctx.beginPath()

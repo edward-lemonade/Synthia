@@ -1,0 +1,91 @@
+@use "theme" as *;	
+@use "../../../../studio-vars" as *;
+
+.container {
+	position: relative;
+	height: $viewport-header-height;
+	width: 100%;
+	overflow: hidden;
+	
+	.canvas {
+		position: absolute;
+		top: 0;
+			left: 0;
+
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	.controls {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 120px;
+		height: 100%;
+
+		display: flex;
+		flex: 1;
+		flex-direction: row-reverse;
+		align-items: center;
+		justify-content: right;
+
+		padding-right: 10px;
+		gap: 4px;
+
+		z-index: 50;
+
+		.control-btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0px;
+
+			height: 30px !important;
+			width: 30px !important;
+			max-width: 30px !important;
+
+			background: $appbar-accent-2;
+			color: $appbar-text;
+			border-radius: $viewport-header-height;
+			border: none;
+
+			cursor: pointer;
+			transition: all 0.2s ease;
+
+			&.active {
+				background-color: $accent-yellow;
+				color: black; 
+				
+				&:hover {
+					background-color: $accent-yellow-l; // hover when active
+				}
+			}
+			&:not(.active):hover {
+				background: $appbar-accent-3;
+				color: $appbar-text; 
+			}
+		}
+		
+	}
+
+	.scroll-container {
+		display: flex;
+
+		height: $viewport-header-height;
+
+		z-index: 2;
+		background: none;
+
+		overflow-x: auto;
+
+		&::-webkit-scrollbar { display: none; }
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+
+		.scroll-content {
+			position: relative;
+			height: 100%;
+			flex: none;
+		}
+	}
+}

@@ -1,0 +1,102 @@
+@use "theme" as *;	
+@use "../../../studio-vars" as *;
+@use '@angular/material' as mat;
+@use 'sass:color';
+
+
+.container {
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	height: 100%;
+
+	align-items: center;
+	justify-content: start;
+
+	border-bottom: $border-width solid $border-color;
+	--highlight-color: #{$accent-orange};
+
+	.scroll-container {
+		height: 100%;
+		width: $cabnet-instrument-selector;
+
+		padding-left: $left-padding;
+		padding-right: $left-padding;
+		padding-top: 0px;
+		padding-bottom: 0px;
+
+		border-right: $border-width solid $border-color;
+
+		overflow-y: auto;
+		overflow-x: hidden;
+
+		.instrument-options {
+			display: flex;
+			flex: 1 0;
+			flex-direction: column;
+
+			background: $appbar-bg;
+			width: $cabnet-instrument-selector;
+
+			.instrument-option {
+				height: 50px;
+				width: $cabnet-instrument-selector;
+
+				font-size: 14px;
+				font-weight: 500;
+				color: $appbar-text !important;
+				background: transparent;
+				border: 1px solid transparent;
+				cursor: pointer;
+				transition: all 0.2s ease;
+				display: flex;
+				align-items: center;
+				justify-content: left;
+				padding-left: 20px;
+
+				&:hover {
+					background: $appbar-accent-1;
+					border-color: $appbar-accent-1;
+				}
+			}
+			.instrument-option.selected {
+				background: $appbar-text !important; 
+				color: $appbar-bg !important;
+			}
+		}
+
+		&::-webkit-scrollbar {
+			width: 8px; // Width of the scrollbar
+			height: 8px; 
+		}
+		&::-webkit-scrollbar-track {
+			background: $app-bg-l; // Track background
+			border-radius: 10px;
+		}
+		&::-webkit-scrollbar-thumb {
+			background: $app-bg-ll; // Thumb color
+			border-radius: 10px;
+			
+			&:hover {
+				background: $near-white; // Hover color
+			}
+		}
+		&::-webkit-scrollbar-corner {
+			background: transparent; // Corner where scrollbars meet
+		}
+	}
+}
+
+
+controls {
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	height: 100%;
+
+	align-items: center;
+	justify-content: start;
+
+	border-bottom: $border-width solid $border-color;
+	--highlight-color: #{$accent-orange};
+}

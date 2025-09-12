@@ -30,6 +30,10 @@
 			"@shared/*": ["../shared/*"],
 			"@shared_types/*": ["../shared/types/*"]
 		},		
+		"typeRoots": [
+			"src/typings",
+			"node_modules/@types"
+		]
 	},
 	"angularCompilerOptions": {
 		"enableI18nLegacyMessageIdFormat": false,
