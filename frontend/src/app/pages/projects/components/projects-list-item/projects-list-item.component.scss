@@ -187,13 +187,9 @@
 	}
 }
 
-.menu {
-	background-color: $near-white !important;
-}
 
 ::ng-deep .extra-options-menu {
 	background: $appbar-bg;
-	border: 2px solid $appbar-text !important;
 	border-radius: 0px !important;
 
 	display: flex;
@@ -203,6 +199,7 @@
 }
 
 .extra-options-menu-content {
+	background: $appbar-bg;
 	display: flex;
 	flex-direction: column;
 	

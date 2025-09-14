@@ -9,6 +9,7 @@ import axios from "axios";
 import { AudioCacheService } from "../services/audio-cache.service";
 import { DeepPartial, ObjectStateNode, objectStateNode, propStateNode, StateNode } from "./state.factory";
 import { ObjectScaffold, Scaffold, STATE_SCAFFOLD } from "./state.scaffolds";
+import { UserService } from "@src/app/services/user.service";
 
 
 @Injectable()
@@ -24,6 +25,7 @@ export class StateService { // SINGLETON
 
 	constructor(
 		private auth: AppAuthService,
+		private userService: UserService,
 		private route: ActivatedRoute,
 		private router: Router,
 
@@ -35,7 +37,7 @@ export class StateService { // SINGLETON
 		combineLatest([
 			this.route.paramMap,
 			this.route.queryParams,
-			this.auth.getAuthor$(),
+			this.userService.getAuthor$(),
 		]).pipe(
 			filter(([params, queryParams, author]) => {
 				const projectId = params.get('projectId');
@@ -92,7 +94,7 @@ export class StateService { // SINGLETON
 			console.log('Got JWT token:', token ? 'Token received' : 'No token');
 
 			const res = await axios.post<{state: ProjectState}>(
-				'/api/projects/load', 
+				'/api/projects/get_studio', 
 				{ 
 					projectId: projectId, 
 				},

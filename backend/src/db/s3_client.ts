@@ -7,7 +7,7 @@ const s3 = new S3Client({ region: 'us-west-1' });
 export async function putAudioFile(projectId: string, fileId: string, file: Express.Multer.File) {
 	const key = projectId + '/files/' + fileId;
 	const command = new PutObjectCommand({
-		Bucket: 'noteflyte',
+		Bucket: 'app-synthia',
 		Key: key,
 		Body: file.buffer,
 		ContentType: file.mimetype,
@@ -25,7 +25,7 @@ export async function getAudioFile(projectId: string, fileId: string) : Promise<
 	const key = projectId + '/files/' + fileId;
 
 	const command = new GetObjectCommand({
-		Bucket: "noteflyte",
+		Bucket: "app-synthia",
 		Key: key,
 	});
 
@@ -55,7 +55,7 @@ export async function putExportFile(projectId: string, file: Blob): Promise<void
 	const buffer = Buffer.from(arrayBuffer);
 	
 	const command = new PutObjectCommand({
-		Bucket: 'noteflyte',
+		Bucket: 'app-synthia',
 		Key: key,
 		Body: buffer,
 		ContentType: 'audio/wav', // Explicitly set content type for WAV files
@@ -73,7 +73,7 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	const key = projectId + '/export';
 
 	const command = new GetObjectCommand({
-		Bucket: "noteflyte",
+		Bucket: "app-synthia",
 		Key: key,
 	});
 

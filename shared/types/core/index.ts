@@ -1,1 +1,4 @@
 export * from './Author'
+export * from './Comment'
+export * from './User'
+export * from './InteractionState'

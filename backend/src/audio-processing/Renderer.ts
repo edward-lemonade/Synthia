@@ -42,7 +42,7 @@ export class Renderer {
 		return this.projectState.studio.tracks.reduce((max, track) => {
 			return Math.max(max, track.regions.reduce((regionMax, region) => {
 				return Math.max(regionMax, region.start + region.duration);
-				}, 0));
+			}, 0));
 		}, 0) * this.projectState.studio.timeSignature.N  / this.projectState.studio.bpm * 60; 
 	}
 

@@ -9,6 +9,7 @@ import { ProjectsService } from '../../projects.service';
 import { CachedAudioFile } from '@src/app/utils/audio';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
 import { DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
 	selector: 'app-projects-list-item',
@@ -90,6 +91,10 @@ import { DatePipe } from '@angular/common';
 								<mat-icon color="red">delete</mat-icon>
 								Delete
 							</button>
+							<button mat-menu-item class="extra-options-menu-btn" (click)="onPublishButton()">
+								<mat-icon>cloud_upload</mat-icon>
+								Publish
+							</button>
 						</div>
 					</mat-menu>
 				</div>
@@ -116,7 +121,10 @@ export class ProjectsListItemComponent implements AfterViewInit, OnDestroy {
 	private audioElement: HTMLAudioElement | null = null;
 	private progressUpdateInterval: any = null;
 
-	constructor(public projectsService: ProjectsService) {}
+	constructor(
+		public projectsService: ProjectsService,
+		public router: Router,
+	) {}
 
 	async ngAfterViewInit() {
 		await this.initializeWaveform();
@@ -312,6 +320,11 @@ export class ProjectsListItemComponent implements AfterViewInit, OnDestroy {
 		}
 		this.tempProjectName = '';
 	}
+
+	onPublishButton() {
+		this.projectsService.publishProject(this.project)
+	}
+
 
 	// ==================================================================================================
 	// Helpers

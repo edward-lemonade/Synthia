@@ -19,6 +19,6 @@ const ProjectMetadataSchema = new mongoose.Schema({ // interface ProjectMetadata
 	exportFile: {type: String, default: null}
 });
 
-export interface IProjectMetadataDocument extends Document, ProjectMetadata {}
+export interface IProjectMetadataDocument extends ProjectMetadata, Document {}
 
 export const ProjectMetadataModel = mongoose.model<IProjectMetadataDocument>('ProjectMetadata', ProjectMetadataSchema);

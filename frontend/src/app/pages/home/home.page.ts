@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
 	imports: [],
 	template: `
 		<h1>
-			Welcome to NoteFlyte buddy
+			Welcome to Synthia buddy
 		</h1>
 	`,
 	styles: [`

@@ -1,36 +1,123 @@
 @use "theme" as *;
 
+.page-container {
+	display: flex;
+	flex-direction: column;
+	width: 100vw;
+	height: 100vh;
+}
+
 .appbar {
 	padding-left: $pad-ends;
 	padding-right: $pad-ends;
 	background: $appbar-bg;
 	color: $appbar-text;
-	position: sticky;
-	top: 0;
+
 	z-index: 1000;
-}
-.appbar span {
-	color: $appbar-text;
+
+	.nav {
+		display: flex;
+		gap: 8px;
+		padding-left: 16px;
+
+		.nav-btn {
+			background: $appbar-accent-1;
+			color: $appbar-text !important;
+			transition: background 0.2s;
+		}
+	}
+
+	.spacer {
+		flex: 1 1 auto;
+	}
+
+	.profile-picture-button {
+		border-radius: 50%;
+		overflow: hidden;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background: $appbar-text;
+		
+		.profile-picture {
+			width: 32px;
+			height: 32px;
+			border-radius: 50%;
+			object-fit: cover;
+			display: block;
+		}
+		
+		// Ensure the fallback icon is properly centered
+		mat-icon {
+			font-size: 24px;
+			width: 24px;
+			height: 24px;
+		}
+	}
+	.profile-picture-button:hover {
+		.profile-picture {
+			opacity: 0.8;
+		}
+	}
+
+	span {
+		color: $appbar-text;
+	}
+
 }
 
-.nav {
+.page-content {
 	display: flex;
-	gap: 8px;
-	padding-left: 16px;
+	flex: 1;
+	min-height: 0;
+	width: 100vw;
 
-}
-.nav-btn {
-	background: $appbar-accent-1;
-	color: $appbar-text !important;
-	transition: background 0.2s;
+	overflow-y: scroll;
+
+	router-outlet {
+		display: contents; // Makes router-outlet "disappear" from layout
+	}
+	
+	::ng-deep > * {
+		width: 100%;
+		flex: 1;
+	}
 }
 
-.spacer {
-	flex: 1 1 auto;
+
+::ng-deep .user-settings-menu {
+	background: $appbar-bg !important;
+	border-radius: 0px !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
 }
 
-.appbar-btn {
-	background: $appbar-accent-2;
-	color: #fff !important;
-	transition: background 0.2s;
+.user-settings-menu-content {
+	background: $appbar-bg;
+	display: flex;
+	flex-direction: column;
+	
+	.user-settings-menu-btn {
+		height: 30px;
+
+		font-size: 14px;
+		font-weight: 500;
+		color: $appbar-text !important;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: left;
+
+		&:hover {
+			background: $appbar-accent-1;
+			border-color: $appbar-accent-1;
+		}
+	}
 }

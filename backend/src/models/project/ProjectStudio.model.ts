@@ -19,7 +19,7 @@ const ProjectStudioSchema = new mongoose.Schema({ // interface ProjectMetadata
 	fileRefs: { type: [BaseFileRefSchema], required: true }
 });
 
-export interface IProjectStudioDocument extends Document, ProjectStudio {
+export interface IProjectStudioDocument extends ProjectStudio, Document {
 	projectId: string;
   	projectMetadataId: mongoose.Types.ObjectId;
 }

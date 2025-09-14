@@ -1,40 +1,38 @@
 import { Injectable } from '@angular/core';
-import { AuthService as Auth0Service, User } from '@auth0/auth0-angular';
+import { AuthService as Auth0Service, User as UserAuth } from '@auth0/auth0-angular';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { env } from '@env/environment';
-import { Author } from '@shared/types';
 
 
 @Injectable({ providedIn: 'root' })
 export class AppAuthService {
-	private user: User | null = null;
-  	private userSubject = new BehaviorSubject<User | null>(null);
-	private author: Author | null = null; // for studio pages
-	private authorSubject = new BehaviorSubject<Author | null>(null);
+	private static _instance: AppAuthService;
+	static get instance(): AppAuthService { return AppAuthService._instance; }
 
 	constructor(private auth0: Auth0Service) {
+		console.log("app auth service")
+		AppAuthService._instance = this;
+		this.initializeUser();
+	}
+
+	private userAuth: UserAuth | null = null;
+	private userAuthSubject = new BehaviorSubject<UserAuth | null>(null);
+	getUserAuth(): UserAuth | null { return this.userAuth; }
+	getUserAuth$() { return this.userAuthSubject.asObservable(); }
+
+	private initializeUser() {
 		this.auth0.user$.pipe(
-			filter((user): user is User => !!user)  
+			filter((user): user is UserAuth => !!user)
 		).subscribe(user => {
-			this.user = user;
-			this.author = {
-				userId: user.sub!,
-				username: user.name || user.email || "",
-			}
-			this.userSubject.next(this.user);
-			this.authorSubject.next(this.author)
+			this.userAuth = user;
+			this.userAuthSubject.next(this.userAuth);
 		});
 	}
 
-	getUser(): User | null { return this.user }
-	getUser$() { return this.userSubject.asObservable() }
-	getAuthor(): Author | null { return this.author }
-	getAuthor$() { return this.authorSubject.asObservable() }
-
 	async getAccessToken(): Promise<string> {
 		return firstValueFrom(
-		  	this.auth0.getAccessTokenSilently({ 
+			this.auth0.getAccessTokenSilently({
 				authorizationParams: {
 					audience: env.auth0_api_aud,
 					prompt: 'consent'

@@ -3,6 +3,7 @@ import { AudioFileRef, BaseFileRef, ProjectFront, ProjectMetadata, ProjectState,
 import mongoose from "mongoose";
 import { getAudioFile } from "@src/db/s3_client";
 import { RegionType } from "@src/models/project/Track.model";
+import { Comment } from "@shared/types";
 
 export class ProjectMetadataTransformer {
 	static fromDoc(docMeta: IProjectMetadataDocument): ProjectMetadata {

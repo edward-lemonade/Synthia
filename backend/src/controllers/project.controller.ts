@@ -1,22 +1,28 @@
 import { Request, Response } from "express";
 import { applyPatches, Patch } from "immer";
-import mongoose, { Document } from "mongoose";
 
-import { deleteMetadataByProjectId, deleteStudioByProjectId, findMetadataByProjectId, findMetadatasByUser, findStudioByProjectId } from "@src/db/mongo_client";
+import * as db from "@src/db/mongo_client";
 
-import { AudioFileData, ProjectState } from "@shared/types";
+import { AudioFileData, ProjectFront, ProjectState } from "@shared/types";
 import { ProjectMetadataTransformer, ProjectStudioTransformer } from "@src/transformers/project.transformer";
-import { ProjectMetadataModel, ProjectStudioModel } from "@src/models";
+import { ProjectFrontModel, ProjectMetadataModel, ProjectStudioModel } from "@src/models";
 import { getExportFile, putExportFile } from "@src/db/s3_client";
 import { Renderer } from "@src/audio-processing/Renderer"
 
 
 export async function getMine(req: Request, res: Response) {
 	const userId = req.body.userId;
-	const metadataDocs = await findMetadatasByUser(userId);
+	const metadataDocs = await db.findMetadatasByUser(userId);
 	const metadatas = metadataDocs.map((doc) => ProjectMetadataTransformer.fromDoc(doc));
 
 	res.json({ projects: metadatas })
+}
+
+export async function getProject(req: Request, res: Response) {
+	const metadataDoc = await db.findMetadataByProjectId(req.body.projectId);
+	const metadata = metadataDoc ? ProjectMetadataTransformer.fromDoc(metadataDoc) : null;
+
+	res.json({ project: metadata })
 }
 
 export async function saveExisting(req: Request, res: Response) {
@@ -24,8 +30,8 @@ export async function saveExisting(req: Request, res: Response) {
 	const patches = req.body.patches as Patch[];
 
 	const [metadataDoc, studioDoc] = await Promise.all([
-		findMetadataByProjectId(projectId),
-		findStudioByProjectId(projectId)
+		db.findMetadataByProjectId(projectId),
+		db.findStudioByProjectId(projectId)
 	]);
 
 	if (!metadataDoc || !studioDoc) {
@@ -50,10 +56,11 @@ export async function saveExisting(req: Request, res: Response) {
 
 export async function saveOverwrite(req: Request, res: Response) {
 	const state = req.body.state as ProjectState;
+	state.metadata.updatedAt = new Date();
 
 	const [metadataDoc, studioDoc] = await Promise.all([
-		findMetadataByProjectId(state.metadata.projectId),
-		findStudioByProjectId(state.metadata.projectId)
+		db.findMetadataByProjectId(state.metadata.projectId),
+		db.findStudioByProjectId(state.metadata.projectId)
 	]);
 
 	if (!metadataDoc || !studioDoc) {
@@ -116,8 +123,8 @@ export async function saveNew(req: Request, res: Response) {
 export async function load(req: Request, res: Response) {
 	const projectId = req.body.projectId;
 	const [metadataDoc, studioDoc] = await Promise.all([
-		findMetadataByProjectId(projectId),
-		findStudioByProjectId(projectId)
+		db.findMetadataByProjectId(projectId),
+		db.findStudioByProjectId(projectId)
 	]);
 	if (!metadataDoc || !studioDoc) { console.error("Failed to load project metadata."); res.json({ success: false }); return }
 
@@ -128,8 +135,8 @@ export async function load(req: Request, res: Response) {
 export async function deleteStudio(req: Request, res: Response) {
 	const projectId = req.body.projectId;
 	const [resM, resS] = await Promise.all([
-		deleteMetadataByProjectId(projectId),
-		deleteStudioByProjectId(projectId)
+		db.deleteMetadataByProjectId(projectId),
+		db.deleteStudioByProjectId(projectId)
 	]);
 	if ((resM.deletedCount+resS.deletedCount!=2)) { console.error("Failed to delete project."); res.json({ success: false }); return }
 
@@ -140,7 +147,7 @@ export async function rename(req: Request, res: Response) {
 	const projectId = req.body.projectId;
 	const newName = req.body.newName;
 	
-	const metadataDoc = await findMetadataByProjectId(projectId);
+	const metadataDoc = await db.findMetadataByProjectId(projectId);
 	if (!metadataDoc) { console.error("Failed to find project."); res.json({ success: false }); return }
 
 	metadataDoc.title = newName;
@@ -153,6 +160,52 @@ export async function rename(req: Request, res: Response) {
 export async function getExport(req: Request, res: Response) {
 	const audioFileData: AudioFileData = await getExportFile(req.body.projectId);
 	res.json({ success: true, exportFileData: audioFileData });
+}
+
+export async function publish(req: Request, res: Response) {
+	const { projectId, description } = req.body;
+
+	const metadataDoc = await db.findMetadataByProjectId(projectId);
+	if (!metadataDoc) {
+		console.error('Error creating ProjectFront: No metadata found');
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to create project front' 
+        });
+		return;
+	}
+
+    try {
+		let frontDoc = await db.findFrontByProjectId(projectId);
+		if (frontDoc) {
+			// already released
+			frontDoc.updateOne({
+				description,
+			})
+		} else {
+			// create new
+			frontDoc = await ProjectFrontModel.create({
+				projectId,
+				description,
+				projectMetadataId: metadataDoc!._id,
+			});
+		}
+
+		metadataDoc.isReleased = true;
+		await metadataDoc.save();
+        
+        res.json({ 
+            success: true, 
+            projectFront: frontDoc.toObject(), 
+        });
+        
+    } catch (error) {
+        console.error('Error creating ProjectFront:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to create project front' 
+        });
+    }
 }
 
 // =======================================================================
