@@ -9,45 +9,29 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
+import { PublishAudioComponent } from "./audio/audio.component";
 
 @Component({
 	selector: 'app-publish',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, FormsModule],
+	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, FormsModule, PublishAudioComponent],
 	providers: [PublishService],
 	template: `
 		<div class="container">
 			<div class="publish-container">
 				<div class="header">Publish Project</div>
 				
-				<div class="project-name">{{ projectMetadata ? projectMetadata.title : '' }}</div>
-				
-				<div class="audio-player">
-					<div class="audio-controls">
-						<button 
-							class="play-button"
-							(click)="onPlayButton()">
-							<mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
-						</button>
-						<div class="duration-display">
-							{{ formatDuration(cachedAudioFile ? cachedAudioFile.duration : 0) }}
-						</div>
-					</div>
-					
-					<div class="waveform-container">
-						<div #waveformWrapper class="waveform-wrapper">
-							<canvas #canvas 
-								class="waveform-canvas"
-								(click)="onWaveformClick($event)">
-							</canvas>
-							<div class="progress-container">
-								<div class="progress-bar" 
-									[style.width.%]="progressPercent">
-								</div>
-							</div>
-						</div>
-					</div>
+				<!-- Project Title Input -->
+				<div class="title-section">
+					<mat-form-field appearance="outline" class="title-field">
+						<mat-label>Project Title</mat-label>
+						<input matInput 
+							placeholder="Enter project title..."
+							[(ngModel)]="projectTitle">
+					</mat-form-field>
 				</div>
 				
+				<app-publish-audio/>
+
 				<!-- Description Box -->
 				<div class="description-section">
 					<mat-form-field appearance="outline" class="description-field">
@@ -60,41 +44,64 @@ import { createWaveformViewport } from '@src/app/utils/render-waveform';
 					</mat-form-field>
 				</div>
 				
-				<!-- Publish form/options -->
-				<div class="publish-options">
-					<!-- Additional publish options can go here -->
-				</div>
-				
-				<!-- Publish Button -->
 				<div class="publish-button-container">
-					<button mat-raised-button 
-						color="primary" 
-						class="publish-button"
-						(click)="onPublish()"
-						[disabled]="isPublishing">
-						<mat-icon>cloud_upload</mat-icon>
-						{{ isPublishing ? 'Publishing...' : 'Publish' }}
-					</button>
+					<!-- Loading state -->
+					<div *ngIf="isLoading" class="loading-section">
+						<div class="loading-text">Loading project data...</div>
+					</div>
+					
+					<!-- Show different options based on published status -->
+					<div *ngIf="!isLoading && !projectMetadata?.isReleased" class="publish-section">
+						<button
+							class="button publish-button"
+							(click)="onPublish()"
+							[disabled]="isPublishing">
+							<mat-icon>cloud_upload</mat-icon>
+							{{ isPublishing ? 'Publishing...' : 'Publish' }}
+						</button>
+					</div>
+					
+					<div *ngIf="!isLoading && projectMetadata?.isReleased" class="published-section">
+						<div class="published-status">
+							<mat-icon class="published-icon">check_circle</mat-icon>
+							<span class="published-text">This project is already published</span>
+						</div>
+						
+						<div class="published-actions">
+							<button
+								class="button update-button"
+								(click)="onUpdate()"
+								[disabled]="isPublishing">
+								<mat-icon>edit</mat-icon>
+								{{ isPublishing ? 'Updating...' : 'Update' }}
+							</button>
+							
+							<button
+								class="button unpublish-button"
+								(click)="onUnpublish()"
+								[disabled]="isPublishing">
+								<mat-icon>remove_circle</mat-icon>
+								{{ isPublishing ? 'Unpublishing...' : 'Unpublish' }}
+							</button>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	`,
 	styleUrls: ['./publish.page.scss']
 })
-export class PublishPage implements OnInit, OnDestroy, AfterViewInit {
+export class PublishPage implements OnInit {
 	@ViewChild('waveformWrapper') waveformWrapper!: ElementRef<HTMLDivElement>;
 	@ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
 
 	projectId: string | null = null;
 	get projectMetadata() { return this.publishService.projectMetadata };
+	get projectFront() { return this.publishService.projectFront };
 	get cachedAudioFile() { return this.publishService.cachedAudioFile };
 	isLoading = false;
-	
-	isPlaying: boolean = false;
-	progressPercent: number = 0;
-	private audioElement: HTMLAudioElement | null = null;
-	private progressUpdateInterval: any = null;
 
+	projectTitle: string = '';
 	description: string = '';
 	isPublishing: boolean = false;
 
@@ -113,22 +120,20 @@ export class PublishPage implements OnInit, OnDestroy, AfterViewInit {
 		});
 	}
 
-	async ngAfterViewInit() {
-		this.initializeWaveform();
-	}
-
-	ngOnDestroy() {
-		this.stopAudio();
-	}
-
 	private async loadProjectData() {
 		if (!this.projectId) return;
 
 		this.isLoading = true;
 		
 		try {
-			const project = await this.publishService.loadProject(this.projectId);
-			
+			const projectMetadata = await this.publishService.loadProject(this.projectId);
+			if (projectMetadata) {
+				this.projectTitle = projectMetadata.title || '';
+			}
+			if (this.projectMetadata?.isReleased) {
+				await this.publishService.loadFront();
+				this.description = this.projectFront?.description || '';
+			}
 		} catch (error) {
 			console.error('Error loading project data or audio export:', error);
 		} finally {
@@ -136,154 +141,52 @@ export class PublishPage implements OnInit, OnDestroy, AfterViewInit {
 		}
 	}
 
-	private async initializeWaveform() {
-		if (!this.canvas || !this.waveformWrapper) return;
-
-		try {
-			if (!this.cachedAudioFile) {
-				await this.publishService.getExport(this.projectId!);
-			}
-			
-			createWaveformViewport(
-				this.cachedAudioFile!.waveformData,
-				this.canvas.nativeElement,
-				0,
-				this.cachedAudioFile!.duration,
-				0,
-				this.waveformWrapper.nativeElement.clientWidth,
-			);
-		} catch (error) {
-			console.error('Failed to initialize waveform:', error);
-		}
-	}
-
-	// ==================================================================================================
-	// Audio Playback Methods
-
-	onPlayButton() {
-		if (this.isPlaying) {
-			this.pauseAudio();
-		} else {
-			const resumeTime = this.audioElement?.currentTime || 0;
-			this.playAudio(resumeTime);
-		}
-	}
-
-	private playAudio(startTime: number = 0) {
-		if (!this.cachedAudioFile) return;
-
-		this.audioElement = new Audio();
-		this.audioElement.src = this.cachedAudioFile.url;
-		this.audioElement.currentTime = startTime;
-		
-		this.audioElement.addEventListener('ended', () => {
-			this.isPlaying = false;
-			this.progressPercent = 0;
-			this.cleanup();
-		});
-
-		this.audioElement.addEventListener('error', (error) => {
-			console.error('Audio playback error:', error);
-			this.isPlaying = false;
-			this.progressPercent = 0;
-			this.cleanup();
-		});
-
-		this.audioElement.addEventListener('loadedmetadata', () => {
-			this.startProgressUpdates();
-		});
-
-		// Start playback
-		this.audioElement.play().then(() => {
-			this.isPlaying = true;
-		}).catch(error => {
-			console.error('Failed to start playback:', error);
-			this.isPlaying = false;
-			this.cleanup();
-		});
-	}
-
-	private pauseAudio() {
-		if (this.audioElement) {
-			this.audioElement.pause();
-			this.isPlaying = false;
-			this.stopProgressUpdates();
-		}
-	}
-
-	private stopAudio() {
-		if (this.audioElement) {
-			this.audioElement.pause();
-			this.audioElement.currentTime = 0;
-			this.cleanup();
-		}
-		this.isPlaying = false;
-		this.progressPercent = 0;
-		this.stopProgressUpdates();
-	}
-
-	onWaveformClick(event: MouseEvent) {
-		if (!this.cachedAudioFile || !this.canvas) return;
-
-		const rect = this.canvas.nativeElement.getBoundingClientRect();
-		const clickX = event.clientX - rect.left;
-		const canvasWidth = rect.width;
-		
-		const clickPercent = clickX / canvasWidth;
-		const targetTime = clickPercent * this.cachedAudioFile.duration;
-
-		if (this.audioElement) {
-			this.audioElement.currentTime = Math.max(0, Math.min(targetTime, this.cachedAudioFile.duration));
-			this.updateProgress();
-		} else {
-			this.playAudio(targetTime);
-		}
-	}
-
-	private cleanup() {
-		if (this.audioElement) {			
-			// Clean up the audio element
-			this.audioElement.src = '';
-			this.audioElement = null;
-		}
-		this.stopProgressUpdates();
-	}
-
-	// ==================================================================================================
-	// Progress Updates
-
-	private startProgressUpdates() {
-		this.stopProgressUpdates(); // Clear any existing interval
-		
-		this.progressUpdateInterval = setInterval(() => {
-			this.updateProgress();
-		}, 100); // Update every 100ms
-	}
-
-	private stopProgressUpdates() {
-		if (this.progressUpdateInterval) {
-			clearInterval(this.progressUpdateInterval);
-			this.progressUpdateInterval = null;
-		}
-	}
-
-	private updateProgress() {
-		if (this.audioElement && this.cachedAudioFile) {
-			const currentTime = this.audioElement.currentTime;
-			const duration = this.cachedAudioFile.duration;
-			this.progressPercent = (currentTime / duration) * 100;
-		}
-	}
 
 	// ==================================================================================================
 	// Publish Methods
 
 	async onPublish() {
 		if (this.isPublishing) return;
+
+		if (!this.projectTitle.trim()) {
+			alert('Please enter a project title');
+			return;
+		}
+		
 		this.isPublishing = true;
 		
-		await this.publishService.publishProject(this.description)
+		await this.publishService.publishProject(this.description, this.projectTitle)
 		this.isPublishing = false;
+	}
+
+	async onUpdate() {
+		if (this.isPublishing) return;
+
+		if (!this.projectTitle.trim()) {
+			alert('Please enter a project title');
+			return;
+		}
+		
+		this.isPublishing = true;
+		
+		await this.publishService.publishProject(this.description, this.projectTitle)
+		this.isPublishing = false;
+	}
+
+	async onUnpublish() {
+		if (this.isPublishing) return;
+		
+		const confirmed = confirm('Are you sure you want to unpublish this project? This will permanently delete all of the track\'s statistics');
+		if (!confirmed) return;
+		
+		this.isPublishing = true;
+		
+		const success = await this.publishService.unpublishProject();
+		this.isPublishing = false;
+		
+		if (success) {
+			console.log('Project unpublished successfully');
+		}
 	}
 
 	// ==================================================================================================

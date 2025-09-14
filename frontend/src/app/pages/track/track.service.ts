@@ -3,7 +3,7 @@ import { Injectable, Signal, WritableSignal, signal } from '@angular/core';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { Router } from '@angular/router';
 import axios from 'axios';
-import { AudioFileData, Comment, CommentDTO, InteractionState, ProjectFront, ProjectFrontDTO, ProjectMetadata } from '@shared/types';
+import { AudioFileData, Comment, CommentDTO, fillDates, InteractionState, ProjectFront, ProjectFrontDTO, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
 
 
@@ -43,11 +43,7 @@ export class TrackService {
 				this.interactionState = res.data.interactionState || false;
 				
 				this.comments.set(
-					res.data.comments.map(comment => ({
-						...comment,
-						createdAt: new Date(comment.createdAt),
-						updatedAt: new Date(comment.updatedAt)
-					}))
+					res.data.comments.map(comment => (fillDates(comment)))
 				);
 
 				this.likes.set(this.projectFront.likes);
@@ -114,7 +110,7 @@ export class TrackService {
 			const user = this.auth.getUserAuth();
 			if (!user) return null;
 
-			const res = await axios.post<{ success: boolean, newComment: Comment }>(
+			const res = await axios.post<{ success: boolean, newComment: CommentDTO }>(
 				`/api/track/${this.projectMetadata.projectId}/comment`, 
 				{
 					comment: comment.trim(),
@@ -123,7 +119,7 @@ export class TrackService {
 				{ headers: { Authorization: `Bearer ${token}` }}
 			);
 			
-			const newComment = res.data.newComment;
+			const newComment = fillDates(res.data.newComment);
 			this.comments.update(curr => [newComment, ...curr])
 
 			return newComment;

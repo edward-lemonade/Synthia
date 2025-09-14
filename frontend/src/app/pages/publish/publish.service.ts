@@ -14,6 +14,7 @@ export class PublishService {
 	) {}
 
 	declare projectMetadata: ProjectMetadata;
+	declare projectFront: ProjectFront;
 	declare cachedAudioFile: CachedAudioFile;
 
 	public async loadProject(projectId: string) {
@@ -64,7 +65,7 @@ export class PublishService {
 		}
 	}
 
-	public async getExport(projectId: string, timeoutMs: number = 30000) {
+	public async getExport(timeoutMs: number = 30000) {
 		const startTime = Date.now();
 		
 		while (Date.now() - startTime < timeoutMs) {
@@ -76,7 +77,35 @@ export class PublishService {
 			await new Promise(resolve => setTimeout(resolve, 100));
 		}
 		
-		throw new Error(`Export for project ${projectId} not available after ${timeoutMs}ms timeout`);
+		throw new Error(`Export for project not available after ${timeoutMs}ms timeout`);
+	}
+
+	// =========================================================
+	// Update
+
+	public async loadFront() {
+		try {
+			const token = await this.auth.getAccessToken();
+			const user = this.auth.getUserAuth();
+			if (!user || !this.projectMetadata?.projectId) return null;
+
+			const res = await axios.post<{ projectFront: any }>(
+				'/api/projects/get_front', 
+				{ projectId: this.projectMetadata.projectId },
+				{ headers: {Authorization: `Bearer ${token}`}}
+			);
+
+			this.projectFront = res.data.projectFront;
+
+			return res.data.projectFront?.description || '';
+		} catch (err) {
+			console.error('Error loading project front:', err);
+			return null;
+		}
+	}
+
+	public async getExistingDescription() {
+		return this.projectFront?.description || '';
 	}
 
 	public async renameProject(project: ProjectMetadata, newName: string) {
@@ -102,11 +131,23 @@ export class PublishService {
 		}
 	}
 
-	public async publishProject(description: string) {
+	// =========================================================
+	// Actions
+
+	public async publishProject(description: string, title?: string) {
 		try {
 			const token = await this.auth.getAccessToken();
 			const user = this.auth.getUserAuth();
 			if (!user) return null;
+
+			if (title && title !== this.projectMetadata.title) {
+				const renameSuccess = await this.renameProject(this.projectMetadata, title);
+				if (!renameSuccess) {
+					console.error('Failed to update project title');
+					return false;
+				}
+				this.projectMetadata = { ...this.projectMetadata, title: title };
+			}
 
 			const res = await axios.post<{ success: boolean }>(
 				'/api/projects/publish', 
@@ -119,11 +160,37 @@ export class PublishService {
 			);
 
 			if (res.data.success) {
+				this.projectMetadata = { ...this.projectMetadata, isReleased: true };
 				this.router.navigate(['/track', this.projectMetadata.projectId]);
 			}
 			return true;
 		} catch (err) {
-			console.error('Error during project loading:', err);
+			console.error('Error during project publishing:', err);
+			return false;
+		}
+	}
+
+	public async unpublishProject() {
+		try {
+			const token = await this.auth.getAccessToken();
+			const user = this.auth.getUserAuth();
+			if (!user) return null;
+
+			const res = await axios.post<{ success: boolean }>(
+				'/api/projects/unpublish', 
+				{ 
+					projectId: this.projectMetadata.projectId,
+				},
+				{ headers: {Authorization: `Bearer ${token}`}}
+			);
+
+			if (res.data.success) {
+				this.projectMetadata = { ...this.projectMetadata, isReleased: false };
+				this.router.navigate(['/projects']);
+			}
+			return res.data.success;
+		} catch (err) {
+			console.error('Error during project unpublishing:', err);
 			return false;
 		}
 	}

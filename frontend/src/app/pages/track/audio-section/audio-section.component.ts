@@ -65,24 +65,21 @@ import { TrackService } from '../track.service';
 				<button 
 					class="control-btn like-btn"
 					[class.liked]="tracksService.hasLiked()"
-					(click)="onToggleLike()"
-					matTooltip="{{ tracksService.hasLiked() ? 'Unlike' : 'Like' }} this track">
+					(click)="onToggleLike()">
 					<mat-icon>{{ tracksService.hasLiked() ? 'favorite' : 'favorite_border' }}</mat-icon>
 					<span class="control-label">{{ tracksService.likes() }}</span>
 				</button>
 
 				<button 
 					class="control-btn share-btn"
-					(click)="onShare()"
-					matTooltip="Share this track">
+					(click)="onShare()">
 					<mat-icon>share</mat-icon>
 					<span class="control-label">Share</span>
 				</button>
 
 				<button 
 					class="control-btn download-btn"
-					(click)="onDownload()"
-					matTooltip="Download this track">
+					(click)="onDownload()">
 					<mat-icon>download</mat-icon>
 					<span class="control-label">Download</span>
 				</button>
@@ -133,7 +130,6 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	ngAfterViewInit() {
 		this.canvasQuery.changes.subscribe(() => {
 			if (this.canvasQuery.length > 0) {
-				console.log("canvas")
 				this.canvas = this.canvasQuery.first;
 				if (this.canvas && this.waveformWrapper && !this.isWaveformInitialized) {this.initializeWaveform();}
 			}

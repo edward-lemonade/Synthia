@@ -20,127 +20,32 @@
         font-weight: 700;
     }
 
-    .project-name {
-        color: white;
-        font-size: 32px;
-        font-weight: 300;
-    }
-
-	.audio-player {
-		background: linear-gradient(90deg, 
-			$accent-purple-l, 
-			$accent-pink 40%,
-			$accent-orange 70%,
-			$accent-yellow 100%
-		);
-		border-radius: 20px;
-		padding: 24px;
-		display: flex;
-		flex-direction: column;
-		gap: 24px;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-		transition: all 0.3s ease;
-
-		&:hover {
-			box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
-			transform: translateY(-2px);
-		}
-
-		.audio-controls {
-			display: flex;
-			align-items: center;
-			gap: 20px;
-
-			.play-button {
-				width: 64px;
-				height: 64px;
-				border-radius: 32px;
-				border: none;
-				background-color: $app-bg-l;
-				color: white;
-				cursor: pointer;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				transition: all 0.2s ease;
-				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-
-				&:hover {
-					background-color: $app-bg-ll;
-					transform: scale(1.05);
-					box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-				}
-
-				&:active {
-					transform: scale(0.98);
-				}
-
-				mat-icon {
-					font-size: 32px;
-					width: 32px;
-					height: 32px;
-				}
-			}
-
-			.duration-display {
-				font-size: 24px;
-				font-weight: 600;
-				color: $app-bg;
-				text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-				min-width: 80px;
-			}
-		}
-
-		.waveform-container {
-			display: flex;
-			align-items: center;
+    .title-section {
+		.title-field {
 			width: 100%;
-			height: 120px;
 			
-			.waveform-wrapper {
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-				min-width: 0;
-				height: 100%;
-				position: relative;
-				border-radius: 12px;
-				overflow: hidden;
-				background: rgba(255, 255, 255, 0.1);
-				backdrop-filter: blur(10px);
-				
-				.waveform-canvas {
-					position: relative;
-					height: calc(100% - 8px); // Leave space for progress bar
-					background: none;
-					cursor: pointer;
-					transition: opacity 0.2s ease;
-					
-					&:hover {
-						opacity: 0.8;
-					}
+			::ng-deep .mat-mdc-form-field {
+				.mat-mdc-text-field-wrapper {
+					background-color: rgba(255, 255, 255, 0.05);
+					border-radius: 8px;
 				}
 				
-				.progress-container {
-					position: relative;
-					height: 8px;
-					background-color: rgba(255, 255, 255, 0.2);
-					border-radius: 0 0 12px 12px;
-					overflow: hidden;
-					
-					.progress-bar {
-						position: absolute;
-						top: 0;
-						left: 0;
-						height: 100%;
-						background: linear-gradient(90deg, 
-							rgba(255, 255, 255, 0.9),
-							rgba(255, 255, 255, 1)
-						);
-						border-radius: 0 0 12px 12px;
-						transition: width 0.1s ease;
-						box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
-					}
+				.mat-mdc-form-field-label {
+					color: rgba(255, 255, 255, 0.8);
+				}
+				
+				.mat-mdc-input-element {
+					color: white;
+					font-size: 24px;
+					font-weight: 300;
+				}
+				
+				.mat-mdc-form-field-outline {
+					color: rgba(255, 255, 255, 0.3);
+				}
+				
+				&.mat-focused .mat-mdc-form-field-outline {
+					color: rgba(255, 255, 255, 0.6);
 				}
 			}
 		}
@@ -186,18 +91,34 @@
 		margin-top: auto;
 		padding-top: 24px;
 		
-		.publish-button {
-			height: 56px;
-			min-width: 200px;
-			font-size: 18px;
+		.loading-section {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 20px;
+			
+			.loading-text {
+				color: rgba(255, 255, 255, 0.7);
+				font-size: 16px;
+			}
+		}
+		
+		.button {
+			display: flex;
+			padding: 0 20px;
+			height: 48px;
+			min-width: 140px;
+			border-radius: 24px;
+			border: 0px;
+			font-size: 16px;
 			font-weight: 600;
-			border-radius: 28px;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+			cursor: pointer;
+			align-items: center;
 			transition: all 0.2s ease;
 			
 			&:hover:not(:disabled) {
 				transform: translateY(-2px);
-				box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 			}
 			
 			&:disabled {
@@ -206,6 +127,61 @@
 			
 			mat-icon {
 				margin-right: 8px;
+			}
+		}
+
+		.published-section {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 20px;
+			width: 100%;
+			
+			.published-status {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				padding: 16px 24px;
+				background-color: rgba(76, 175, 80, 0.1);
+				border: 1px solid rgba(76, 175, 80, 0.3);
+				border-radius: 12px;
+				
+				.published-icon {
+					color: #4CAF50;
+					font-size: 24px;
+					width: 24px;
+					height: 24px;
+				}
+				
+				.published-text {
+					color: #4CAF50;
+					font-size: 16px;
+					font-weight: 500;
+				}
+			}
+			
+			.published-actions {
+				display: flex;
+				gap: 16px;
+				justify-content: center;
+				flex-wrap: wrap;
+				
+				.update-button {
+					color: $appbar-text;
+					background-color: $app-bg-l;
+					box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+				}
+				
+				.unpublish-button {
+					color: white;
+					background-color: #f44336;
+					box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+					
+					&:hover:not(:disabled) {
+						background-color: #d32f2f;
+						box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+					}
+				}
 			}
 		}
 	}
