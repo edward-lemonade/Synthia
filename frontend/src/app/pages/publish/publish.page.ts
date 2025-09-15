@@ -196,7 +196,7 @@ export class PublishPage implements OnInit {
 		if (!this.projectMetadata?.authors || this.projectMetadata.authors.length === 0) {
 			return '';
 		}
-		return this.projectMetadata.authors.map(author => author.username).join(', ');
+		return this.projectMetadata.authors.map(author => author.displayName).join(', ');
 	}
 
 	formatDuration(seconds: number): string {

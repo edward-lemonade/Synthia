@@ -12,10 +12,11 @@ import { FormsModule } from '@angular/forms';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
 import * as TimeUtils from '@src/app/utils/time';
 import { TrackService } from '../track.service';
+import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 
 @Component({
 	selector: 'app-track-comment',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule],
+	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, AvatarComponent],
 	template: `
 		<div class="comments-section">
 			<div class="comments-header">
@@ -51,9 +52,11 @@ import { TrackService } from '../track.service';
 
 			<div class="comments-list" *ngIf="tracksService.comments().length > 0">
 				<div class="comment" *ngFor="let comment of tracksService.comments(); trackBy: trackComment">
-					<div class="comment-avatar">
-						<mat-icon>person</mat-icon>
-					</div>
+					<app-avatar 
+						[width]="40"
+						[profilePictureURL]="comment.profilePictureURL"
+						[altText]="comment.displayName + ' avatar'">
+					</app-avatar>
 					<div class="comment-content">
 						<div class="comment-header">
 							<span class="comment-author">{{ comment.displayName }}</span>
@@ -82,8 +85,8 @@ export class CommentSectionComponent {
 
 	TimeUtils = TimeUtils;
 	projectId: string | null = null;
-	get projectMetadata() { return this.tracksService.projectMetadata! };
-	get projectFront() { return this.tracksService.projectFront! };
+	get projectMetadata() { return this.tracksService.projectMetadata()! };
+	get projectFront() { return this.tracksService.projectFront()! };
 
 	newComment: string = '';
 	isSubmittingComment: boolean = false;
@@ -106,14 +109,4 @@ export class CommentSectionComponent {
 		return comment.id;
 	}
 
-
-	// ==================================================================================================
-	// Helpers
-
-	getAuthorsString(): string {
-		if (!this.projectMetadata.authors || this.projectMetadata.authors.length === 0) {
-			return '';
-		}
-		return this.projectMetadata.authors.map(author => author.username).join(', ');
-	}
 }

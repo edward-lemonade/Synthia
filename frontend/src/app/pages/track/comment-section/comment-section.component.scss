@@ -103,23 +103,6 @@
 				background: rgba(255,255,255,0.2);
 			}
 
-			.comment-avatar {
-				width: 40px;
-				height: 40px;
-				border-radius: 20px;
-				background: $accent-purple-l;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				flex-shrink: 0;
-
-				mat-icon {
-					color: white;
-					font-size: 20px;
-					width: 20px;
-					height: 20px;
-				}
-			}
 
 			.comment-content {
 				flex: 1;

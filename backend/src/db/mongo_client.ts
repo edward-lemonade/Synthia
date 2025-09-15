@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { MONGO_STRING } from "@src/env";
 import { UserModel } from "@src/models/User.model";
 import { CommentModel } from "@src/models/Comment.model";
+import { LikeModel } from "@src/models/Like.model";
 
 export async function connectMongo() {
 	try {
@@ -81,17 +82,29 @@ export async function deleteFrontByProjectId(projectId: string) {
 // ===========================================================
 
 export async function hasLikedTrack(projectId: string, userId: string) {
-	const user = await UserModel.findOne({ auth0Id: userId }).select('likes');
-	if (!user) {return false}
-	const liked = user.likes.includes(projectId);
-	return liked;
+	const like = await LikeModel.findOne({ userId, projectId }).select('likes');
+	return like;
 }
 
-export async function doUserLike(projectId: string, userId: string) {
+export async function createUserLike(projectId: string, userId: string) {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 	
 	try {
+		// Check if like already exists
+		const existingLike = await LikeModel.findOne({ projectId, userId });
+		if (existingLike) {
+			await session.abortTransaction();
+			return false; // Like already exists
+		}
+
+		const newLike = new LikeModel({
+			projectId,
+			userId,
+			createdAt: new Date()
+		});
+		await newLike.save({ session });
+		
 		const userResult = await UserModel.updateOne(
 			{ auth0Id: userId },
 			{ $addToSet: { likes: projectId } }, // $addToSet prevents duplicates
@@ -117,11 +130,14 @@ export async function doUserLike(projectId: string, userId: string) {
 	}
 }
 
-export async function doUserUnlike(projectId: string, userId: string) {
+export async function deleteUserLike(projectId: string, userId: string) {
 	const session = await mongoose.startSession();
 	session.startTransaction();
 	
 	try {
+		// Delete the Like object
+		const likeResult = await LikeModel.deleteOne({ projectId, userId }, { session });
+		
 		const userResult = await UserModel.updateOne(
 			{ auth0Id: userId },
 			{ $pull: { likes: projectId } },
@@ -147,35 +163,16 @@ export async function doUserUnlike(projectId: string, userId: string) {
 	}
 }
 
-export async function doUserPlay(projectId: string, userId: string, timestamp: number) {
-	const session = await mongoose.startSession();
-	session.startTransaction();
-	
+export async function deleteProjectLikes(projectId: string) {
 	try {
-		// Add the projectId to user's plays array (allows duplicates for multiple plays)
-		const userResult = await UserModel.updateOne(
-			{ userId },
-			{ $push: { plays: projectId } },
-			{ session }
-		);
-		
-		// Increment the project's play count
-		await ProjectFrontModel.updateOne(
-			{ projectId },
-			{ $inc: { plays: 1 } },
-			{ session }
-		);
-		
-		await session.commitTransaction();
-		return userResult.modifiedCount > 0;
+		const result = await LikeModel.deleteMany({ projectId });
+		return result.deletedCount;
 	} catch (error) {
-		await session.abortTransaction();
-		console.error('Error creating user play:', error);
+		console.error('Error deleting project likes:', error);
 		throw error;
-	} finally {
-		session.endSession();
 	}
 }
+
 
 export async function getTrackComments(projectId: string) {
 	try {
@@ -207,15 +204,13 @@ export async function createUserComment(projectId: string, userId: string, comme
 		});
 		
 		await newComment.save({ session });
-		
-		// Add the comment's ObjectId to user's comments array
+
 		await UserModel.updateOne(
 			{ userId },
 			{ $push: { comments: newComment.commentId } },
 			{ session }
 		);
 		
-		// Add the comment ID to the project's comments array
 		await ProjectFrontModel.updateOne(
 			{ projectId },
 			{ $push: { commentIds: newComment.commentId } },
@@ -230,6 +225,21 @@ export async function createUserComment(projectId: string, userId: string, comme
 		throw error;
 	} finally {
 		session.endSession();
+	}
+}
+
+export async function deleteUserComment(commentId: string) {
+	const res = await CommentModel.deleteOne({ commentId: commentId });
+	return res;
+}
+
+export async function deleteProjectComments(projectId: string) {
+	try {
+		const result = await CommentModel.deleteMany({ projectId });
+		return result.deletedCount;
+	} catch (error) {
+		console.error('Error deleting project likes:', error);
+		throw error;
 	}
 }
 
@@ -249,5 +259,35 @@ export async function findRecentUserComments(projectId: string, userId: string, 
 	} catch (error) {
 		console.error('Error finding recent user comments:', error);
 		throw error;
+	}
+}
+
+export async function doUserPlay(projectId: string, userId: string, timestamp: number) {
+	const session = await mongoose.startSession();
+	session.startTransaction();
+	
+	try {
+		// Add the projectId to user's plays array (allows duplicates for multiple plays)
+		const userResult = await UserModel.updateOne(
+			{ userId },
+			{ $push: { plays: projectId } },
+			{ session }
+		);
+		
+		// Increment the project's play count
+		await ProjectFrontModel.updateOne(
+			{ projectId },
+			{ $inc: { plays: 1 } },
+			{ session }
+		);
+		
+		await session.commitTransaction();
+		return userResult.modifiedCount > 0;
+	} catch (error) {
+		await session.abortTransaction();
+		console.error('Error creating user play:', error);
+		throw error;
+	} finally {
+		session.endSession();
 	}
 }

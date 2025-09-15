@@ -11,7 +11,6 @@ export class AppAuthService {
 	static get instance(): AppAuthService { return AppAuthService._instance; }
 
 	constructor(private auth0: Auth0Service) {
-		console.log("app auth service")
 		AppAuthService._instance = this;
 		this.initializeUser();
 	}

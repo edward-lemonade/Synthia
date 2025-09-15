@@ -9,14 +9,20 @@ import { ProjectsPage } from './pages/projects/projects.page';
 import { StudioPage } from './pages/studio/studio.page';
 import { PublishPage } from './pages/publish/publish.page';
 import { TrackPage } from './pages/track/track.page';
+import { SettingsPage } from './pages/settings/settings.page';
+import { RegistrationPage } from './pages/registration/registration.page';
+import { ProfilePage } from './pages/profile/profile.page';
 
 export const routes: Routes = [
 	{path: '', component: AppbarLayoutComponent, children: [
 		{path: '', component: HomePage, canActivate: [UnAuthGuard]},
 		{path: 'projects', component: ProjectsPage, canActivate: [AuthGuard]},
+		{path: 'settings', component: SettingsPage, canActivate: [AuthGuard]},
 		{path: 'publish/:projectId', component: PublishPage, canActivate: [AuthGuard]},
 		{path: 'track/:trackId', component: TrackPage, canActivate: [AuthGuard]},
+		{path: 'profile/:displayName', component: ProfilePage, canActivate: [AuthGuard]},
 	]},
+	{path: 'registration', component: RegistrationPage, canActivate: [AuthGuard]},
 	{path: 'studio/:projectId', component: StudioPage, canActivate: [AuthGuard]},
 	{path: '**', redirectTo: ''},
 ];

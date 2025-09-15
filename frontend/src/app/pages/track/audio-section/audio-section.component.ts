@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal, computed } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,9 +20,13 @@ import { TrackService } from '../track.service';
 		<div class="audio-player">
 			<div class="shine"></div>
 			<div class="project-metadata">
-				<div class="project-name">{{ projectMetadata.title }}</div>
-				<div class="project-authors">{{ getAuthorsString() }}</div>
-				<div class="project-date">{{ projectFront.dateReleased.toLocaleDateString() }}</div>
+				<div class="project-name">{{ projectMetadata?.title }}</div>
+				<div class="project-authors">
+					<ng-container *ngFor="let author of projectMetadata?.authors; let last = last">
+						<span class="author" (click)="onAuthorClick(author)">{{ author.displayName }}</span><span *ngIf="!last">, </span>
+					</ng-container>
+				</div>
+				<div class="project-date">{{ projectFront?.dateReleased?.toLocaleDateString() }}</div>
 			</div>
 
 			<div class="audio-controls">
@@ -38,12 +42,12 @@ import { TrackService } from '../track.service';
 			
 			<div class="waveform-container">
 				<div #waveformWrapper class="waveform-wrapper">
-					<ng-container *ngIf="!tracksService.isAudioLoaded">
+					<ng-container *ngIf="!trackService.isAudioLoaded">
 						<div class="loading-content">
 							<mat-spinner diameter="30"></mat-spinner>
 						</div>
 					</ng-container>
-					<ng-container *ngIf="tracksService.isAudioLoaded">
+					<ng-container *ngIf="trackService.isAudioLoaded">
 						<canvas #canvas 
 							class="waveform-canvas"
 							(click)="onWaveformClick($event)">
@@ -57,17 +61,17 @@ import { TrackService } from '../track.service';
 				</div>
 			</div>
 
-			<div class="description" *ngIf="projectFront.description">
-				{{ projectFront.description }}
+			<div class="description" *ngIf="projectFront?.description">
+				{{ projectFront?.description }}
 			</div>
 
 			<div class="controls">
 				<button 
 					class="control-btn like-btn"
-					[class.liked]="tracksService.hasLiked()"
+					[class.liked]="trackService.hasLiked()"
 					(click)="onToggleLike()">
-					<mat-icon>{{ tracksService.hasLiked() ? 'favorite' : 'favorite_border' }}</mat-icon>
-					<span class="control-label">{{ tracksService.likes() }}</span>
+					<mat-icon>{{ trackService.hasLiked() ? 'favorite' : 'favorite_border' }}</mat-icon>
+					<span class="control-label">{{ trackService.likes() }}</span>
 				</button>
 
 				<button 
@@ -96,11 +100,11 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	TimeUtils = TimeUtils;
 
 	projectId: string | null = null;
-	get projectMetadata() { return this.tracksService.projectMetadata! };
-	get projectFront() { return this.tracksService.projectFront! };
+	get projectMetadata() { return this.trackService.projectMetadata() };
+	get projectFront() { return this.trackService.projectFront() };
 
-	get cachedAudioFile() { return this.tracksService.cachedAudioFile! };
-	get interactionState() { return this.tracksService.interactionState; }
+	get cachedAudioFile() { return this.trackService.cachedAudioFile()! };
+	get interactionState() { return this.trackService.interactionState; }
 	
 	isPlaying: boolean = false;
 	private audioElement: HTMLAudioElement | null = null;
@@ -113,7 +117,8 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	constructor(
 		private route: ActivatedRoute,
-		public tracksService: TrackService,
+		private router: Router,
+		public trackService: TrackService,
 	) {}
 
 	async ngOnInit() {
@@ -121,8 +126,8 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.projectId = params['trackId'];
 			
 			if (this.projectId) {
-				await this.tracksService.loadTrack(this.projectId);
-				await this.tracksService.loadAudio(this.projectId);
+				await this.trackService.loadTrack(this.projectId);
+				await this.trackService.loadAudio(this.projectId);
 			}
 		});
 	}
@@ -145,9 +150,8 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	private async initializeWaveform() {
 		try {
-			console.log("initing")
 			if (!this.cachedAudioFile) {
-				await this.tracksService.getAudio();
+				await this.trackService.getAudio();
 			}
 			
 			createWaveformViewport(
@@ -204,7 +208,7 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 			// Record play after a few seconds of listening
 			setTimeout(() => {
 				if (this.isPlaying && !this.hasRecordedPlay) {
-					this.tracksService.recordPlay();
+					this.trackService.recordPlay();
 					this.hasRecordedPlay = true;
 				}
 			}, 3000);
@@ -292,14 +296,14 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	// User Interactions
 
 	async onToggleLike() {
-		await this.tracksService.toggleLike();
+		await this.trackService.toggleLike();
 	}
 
 	onShare() {
 		if (navigator.share) {
 			navigator.share({
-				title: this.projectMetadata.title,
-				text: `Check out "${this.projectMetadata.title}" by ${this.getAuthorsString()}`,
+				title: this.projectMetadata!.title,
+				text: `Check out "${this.projectMetadata!.title}" by ${this.authorsString()}`,
 				url: window.location.href
 			}).catch(err => console.log('Share failed:', err));
 		} else {
@@ -313,7 +317,7 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	onDownload() {
 		const link = document.createElement('a');
 		link.href = this.cachedAudioFile.url;
-		link.download = `${this.projectMetadata.title}.mp3`;
+		link.download = `${this.projectMetadata!.title}.mp3`;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -322,10 +326,15 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	// ==================================================================================================
 	// Helpers
 
-	getAuthorsString(): string {
-		if (!this.projectMetadata.authors || this.projectMetadata.authors.length === 0) {
+	authorsString = computed(() => {
+		console.log("dawg", this.projectMetadata?.authors)
+		if (!this.projectMetadata!.authors || this.projectMetadata!.authors.length === 0) {
 			return '';
 		}
-		return this.projectMetadata.authors.map(author => author.username).join(', ');
+		return this.projectMetadata!.authors.map(author => author.displayName).join(', ');
+	})
+
+	onAuthorClick(author: any) {
+		this.router.navigate(['/profile', author.displayName]);
 	}
 }

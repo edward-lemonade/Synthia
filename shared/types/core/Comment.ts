@@ -4,6 +4,7 @@ export interface Comment {
 	userId: string;
 	displayName: string;
 	content: string;
+	profilePictureURL?: string | null;
 
 	createdAt: Date;
 	updatedAt: Date;
@@ -13,4 +14,12 @@ export interface Comment {
 export interface CommentDTO extends Omit<Comment, 'createdAt' | 'updatedAt'> {
 	createdAt: string;
 	updatedAt: string;
+}
+
+export function fillDates(comment: CommentDTO): Comment {
+	return {
+		...comment,
+		createdAt: new Date(comment.createdAt),
+		updatedAt: new Date(comment.updatedAt),
+	}
 }

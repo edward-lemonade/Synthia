@@ -15,8 +15,6 @@ const ProjectFrontSchema = new mongoose.Schema({ // interface ProjectMetadata
 	likes: 			{ type: Number, default: 0 },
 	remixes: 		{ type: Number, default: 0 },
 	saves: 			{ type: Number, default: 0 },
-	playlists: 		[{ type: String }],
-	commentIds: 	[{ type: String }],
 });
 
 export interface IProjectFrontDocument extends ProjectFront, Document {

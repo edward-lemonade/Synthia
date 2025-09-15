@@ -37,17 +37,18 @@ export class StateService { // SINGLETON
 		combineLatest([
 			this.route.paramMap,
 			this.route.queryParams,
-			this.userService.getAuthor$(),
 		]).pipe(
-			filter(([params, queryParams, author]) => {
+			filter(([params, queryParams]) => {
 				const projectId = params.get('projectId');
 				const isNew = queryParams['isNew'];
-				return !!(projectId && author);
+				const author = this.userService.author();
+				return !!(projectId);
 			}),
 			take(1)
-		).subscribe(([params, queryParams, author]) => {
+		).subscribe(([params, queryParams]) => {
 			this.projectId = params.get('projectId');
 			this.isNew = queryParams['isNew']==='true';
+			const author = this.userService.author();
 			
 			this.initState(author!, this.projectId!, this.isNew!)
 		});
@@ -122,7 +123,7 @@ export class StateService { // SINGLETON
 			if (this.isNew && token) {
 				const res = await axios.post<{ success: boolean }>(
 					'/api/projects/save_new', 
-					{state: this.state.snapshot() as ProjectState},
+					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
 					{
 						headers: {
 							Authorization: `Bearer ${token}`
@@ -142,7 +143,7 @@ export class StateService { // SINGLETON
 			} else {
 				const res = await axios.post<{ success: boolean }>(
 					'/api/projects/save_overwrite', 
-					{state: this.state.snapshot() as ProjectState},
+					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
 					{
 						headers: {
 							Authorization: `Bearer ${token}`

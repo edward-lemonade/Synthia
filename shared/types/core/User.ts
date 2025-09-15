@@ -2,6 +2,7 @@ export interface User {
 	auth0Id: string;
 	displayName: string;
 	bio: string;
+	profilePictureURL?: string | null; // URL to profile picture
 	
 	// Social features
 	comments: 	string[]; // objectIds 

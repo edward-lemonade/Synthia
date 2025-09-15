@@ -48,7 +48,7 @@ mat-nav-list {
 	text-align: left;
 
 	background: $accent-purple;
-	color: $app-bg;
+	color: $app-bg !important;
 	transition: background 0.2s;
 
 	//margin-top: 24px;

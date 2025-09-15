@@ -10,8 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
-import { createWaveformViewport } from '@src/app/utils/render-waveform';
-import * as TimeUtils from '@src/app/utils/time';
+
 import { AudioSectionComponent } from "./audio-section/audio-section.component";
 import { CommentSectionComponent } from "./comment-section/comment-section.component";
 
@@ -31,10 +30,7 @@ import { CommentSectionComponent } from "./comment-section/comment-section.compo
 		<!-- Main Content -->
 		<div class="container" *ngIf="tracksService.isDataLoaded">
 			<div class="track-container">
-
 				<app-track-audio/>
-
-				
 				<app-track-comment/>
 			</div>
 		</div>

@@ -5,18 +5,20 @@ import { Router } from '@angular/router';
 import axios from 'axios';
 import { AudioFileData, Comment, CommentDTO, fillDates, InteractionState, ProjectFront, ProjectFrontDTO, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
+import { UserService } from '@src/app/services/user.service';
 
 
 @Injectable()
 export class TrackService {
 	constructor(
 		private auth: AppAuthService,
+		private userService: UserService,
 		private router: Router,
 	) {}
 
-	declare projectMetadata: ProjectMetadata;
-	declare projectFront: ProjectFront;
-	declare cachedAudioFile: CachedAudioFile;
+	projectMetadata = signal<ProjectMetadata|null>(null);
+	projectFront = signal<ProjectFront|null>(null);
+	cachedAudioFile = signal<CachedAudioFile|null>(null);
 	isDataLoaded = false;
 	isAudioLoaded = false;
 
@@ -38,15 +40,15 @@ export class TrackService {
 			);
 
 			if (res.data.metadata && res.data.front) {
-				this.projectMetadata = res.data.metadata;
-				this.projectFront = {...res.data.front, dateReleased: new Date(res.data.front.dateReleased)};
+				this.projectMetadata.set(res.data.metadata);
+				this.projectFront.set({...res.data.front, dateReleased: new Date(res.data.front.dateReleased)});
 				this.interactionState = res.data.interactionState || false;
 				
 				this.comments.set(
 					res.data.comments.map(comment => (fillDates(comment)))
 				);
 
-				this.likes.set(this.projectFront.likes);
+				this.likes.set(res.data.front.likes);
 				this.hasLiked.set(this.interactionState.hasLiked);
 				this.isDataLoaded = true;
 			}
@@ -71,7 +73,7 @@ export class TrackService {
 			const audioFileData = res.data.audioFileData;
 			if (audioFileData) {
 				const cachedExportData = await makeCacheAudioFile(audioFileData);
-				this.cachedAudioFile = cachedExportData;
+				this.cachedAudioFile.set(cachedExportData);
 				this.isAudioLoaded = true;
 				return cachedExportData;
 			}
@@ -111,7 +113,7 @@ export class TrackService {
 			if (!user) return null;
 
 			const res = await axios.post<{ success: boolean, newComment: CommentDTO }>(
-				`/api/track/${this.projectMetadata.projectId}/comment`, 
+				`/api/track/${this.projectMetadata()!.projectId}/comment`, 
 				{
 					comment: comment.trim(),
 					timestamp: Date.now()
@@ -119,7 +121,7 @@ export class TrackService {
 				{ headers: { Authorization: `Bearer ${token}` }}
 			);
 			
-			const newComment = fillDates(res.data.newComment);
+			const newComment = {...fillDates(res.data.newComment), profilePictureURL: this.userService.user()?.profilePictureURL};
 			this.comments.update(curr => [newComment, ...curr])
 
 			return newComment;
@@ -136,7 +138,7 @@ export class TrackService {
 			if (!user) return false;
 
 			const res = await axios.post<{ success: boolean, isLiked: boolean }>(
-				`/api/track/${this.projectMetadata.projectId}/toggle_like`, 
+				`/api/track/${this.projectMetadata()!.projectId}/toggle_like`, 
 				{},
 				{ headers: { Authorization: `Bearer ${token}` }}
 			);
@@ -168,7 +170,7 @@ export class TrackService {
 			if (!user) return false;
 
 			const res = await axios.post<{ success: boolean }>(
-				`/api/track/${this.projectMetadata.projectId}/record_play`, 
+				`/api/track/${this.projectMetadata()!.projectId}/record_play`, 
 				{ 
 					timestamp: now
 				},

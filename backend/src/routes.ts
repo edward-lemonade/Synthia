@@ -12,7 +12,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
-router.get('/api/me', checkJwt, UserController.getOrCreateUser)
+router.get('/api/me', checkJwt, UserController.getUser)
+router.put('/api/me/create', checkJwt, UserController.createUser)
+router.put('/api/user/profile', checkJwt, UserController.updateUserProfile)
+router.put('/api/user/profile_picture', checkJwt, upload.single('profilePicture'), UserController.updateProfilePicture)
+router.get('/api/profile/:displayName', checkJwt, UserController.getProfile);
 
 router.post('/api/projects/get_mine', checkJwt, ProjectController.getMine);
 router.post('/api/projects/get_project', checkJwt, ProjectController.getProject);
@@ -21,8 +25,10 @@ router.post('/api/projects/save_new', checkJwt, ProjectController.saveNew);
 router.post('/api/projects/get_studio', checkJwt, ProjectController.load);
 router.post('/api/projects/delete_studio', checkJwt, ProjectController.deleteStudio);
 router.post('/api/projects/rename', checkJwt, ProjectController.rename);
-router.post('/api/projects/get_export', checkJwt, ProjectController.getExport)
-router.post('/api/projects/publish', checkJwt, ProjectController.publish)
+router.post('/api/projects/get_export', checkJwt, ProjectController.getExport);
+router.post('/api/projects/get_front', checkJwt, ProjectController.getFront);
+router.post('/api/projects/publish', checkJwt, ProjectController.publish);
+router.post('/api/projects/unpublish', checkJwt, ProjectController.unpublish);
 
 router.post('/api/project_files/save', checkJwt, upload.any(), ProjectFilesController.saveAudioFiles);
 router.post('/api/project_files/load', checkJwt, ProjectFilesController.loadAudioFiles);

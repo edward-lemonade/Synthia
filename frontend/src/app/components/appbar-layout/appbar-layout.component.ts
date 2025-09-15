@@ -10,12 +10,12 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { UserService } from '@src/app/services/user.service';
 import { MatMenu, MatMenuModule } from "@angular/material/menu";
-import { f } from "../../../../node_modules/@angular/material/icon-module.d-COXCrhrh";
 import { MatIconModule } from '@angular/material/icon';
+import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 
 @Component({
 	selector: 'app-appbar-layout',
-	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, MatIconButton],
+	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, MatIconButton, AvatarComponent],
 	template: `
 		<div class="page-container">
 			<ng-container *ngIf="auth.isAuthenticated$ | async">	
@@ -42,11 +42,11 @@ import { MatIconModule } from '@angular/material/icon';
 							</a>
 							<a mat-tab-link 
 								class="nav-btn" 
-								routerLink="/showcase" 
+								[routerLink]="['/profile', userDisplayName()]" 
 								routerLinkActive="nav-btn-active" #rlaShowcase="routerLinkActive" 
 								[routerLinkActiveOptions]="{ exact: false }" 
 								[active]="rlaShowcase.isActive">
-								Showcase
+								Profile
 							</a>
 						</nav>
 					</mat-tab-nav-panel>
@@ -56,13 +56,12 @@ import { MatIconModule } from '@angular/material/icon';
 					<button mat-icon-button 
 						class="icon-button profile-picture-button"
 						[matMenuTriggerFor]="userSettings">
-						<img 
-							*ngIf="userPicture(); else fallbackIcon"
-							[src]="userPicture()" 
-							class="profile-picture">
-						<ng-template #fallbackIcon>
-							<mat-icon>account_circle</mat-icon>
-						</ng-template>
+						<app-avatar 
+							[width]="40"
+							[profilePictureURL]="userPicture()"
+							[altText]="'Profile picture'"
+							[iconName]="'account_circle'">
+						</app-avatar>
 					</button>
 					<mat-menu #userSettings="matMenu" class="user-settings-menu">
 						<div class="user-settings-menu-content">
@@ -109,25 +108,20 @@ import { MatIconModule } from '@angular/material/icon';
 	`,
 	styleUrls: ['./appbar-layout.component.scss']
 })
-export class AppbarLayoutComponent implements AfterViewInit {
+export class AppbarLayoutComponent {
+	private userService = inject(UserService);
+
 	constructor(
 		@Inject(DOCUMENT) public document: Document, 
 		public auth: AuthService,
 		public router: Router,
 	) {}
 
-	private appAuthService = inject(AppAuthService);
-	private userService = inject(UserService);
-	
-	ngAfterViewInit() {
-		
-		console.log(this.appAuthService.getUserAuth());
-	}
-
-	userPicture = computed(() => { return this.appAuthService.getUserAuth()?.picture });
+	userDisplayName = computed(() => { return this.userService.user()?.displayName })
+	userPicture = computed(() => { return this.userService.user()?.profilePictureURL });
 
 	profile() {
-		this.router.navigate(['/profile', this.userService.getUser()?.displayName]);
+		this.router.navigate(['/profile', this.userDisplayName()]);
 	}
 
 	settings() {
@@ -139,4 +133,5 @@ export class AppbarLayoutComponent implements AfterViewInit {
 			logoutParams: { returnTo: document.location.origin } 
 		})
 	}
+
 }

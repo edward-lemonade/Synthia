@@ -1,3 +1,5 @@
+import { ProjectMetadata } from "./ProjectMetadata";
+
 export interface ProjectFront{ // public facing information for RELEASED projects
 	release: string; // EP/album
 	
@@ -10,6 +12,7 @@ export interface ProjectFront{ // public facing information for RELEASED project
 	remixes: number;
 	saves: number;
 	playlists: string[];
+	
 	commentIds: string[];
 }
 

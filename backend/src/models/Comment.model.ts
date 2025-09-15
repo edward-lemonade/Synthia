@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import autopopulate from 'mongoose-autopopulate';
 
 const CommentSchema = new mongoose.Schema({ // interface ProjectMetadata
-	commentId: 		{ type: String, default: uuidv4(), unique: true, index: true },
+	commentId: 		{ type: String, default: uuidv4, unique: true, index: true },
 	projectId: 		{ type: String },
 	userId: 		{ type: String },
 	content: 		{ type: String },

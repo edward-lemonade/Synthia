@@ -1,4 +1,4 @@
-import { AudioFileData, InteractionState } from "@shared/types";
+import { AudioFileData, Comment, InteractionState } from "@shared/types";
 import * as db from "@src/db/mongo_client";
 import * as s3 from "@src/db/s3_client";
 import { ProjectFrontModel } from "@src/models";
@@ -16,14 +16,15 @@ export async function data(req: Request, res: Response) {
 		const metadata = ProjectMetadataTransformer.fromDoc(metadataDoc!);
 
 		const frontDoc = await db.findFrontByProjectId(projectId);
-		const front = ProjectFrontTransformer.fromDocs(metadataDoc!, frontDoc!);
+		const front = ProjectFrontTransformer.fromDoc(frontDoc!);
 
 		const commentDocs = await db.getTrackComments(projectId);
 		const comments = commentDocs.map(el => el.toObject());
+		const commentsWithPfps = await populateCommentPfps(comments);
 
 		const hasLiked = await db.hasLikedTrack(projectId, userId);
 		const interactionState = {
-			hasLiked: hasLiked
+			hasLiked: hasLiked ? true : false
 		} as InteractionState;
 
 		res.json({ 
@@ -31,7 +32,7 @@ export async function data(req: Request, res: Response) {
 
 			metadata: metadata,
 			front: front,
-			comments: comments,
+			comments: commentsWithPfps,
 			interactionState: interactionState
 		});
 	} catch (error) {
@@ -123,14 +124,14 @@ export async function toggleLike(req: Request, res: Response) {
 		const existingLike = await db.hasLikedTrack(projectId, userId);
 		
 		if (existingLike) {
-			await db.doUserUnlike(projectId, userId);
+			await db.deleteUserLike(projectId, userId);
 			
 			res.json({ 
 				success: true, 
 				isLiked: false,
 			});
 		} else {
-			await db.doUserLike(projectId, userId);
+			await db.createUserLike(projectId, userId);
 			
 			res.json({ 
 				success: true, 
@@ -196,4 +197,25 @@ function sanitizeComment(comment: string): string {
 		.replace(/\s+/g, ' ') // Replace multiple whitespace with single space
 		.replace(/<[^>]*>/g, '') // Remove HTML tags
 		.substring(0, 500); // Ensure max length
+}
+
+async function populateCommentPfps(comments: Comment[]) {
+	const uniqueUserIds = [...new Set(comments.map(comment => comment.userId))];
+	const profilePictureChecks = await Promise.allSettled(
+		uniqueUserIds.map(async (userId) => {
+			const profilePictureURL = await s3.getProfilePictureUrl(userId);
+			return { userId, profilePictureURL };
+		})
+	);
+	const profilePictureMap = new Map<string, string | null>();
+	profilePictureChecks.forEach((result) => {
+		if (result.status === 'fulfilled') {
+			profilePictureMap.set(result.value.userId, result.value.profilePictureURL);
+		}
+	});
+	const commentsWithPfps = comments.map(comment => ({
+		...comment,
+		profilePictureURL: profilePictureMap.get(comment.userId) || null
+	}));
+	return commentsWithPfps;
 }

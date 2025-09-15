@@ -38,26 +38,6 @@
 		justify-content: center;
 		align-items: center;
 		background: $appbar-text;
-		
-		.profile-picture {
-			width: 32px;
-			height: 32px;
-			border-radius: 50%;
-			object-fit: cover;
-			display: block;
-		}
-		
-		// Ensure the fallback icon is properly centered
-		mat-icon {
-			font-size: 24px;
-			width: 24px;
-			height: 24px;
-		}
-	}
-	.profile-picture-button:hover {
-		.profile-picture {
-			opacity: 0.8;
-		}
 	}
 
 	span {

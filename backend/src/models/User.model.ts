@@ -17,12 +17,6 @@ const UserSchema = new mongoose.Schema({
 		default: '',
 		maxlength: 200,
 	},
-	
-	// Social features
-	comments: 	[{ type: String, ref: 'Comment' }],
-	likes: 		[{ type: String }],
-	followers: 	[{ type: String }],
-	following: 	[{ type: String }],
 
 	createdAt: { type: Date, default: Date.now },
 	lastLoginAt: { type: Date, default: null }

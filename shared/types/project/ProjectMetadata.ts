@@ -1,4 +1,6 @@
 import { Author } from "../core";
+import { ProjectFront } from "./ProjectFront";
+import { ProjectStudio } from "./ProjectStudio";
 
 
 export interface ProjectMetadata { // common data for frequent fetches / project page
@@ -14,3 +16,13 @@ export interface ProjectMetadata { // common data for frequent fetches / project
 
 	isReleased: boolean;
 } 
+
+export interface ProjectState {
+	metadata: ProjectMetadata,
+	studio: ProjectStudio,
+}
+
+export interface ProjectReleased {
+	metadata: ProjectMetadata,
+	front: ProjectFront,
+}
