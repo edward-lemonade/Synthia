@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -48,7 +48,7 @@ import { UserService } from '@src/app/services/user.service';
 							rows="4"
 						></textarea>
 						<div class="error-message" *ngIf="bioError">{{ bioError }}</div>
-						<div class="help-text">{{ bio?.length ?? 0 }}/200 characters</div>
+						<div class="help-text">{{ bio().length}}/200 characters</div>
 					</div>
 
 					<div class="form-actions">
@@ -112,12 +112,16 @@ export class SettingsPage implements OnDestroy {
 
 	constructor(
 		public userService: UserService,
-	) {}
+	) {
+		this.displayName.set(this.user?.displayName ?? '')
+		this.bio.set(this.user?.bio ?? '')
+	}
 
 	get user() { return this.userService.user() }
 	
-	get displayName() { return this.user?.displayName ?? null };
-	get bio() { return this.user?.bio ?? null };
+	displayName = signal("");
+	bio = signal("");
+
 	get profilePictureURL() { return this.user?.profilePictureURL ?? null };
 	profilePicturePreview: string = '';
 	selectedFile: File | null = null;
@@ -162,17 +166,17 @@ export class SettingsPage implements OnDestroy {
 	}
 
 	validateDisplayName(): boolean {
-		if (!this.displayName || this.displayName.trim().length === 0) {
+		if (!this.displayName() || this.displayName().trim().length === 0) {
 			this.displayNameError = 'Display name is required';
 			return false;
 		}
 		
-		if (this.displayName.length > 30) {
+		if (this.displayName().length > 30) {
 			this.displayNameError = 'Display name must be 30 characters or less';
 			return false;
 		}
 		
-		if (!/^[a-zA-Z0-9_]+$/.test(this.displayName)) {
+		if (!/^[a-zA-Z0-9_]+$/.test(this.displayName())) {
 			this.displayNameError = 'Display name can only contain letters, numbers, and underscores';
 			return false;
 		}
@@ -180,7 +184,6 @@ export class SettingsPage implements OnDestroy {
 		this.displayNameError = '';
 		return true;
 	}
-
 	validateBio(): boolean {
 		if (this.bio && this.bio.length > 200) {
 			this.bioError = 'Bio must be 200 characters or less';
@@ -190,7 +193,6 @@ export class SettingsPage implements OnDestroy {
 		this.bioError = '';
 		return true;
 	}
-
 	validateProfilePicture(): boolean {
 		if (this.selectedFile) {
 			return !this.profilePictureError;
@@ -204,12 +206,10 @@ export class SettingsPage implements OnDestroy {
 		this.validateDisplayName();
 		this.clearMessages();
 	}
-
 	onBioChange() {
 		this.validateBio();
 		this.clearMessages();
 	}
-
 	onProfilePictureChange() {
 		this.validateProfilePicture();
 		this.clearMessages();
@@ -230,8 +230,8 @@ export class SettingsPage implements OnDestroy {
 
 		try {
 			await this.userService.updateProfile({
-				displayName: this.displayName ?? undefined,
-				bio: this.bio ?? undefined
+				displayName: this.displayName() ?? undefined,
+				bio: this.bio() ?? undefined
 			});
 
 			this.saveMessage = 'Profile updated successfully!';
