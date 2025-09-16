@@ -1,4 +1,4 @@
-import { AudioFileData, Comment, InteractionState } from "@shared/types";
+import { AudioFileData, Comment, InteractionState, ProjectReleased } from "@shared/types";
 import * as db from "@src/db/mongo_client";
 import * as s3 from "@src/db/s3_client";
 import { ProjectFrontModel } from "@src/models";
@@ -186,6 +186,56 @@ export async function recordPlay(req: Request, res: Response) {
 		});
 	}
 }
+
+// =============================================================================================
+// Batch queries
+
+export async function newest(req: Request, res: Response) {
+    try {
+        const userId = req.auth.sub; // in case you need it later for filtering
+        const { amount, lastReleaseDate, lastProjectId } = req.body;
+
+        let query: any = {};
+        if (lastReleaseDate && lastProjectId) {
+            query = {
+                $or: [
+                    { releaseDate: { $lt: lastReleaseDate } },
+                    { releaseDate: lastReleaseDate, projectId: { $lt: lastProjectId } }
+                ]
+            };
+        }
+
+		const boundedAmount = Math.max(40, amount);
+        const projectFrontDocs = await ProjectFrontModel.find(query)
+            .sort({ releaseDate: -1, projectId: -1 }) // newest first
+            .limit(boundedAmount);
+
+		const projects = await Promise.all(
+			projectFrontDocs.map(async (frontDoc) => {
+				const metadataDoc = await db.findMetadataById(frontDoc.projectMetadataId);
+				return {
+					front: ProjectFrontTransformer.fromDoc(frontDoc),
+					metadata: ProjectMetadataTransformer.fromDoc(metadataDoc!),
+				} as ProjectReleased;
+			})
+		);
+			
+		const reachedEnd = projects.length < boundedAmount;
+        res.json({
+            success: true,
+            projects: projects,
+			reachedEnd: reachedEnd,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            error: "Failed to fetch projects"
+        });
+    }
+}
+
+
 
 // =============================================================================================
 // Helpers

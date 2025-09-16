@@ -65,7 +65,11 @@ import { ProfileService } from './profile.service';
 	styleUrls: ['./profile.page.scss']
 })
 export class ProfilePage {
-	constructor(private route: ActivatedRoute, private router: Router, public profileService: ProfileService) {}
+	constructor(
+		private route: ActivatedRoute, 
+		private router: Router, 
+		public profileService: ProfileService
+	) {}
 
 	async ngOnInit() {
 		this.route.params.subscribe(async params => {

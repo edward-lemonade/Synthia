@@ -66,26 +66,32 @@ import { TrackService } from '../track.service';
 			</div>
 
 			<div class="controls">
+				<div class="plays plays-text">
+					{{projectFront?.plays}} plays
+				</div>
+
+				<span class="spacer"></span>
+				
 				<button 
-					class="control-btn like-btn"
+					class="control-btn"
 					[class.liked]="trackService.hasLiked()"
 					(click)="onToggleLike()">
 					<mat-icon>{{ trackService.hasLiked() ? 'favorite' : 'favorite_border' }}</mat-icon>
-					<span class="control-label">{{ trackService.likes() }}</span>
+					<span class="label-text">{{ trackService.likes() }}</span>
 				</button>
 
 				<button 
-					class="control-btn share-btn"
+					class="control-btn"
 					(click)="onShare()">
 					<mat-icon>share</mat-icon>
-					<span class="control-label">Share</span>
+					<span class="label-text">Share</span>
 				</button>
 
 				<button 
-					class="control-btn download-btn"
+					class="control-btn"
 					(click)="onDownload()">
 					<mat-icon>download</mat-icon>
-					<span class="control-label">Download</span>
+					<span class="label-text">Download</span>
 				</button>
 			</div>
 		</div>
@@ -328,7 +334,6 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 	// Helpers
 
 	authorsString = computed(() => {
-		console.log("authors: ", this.trackService.projectMetadata())
 		if (!this.projectMetadata!.authors || this.projectMetadata!.authors.length === 0) {
 			return '';
 		}

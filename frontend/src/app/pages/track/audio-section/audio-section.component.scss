@@ -235,6 +235,32 @@
 		position: relative;
 		z-index: 1;
 
+		.plays {
+			display: flex;
+			width: 100px;
+			flex-direction: column;
+			justify-content: center;
+			align-items: start;
+			padding-left: 20px;
+		}
+
+		.spacer {
+			display: flex;
+			flex: 1;
+			flex-direction: row;
+		}
+
+		.plays-text {
+			font-size: 20px;
+			font-weight: 600;
+			letter-spacing: 0.5px;
+		}
+		.label-text {
+			font-size: 12px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
 		.control-btn {
 			display: flex;
 			flex-direction: column;
@@ -243,13 +269,13 @@
 			padding: 12px 16px;
 			border: none;
 			border-radius: 12px;
-			background: rgba(255, 255, 255, 0.1);
+			background: rgba(255, 255, 255, 0.2);
 			color: $app-bg;
 			cursor: pointer;
 			transition: all 0.2s ease;
 			min-width: 80px;
 			backdrop-filter: blur(10px);
-			border: 1px solid rgba(255, 255, 255, 0.2);
+			border: 1px solid rgba(255, 255, 255, 0.4);
 
 			&:hover {
 				background: rgba(255, 255, 255, 0.2);
@@ -265,13 +291,6 @@
 				font-size: 20px;
 				width: 20px;
 				height: 20px;
-			}
-
-			.control-label {
-				font-size: 12px;
-				font-weight: 600;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
 			}
 
 			&.liked {

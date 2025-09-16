@@ -38,5 +38,6 @@ router.get('/api/track/:projectId/audio', checkJwt, TrackController.audio);
 router.post('/api/track/:projectId/comment', checkJwt, TrackController.leaveComment);
 router.post('/api/track/:projectId/toggle_like', checkJwt, TrackController.toggleLike);
 router.post('/api/track/:projectId/record_play', checkJwt, TrackController.recordPlay);
+router.post('/api/tracks/newest', checkJwt, TrackController.newest);
 
 export default router;

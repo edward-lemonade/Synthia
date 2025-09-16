@@ -12,13 +12,14 @@ import { TrackPage } from './pages/track/track.page';
 import { SettingsPage } from './pages/settings/settings.page';
 import { RegistrationPage } from './pages/registration/registration.page';
 import { ProfilePage } from './pages/profile/profile.page';
+import { DiscoverPage } from './pages/discover/discover.page';
 
 export const routes: Routes = [
 	{path: '', component: AppbarLayoutComponent, children: [
 		{path: '', component: HomePage, canActivate: [UnAuthGuard]},
 		{path: 'projects', component: ProjectsPage, canActivate: [AuthGuard]},
 		{path: 'settings', component: SettingsPage, canActivate: [AuthGuard]},
-		{path: 'discover', component: SettingsPage, canActivate: [AuthGuard]},
+		{path: 'discover', component: DiscoverPage, canActivate: [AuthGuard]},
 		{path: 'publish/:projectId', component: PublishPage, canActivate: [AuthGuard]},
 		{path: 'track/:trackId', component: TrackPage, canActivate: [AuthGuard]},
 		{path: 'profile/:displayName', component: ProfilePage, canActivate: [AuthGuard]},
