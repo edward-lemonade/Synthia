@@ -1,10 +1,10 @@
-import { AudioFileData, AudioRegion, BaseFileRef, MidiNote, MidiRegion, MidiTrackType, ProjectState, RegionType, Track } from "@shared/types/index.js";
+import { AudioFileData, AudioRegion, BaseFileRef, MidiNote, MidiRegion, MidiTrackType, ProjectState, RegionType, Track } from "@shared/types";
 import { ReverbProcessor } from "@shared/audio-processing/synthesis/effects/reverb-handler";
 import { getAudioFile } from "./../../src/db/s3_client";
 import { MidiRenderer } from "@shared/audio-processing/synthesis/midi-renderer";
 import WavEncoder from 'wav-encoder';
 
-import { AudioContext, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+import { AudioContext, AudioBuffer, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
 
 export class Renderer {
 	declare projectState: ProjectState;

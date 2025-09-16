@@ -152,14 +152,11 @@ export class TimelineExportService {
 		const sampleRate = TimelinePlaybackService.instance.audioContext.sampleRate;
 		const totalSamples = Math.ceil(totalDuration * sampleRate);
 
-		// Create offline context for rendering
 		const offlineContext = new OfflineAudioContext(2, totalSamples, sampleRate);
 		
-		// Create master gain node for offline context
 		const masterGainNode = offlineContext.createGain();
 		masterGainNode.connect(offlineContext.destination);
 
-		// Render all tracks (using your playback logic)
 		await this.renderAllTracks(offlineContext, tracks, masterGainNode);
 
 		return await offlineContext.startRendering();

@@ -92,7 +92,7 @@ import { TrackService } from '../track.service';
 	`,
 	styleUrls: ['./audio-section.component.scss', '../track.page.scss']
 })
-export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
+export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 	@ViewChild('waveformWrapper') waveformWrapper!: ElementRef<HTMLDivElement>;
 	@ViewChildren('canvas') canvasQuery!: QueryList<ElementRef<HTMLCanvasElement>>;
 	canvas!: ElementRef<HTMLCanvasElement>;
@@ -106,9 +106,10 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	get cachedAudioFile() { return this.trackService.cachedAudioFile()! };
 	get interactionState() { return this.trackService.interactionState; }
 	
+	// Audio state
 	isPlaying: boolean = false;
 	private audioElement: HTMLAudioElement | null = null;
-	private progressUpdateInterval: any = null;
+	private isAudioInitialized = false;
 	private hasRecordedPlay: boolean = false;
 	isWaveformInitialized = false;
 
@@ -121,28 +122,19 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 		public trackService: TrackService,
 	) {}
 
-	async ngOnInit() {
-		this.route.params.subscribe(async params => {
-			this.projectId = params['trackId'];
-			
-			if (this.projectId) {
-				await this.trackService.loadTrack(this.projectId);
-				await this.trackService.loadAudio(this.projectId);
-			}
-		});
-	}
-
 	ngAfterViewInit() {
 		this.canvasQuery.changes.subscribe(() => {
 			if (this.canvasQuery.length > 0) {
 				this.canvas = this.canvasQuery.first;
-				if (this.canvas && this.waveformWrapper && !this.isWaveformInitialized) {this.initializeWaveform();}
+				if (this.canvas && this.waveformWrapper && !this.isWaveformInitialized) {
+					this.initializeWaveform();
+				}
 			}
 		});
 	}
 
 	ngOnDestroy() {
-		this.stopAudio();
+		this.cleanup();
 	}
 
 	// ====================================================================
@@ -169,53 +161,80 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	// ==================================================================================================
-	// Audio Playback Methods
+	// Audio Initialization
 
-	onPlayButton() {
-		if (this.isPlaying) {
-			this.pauseAudio();
-		} else {
-			const resumeTime = this.audioElement?.currentTime || 0;
-			this.playAudio(resumeTime);
+	private initializeAudio() {
+		if (this.isAudioInitialized && this.audioElement) return;
+		
+		this.audioElement = new Audio();
+		this.audioElement.src = this.cachedAudioFile.url;
+		this.audioElement.preload = 'metadata';
+		
+		this.audioElement.addEventListener('ended', this.onAudioEnded.bind(this));
+		this.audioElement.addEventListener('error', this.onAudioError.bind(this));
+		this.audioElement.addEventListener('timeupdate', this.onTimeUpdate.bind(this));
+		
+		this.isAudioInitialized = true;
+	}
+
+	private onAudioEnded() {
+		this.isPlaying = false;
+		this.progressPercent = 0;
+		this.playbackTime.set(0);
+		
+		if (this.audioElement) {
+			this.audioElement.currentTime = 0;
 		}
 	}
 
-	private playAudio(startTime: number = 0) {
-		this.audioElement = new Audio();
-		this.audioElement.src = this.cachedAudioFile.url;
-		this.audioElement.currentTime = startTime;
+	private onAudioError(error: Event) {
+		console.error('Audio playback error:', error);
+		this.isPlaying = false;
+		this.progressPercent = 0;
+		this.playbackTime.set(0);
+	}
+
+	private onTimeUpdate() {
+		this.updateProgress();
+	}
+
+	// ==================================================================================================
+	// Audio Playback Methods
+
+	onPlayButton() {
+		this.initializeAudio();
 		
-		this.audioElement.addEventListener('ended', () => {
-			this.isPlaying = false;
-			this.progressPercent = 0;
-			this.cleanup();
-		});
+		if (this.isPlaying) {
+			this.pauseAudio();
+		} else {
+			this.playAudio();
+		}
+	}
 
-		this.audioElement.addEventListener('error', (error) => {
-			console.error('Audio playback error:', error);
-			this.isPlaying = false;
-			this.progressPercent = 0;
-			this.cleanup();
-		});
-
-		this.audioElement.addEventListener('loadedmetadata', () => {
-			this.startProgressUpdates();
-		});
-
-		// Start playback
+	private playAudio(startTime?: number) {
+		if (!this.audioElement) {
+			this.initializeAudio();
+		}
+		
+		if (!this.audioElement) return;
+		
+		if (startTime !== undefined) {
+			this.audioElement.currentTime = Math.max(0, Math.min(startTime, this.cachedAudioFile.duration));
+		}
+		
 		this.audioElement.play().then(() => {
 			this.isPlaying = true;
-			// Record play after a few seconds of listening
+			
 			setTimeout(() => {
 				if (this.isPlaying && !this.hasRecordedPlay) {
 					this.trackService.recordPlay();
 					this.hasRecordedPlay = true;
 				}
-			}, 3000);
+			}, 0.4 * this.audioElement!.duration);
+			
 		}).catch(error => {
 			console.error('Failed to start playback:', error);
 			this.isPlaying = false;
-			this.cleanup();
 		});
 	}
 
@@ -223,19 +242,8 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 		if (this.audioElement) {
 			this.audioElement.pause();
 			this.isPlaying = false;
-			this.stopProgressUpdates();
+			console.log("pause");
 		}
-	}
-
-	private stopAudio() {
-		if (this.audioElement) {
-			this.audioElement.pause();
-			this.audioElement.currentTime = 0;
-			this.cleanup();
-		}
-		this.isPlaying = false;
-		this.progressPercent = 0;
-		this.stopProgressUpdates();
 	}
 
 	onWaveformClick(event: MouseEvent) {
@@ -248,46 +256,40 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 		const clickPercent = clickX / canvasWidth;
 		const targetTime = clickPercent * this.cachedAudioFile.duration;
 
+		this.initializeAudio();
+		
 		if (this.audioElement) {
 			this.audioElement.currentTime = Math.max(0, Math.min(targetTime, this.cachedAudioFile.duration));
 			this.updateProgress();
-		} else {
-			this.playAudio(targetTime);
+			
+			if (this.isPlaying) {
+				this.audioElement.play();
+			}
 		}
 	}
 
 	private cleanup() {
-		if (this.audioElement) {			
+		if (this.audioElement) {
+			this.audioElement.removeEventListener('ended', this.onAudioEnded);
+			this.audioElement.removeEventListener('error', this.onAudioError);
+			this.audioElement.removeEventListener('timeupdate', this.onTimeUpdate);
+			
+			this.audioElement.pause();
 			this.audioElement.src = '';
 			this.audioElement = null;
 		}
-		this.stopProgressUpdates();
+		this.isAudioInitialized = false;
+		this.isPlaying = false;
 	}
 
 	// ==================================================================================================
 	// Progress Updates
-
-	private startProgressUpdates() {
-		this.stopProgressUpdates();
-		
-		this.progressUpdateInterval = setInterval(() => {
-			this.updateProgress();
-		}, 100);
-	}
-
-	private stopProgressUpdates() {
-		if (this.progressUpdateInterval) {
-			clearInterval(this.progressUpdateInterval);
-			this.progressUpdateInterval = null;
-		}
-	}
-
+	
 	private updateProgress() {
-		if (this.audioElement) {
+		if (this.audioElement && !isNaN(this.audioElement.currentTime)) {
 			const currentTime = this.audioElement.currentTime;
 			const duration = this.cachedAudioFile.duration;
 			this.progressPercent = (currentTime / duration) * 100;
-
 			this.playbackTime.set(currentTime);
 		}
 	}
@@ -307,7 +309,6 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 				url: window.location.href
 			}).catch(err => console.log('Share failed:', err));
 		} else {
-			// Fallback: Copy to clipboard
 			navigator.clipboard.writeText(window.location.href).then(() => {
 				console.log('Link copied to clipboard');
 			});
@@ -327,7 +328,7 @@ export class AudioSectionComponent implements OnInit, AfterViewInit, OnDestroy {
 	// Helpers
 
 	authorsString = computed(() => {
-		console.log("dawg", this.projectMetadata?.authors)
+		console.log("authors: ", this.trackService.projectMetadata())
 		if (!this.projectMetadata!.authors || this.projectMetadata!.authors.length === 0) {
 			return '';
 		}

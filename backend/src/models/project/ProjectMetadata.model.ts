@@ -7,8 +7,8 @@ const ProjectMetadataSchema = new mongoose.Schema({ // interface ProjectMetadata
 	updatedAt: 	{ type: Date },
 	title: 		{ type: String },
 	authors: [{
-		userId: 	{ type: String }, // auth0 userId
-		username: 	{ type: String },
+		userId: 		{ type: String }, // auth0 userId
+		displayName: 	{ type: String },
 	}],
 
 	isCollaboration: 	{ type: Boolean },

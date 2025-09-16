@@ -56,7 +56,7 @@ export class SynthesizerService {
 	initialize(audioContext: AudioContext) {
 		this.audioContext = audioContext;
 		this.midiSynthesizer = new MidiSynthesizer(this.viewportService.posToTime);
-		this.drumSynthesizer = new DrumSynthesizer(this.viewportService.posToTime, audioContext);
+		this.drumSynthesizer = new DrumSynthesizer(this.viewportService.posToTime);
 	}
 
 	// ========================================================================================
@@ -241,7 +241,7 @@ export class SynthesizerService {
 		outputNode: AudioNode,
 		trackId: string
 	): Voice | null {
-		if (trackType === 'drums') {
+		if (trackType === MidiTrackType.Drums) {
 			return this.drumSynthesizer.startNote(
 				this.audioContext!,
 				outputNode,
@@ -271,7 +271,7 @@ export class SynthesizerService {
 		trackId: string,
 		offlineAudioContext: OfflineAudioContext
 	): Voice | null {
-		if (trackType === 'drums') {
+		if (trackType === MidiTrackType.Drums) {
 			return this.drumSynthesizer.startNote(
 				offlineAudioContext,
 				outputNode,

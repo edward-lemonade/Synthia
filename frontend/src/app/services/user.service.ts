@@ -38,7 +38,6 @@ export class UserService {
 	private async initializeUser() {
 		try {
 			const user = await this.getUser();
-			console.log("initing")
 			this.gotUser = true;
 			this.checkAndRedirect();
 		} catch (err) {

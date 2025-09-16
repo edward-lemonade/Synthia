@@ -18,6 +18,7 @@ export const routes: Routes = [
 		{path: '', component: HomePage, canActivate: [UnAuthGuard]},
 		{path: 'projects', component: ProjectsPage, canActivate: [AuthGuard]},
 		{path: 'settings', component: SettingsPage, canActivate: [AuthGuard]},
+		{path: 'discover', component: SettingsPage, canActivate: [AuthGuard]},
 		{path: 'publish/:projectId', component: PublishPage, canActivate: [AuthGuard]},
 		{path: 'track/:trackId', component: TrackPage, canActivate: [AuthGuard]},
 		{path: 'profile/:displayName', component: ProfilePage, canActivate: [AuthGuard]},

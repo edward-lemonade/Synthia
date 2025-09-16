@@ -39,10 +39,12 @@ export class TrackService {
 				{ headers: {Authorization: `Bearer ${token}`}}
 			);
 
+			console.log(res.data)
 			if (res.data.metadata && res.data.front) {
 				this.projectMetadata.set(res.data.metadata);
 				this.projectFront.set({...res.data.front, dateReleased: new Date(res.data.front.dateReleased)});
 				this.interactionState = res.data.interactionState || false;
+				console.log(this.projectMetadata(), this.projectFront())
 				
 				this.comments.set(
 					res.data.comments.map(comment => (fillDates(comment)))
