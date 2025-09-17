@@ -215,7 +215,7 @@ export class Renderer {
 	}
 
 	async base64ToAudioBuffer(base64: string, audioContext: OfflineAudioContext): Promise<AudioBuffer> {
-		// 1. Convert base64 string → ArrayBuffer
+		// base64 to ArrayBuffer
 		const binary = atob(base64);
 		const len = binary.length;
 		const bytes = new Uint8Array(len);
@@ -224,7 +224,7 @@ export class Renderer {
 		}
 		const arrayBuffer = bytes.buffer;
 
-		// 2. Decode audio data into AudioBuffer
+		// ArrayBuffer to AudioBuffer
 		return await audioContext.decodeAudioData(arrayBuffer);
 	}
 }

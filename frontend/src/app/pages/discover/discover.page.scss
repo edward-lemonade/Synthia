@@ -4,12 +4,34 @@
 	display: flex;
 	flex-direction: column;
 	flex: 1;
-	padding: 0 $pad-ends;
-	min-height: 100vh;
+
+	height: 100%;
+	padding: 0 400px;
 	background: $app-bg;
 	gap: 32px;
 	padding-top: 40px;
 	padding-bottom: 40px;
+	box-sizing: border-box;
+
+	&::-webkit-scrollbar {
+		width: 8px; // Width of the scrollbar
+		height: 8px; 
+	}
+	&::-webkit-scrollbar-track {
+		background: $app-bg-l; // Track background
+		border-radius: 10px;
+	}
+	&::-webkit-scrollbar-thumb {
+		background: $app-bg-ll; // Thumb color
+		border-radius: 10px;
+		
+		&:hover {
+			background: $near-white; // Hover color
+		}
+	}
+	&::-webkit-scrollbar-corner {
+		background: transparent; // Corner where scrollbars meet
+	}
 }
 
 .controls {
@@ -20,82 +42,154 @@
 		$accent-yellow 100%
 	);
 	border-radius: 24px;
-	padding: 32px;
+	padding: 12px 32px;
 	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+	flex-direction: row;
+	flex: 0;
+	gap: 20px;
+	//box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 	transition: all 0.3s ease;
 	position: relative;
 	overflow: hidden;
-	min-height: 120px;
+	min-height: 40px;
 
-	&::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(255, 255, 255, 0.05);
-		backdrop-filter: blur(10px);
-		pointer-events: none;
-	}
+	.control-btn {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 4px;
+		padding: 12px 16px;
+		border-radius: 12px;
 
-	&:hover {
-		box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
-		transform: translateY(-4px);
-	}
-
-	// Add styles for any controls you put in here
-	h1, h2, h3 {
+		background: rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(255, 255, 255, 0.4);
 		color: $app-bg;
-		margin: 0;
-		font-weight: 800;
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-		position: relative;
-		z-index: 1;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		min-width: 80px;
+		backdrop-filter: blur(10px);
+
+		&.selected {
+			border: 2px solid rgba(255, 255, 0, 1)
+		}
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.3);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+			transform: translateY(-2px);
+		}
+
+		&:active {
+			transform: translateY(0);
+		}
+
+		mat-icon {
+			font-size: 20px;
+			width: 20px;
+			height: 20px;
+		}
+
+		.control-label {
+			font-size: 12px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
 	}
 
-	// Search field styling if you add one
-	mat-form-field {
-		position: relative;
-		z-index: 1;
-		
-		::ng-deep {
-			.mat-mdc-form-field-flex {
-				background: rgba(255, 255, 255, 0.15);
-				border-radius: 16px;
-				padding: 8px 16px;
-				backdrop-filter: blur(10px);
-				border: 1px solid rgba(255, 255, 255, 0.2);
-			}
+	.search-container {
+		display: flex;
+		flex: 1;
+		gap: 0px;
 
-			.mat-mdc-text-field-wrapper {
-				background: transparent !important;
-			}
+		.search-bar {
+			display: flex;
+			flex-direction: row;
+			flex: 1;
+			align-items: center;
+			gap: 8px;
+			padding: 8px 12px;
+			
+			border-top-left-radius: 100px;
+			border-bottom-left-radius: 100px;
+			border-top-right-radius: 0px;
+			border-bottom-right-radius: 0px;
 
-			.mat-mdc-form-field-infix {
+			background: rgba(255, 255, 255, 0.2);
+			border: 2px solid rgba(0, 0, 0, 0.4);
+
+			transition: all 0.2s ease;
+			cursor: text;
+
+			&:hover {
+				background: rgba(255, 255, 255, 0.3);
+			}
+			&:focus-within {
+				background: rgba(255, 255, 255, 0.5);
+			}
+			.search-icon {
+				color: rgba(0,0,0,0.5);
+				font-size: 16px;
+				width: 16px;
+				height: 16px;
+				opacity: 0.7;
+			}
+			.search-input {
+				flex: 1;
+				background: transparent;
 				border: none;
-				padding: 8px 0;
+				outline: none;
+				color: rgba(0,0,0,0.5);
+				font-size: 14px;
+				font-weight: 500;
 			}
+			.search-input::placeholder {
+				color: rgba(0,0,0,0.5);
+				opacity: 0.6;
+			}
+		}
+		.search-btn {
+			display: flex;
+			width: 80px;
+			gap: 4px;
+			padding: 12px 16px;
+			
+			border-top-left-radius: 0px;
+			border-bottom-left-radius: 0px;
+			border-top-right-radius: 100px;
+			border-bottom-right-radius: 100px;
 
-			input {
-				color: $app-bg !important;
+			background: rgba(255, 255, 255, 0.2);
+			border: 2px solid rgba(0, 0, 0, 0.4);
+
+			color: $app-bg;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			backdrop-filter: blur(10px);
+
+			justify-content: center;
+			align-items: center;
+			.control-label {
+				font-size: 12px;
 				font-weight: 600;
-				
-				&::placeholder {
-					color: rgba($app-bg, 0.7) !important;
-				}
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
 			}
 
-			.mat-mdc-form-field-underline,
-			.mdc-line-ripple {
-				display: none;
+			&.selected {
+				border: 2px solid rgba(255, 255, 0, 1)
 			}
 
-			.mat-mdc-form-field-subscript-wrapper {
-				display: none;
+			&:hover {
+				background: rgba(255, 255, 255, 0.3);
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+				transform: translateY(-2px);
+			}
+
+			mat-icon {
+				font-size: 20px;
+				width: 20px;
+				height: 20px;
 			}
 		}
 	}
@@ -106,6 +200,8 @@
 		rgb(57, 40, 69) 0%,
 		rgb(37, 42, 53) 100%
 	);
+	background-attachment: fixed;
+
 	border-radius: 24px;
 	padding: 28px;
 	display: flex;
@@ -114,16 +210,16 @@
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 	transition: all 0.3s ease;
 	position: relative;
-	overflow: hidden;
+
+	align-items: center;
+	
 
 	&::before {
-		content: '';
 		position: absolute;
 		top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(255, 255, 255, 0.03);
 		backdrop-filter: blur(10px);
 		pointer-events: none;
 	}
@@ -133,90 +229,53 @@
 		transform: translateY(-3px);
 	}
 
-	.released-item {
+	.item {
+		display: flex;
+		flex: 1;
+		flex-direction: row;
+		width: 100%;
+	}
+
+	.load-btn {
 		display: flex;
 		flex-direction: row;
-		gap: 12px;
-		padding: 12px;
-		border-radius: 16px;
-		background: rgba(255, 255, 255, 0.12);
-		backdrop-filter: blur(18px);
-		border: 1px solid rgba(255, 255, 255, 0.18);
-		transition: all 0.2s ease;
+		width: 140px;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		padding: 12px 16px;
+		border: none;
+		border-radius: 12px;
+		background: rgba(0, 0, 0, 0.2);
+		color: $app-bg;
 		cursor: pointer;
-		position: relative;
-		z-index: 1;
+		transition: all 0.2s ease;
+		min-width: 80px;
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.4);
 
 		&:hover {
-			background: rgba(255, 255, 255, 0.18);
+			background: rgba(255, 255, 255, 0.2);
 			transform: translateY(-2px);
-			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 		}
 
-		.metadata {
-			display: flex;
-			flex-direction: column;
-			gap: 6px;
-
-			.title {
-				color: white;
-				font-weight: 700;
-				font-size: 18px;
-				margin: 0;
-				line-height: 1.4;
-			}
-
-			.author {
-				color: $appbar-text;
-				font-size: 14px;
-				font-weight: 500;
-				margin: 0;
-			}
+		&:active {
+			transform: translateY(0);
 		}
 
-		.spacer {
-			display: flex;
-			flex: 1;
-			flex-direction: row;
+		mat-icon {
+			font-size: 20px;
+			width: 20px;
+			height: 20px;
 		}
 
-		.stats {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-
-			.stat {
-				display: flex;
-				gap: 6px;
-				mat-icon {
-					font-size: 18px;
-					width: 18px;
-					height: 18px;
-					color: $appbar-text;
-					opacity: 0.8;
-				}
-				span {
-					color: $appbar-text;
-					font-size: 14px;
-					font-weight: 500;
-				}
-			}
-		}
-
-		.data {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			color: $appbar-text;
-			font-size: 13px;
-			padding-left: 10px;
-
-			mat-icon {
-				font-size: 16px;
-				width: 16px;
-				height: 16px;
-				opacity: 0.7;
-			}
+		.label-text {
+			color: white;
+			font-size: 12px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
 		}
 	}
 }

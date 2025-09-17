@@ -116,12 +116,21 @@ export class PublishService {
 				this.projectMetadata = { ...project, title: project.title };
 				return false;
 			}
-
-			const res = await axios.post<{ success: boolean }>(
-				'/api/projects/rename', 
-				{ projectId: project.projectId, newName: newName },
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
+			
+			let res = null;
+			if (project.isReleased) {
+				res = await axios.post<{ success: boolean }>(
+					'/api/projects/rename_front', 
+					{ projectId: project.projectId, newName: newName },
+					{ headers: {Authorization: `Bearer ${token}`}}
+				);
+			} else {
+				 res = await axios.post<{ success: boolean }>(
+					'/api/projects/rename', 
+					{ projectId: project.projectId, newName: newName },
+					{ headers: {Authorization: `Bearer ${token}`}}
+				);
+			}
 
 			return res.data.success;
 		} catch (err) {
@@ -153,6 +162,7 @@ export class PublishService {
 				'/api/projects/publish', 
 				{ 
 					userId: user.sub, 
+					title: title,
 					projectId: this.projectMetadata.projectId,
 					description: description,
 				},

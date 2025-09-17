@@ -1,8 +1,10 @@
-import { AudioFileData, Comment, InteractionState, ProjectReleased } from "@shared/types";
+import { AudioFileData, Comment, InteractionState, ProjectReleased, User, RelevantProjectOrUser } from "@shared/types";
 import * as db from "@src/db/mongo_client";
 import * as s3 from "@src/db/s3_client";
 import { ProjectFrontModel } from "@src/models";
+import { UserModel } from "@src/models/User.model";
 import { ProjectFrontTransformer, ProjectMetadataTransformer } from "@src/transformers/project.transformer";
+import { assertProjectAccess } from "@src/utils/authorization";
 import { Request, Response } from "express";
 
 // Getters
@@ -190,6 +192,8 @@ export async function recordPlay(req: Request, res: Response) {
 // =============================================================================================
 // Batch queries
 
+const MAX_AMOUNT = 40;
+
 export async function newest(req: Request, res: Response) {
     try {
         const userId = req.auth.sub; // in case you need it later for filtering
@@ -199,16 +203,16 @@ export async function newest(req: Request, res: Response) {
         if (lastReleaseDate && lastProjectId) {
             query = {
                 $or: [
-                    { releaseDate: { $lt: lastReleaseDate } },
-                    { releaseDate: lastReleaseDate, projectId: { $lt: lastProjectId } }
+                    { dateReleased: { $lt: lastReleaseDate } },
+                    { dateReleased: lastReleaseDate, projectId: { $lt: lastProjectId } }
                 ]
             };
         }
 
-		const boundedAmount = Math.max(40, amount);
+		const boundedAmount = Math.min(MAX_AMOUNT, amount);
         const projectFrontDocs = await ProjectFrontModel.find(query)
-            .sort({ releaseDate: -1, projectId: -1 }) // newest first
-            .limit(boundedAmount);
+            .sort({ dateReleased: -1 }) // newest first
+			.limit(boundedAmount);
 
 		const projects = await Promise.all(
 			projectFrontDocs.map(async (frontDoc) => {
@@ -219,7 +223,8 @@ export async function newest(req: Request, res: Response) {
 				} as ProjectReleased;
 			})
 		);
-			
+
+
 		const reachedEnd = projects.length < boundedAmount;
         res.json({
             success: true,
@@ -235,7 +240,237 @@ export async function newest(req: Request, res: Response) {
     }
 }
 
+export async function hottest(req: Request, res: Response) {
+    try {
+        const userId = req.auth.sub;
+        const { amount, lastHotness, lastProjectId } = req.body;
 
+		// Use "aggregation pipeline" since hotness isn't actually stored
+
+        let pipeline: any[] = [{
+			$addFields: {
+				hotness: { 
+					$add: [
+						{ $multiply: ["$plays", 1] },      // Weight plays by 1
+						{ $multiply: ["$likes", 3] }       // Weight likes by 3 (more valuable)
+					]
+				}
+			}
+        }];
+
+        if (lastHotness !== undefined && lastProjectId) {
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { hotness: { $lt: lastHotness } },
+                        { hotness: lastHotness, projectId: { $lt: lastProjectId } }
+                    ]
+                }
+            });
+        }
+
+		const boundedAmount = Math.min(MAX_AMOUNT, amount);
+        pipeline.push(
+            { $sort: { hotness: -1, projectId: -1 } },
+            { $limit: boundedAmount }
+        );
+
+        const projectFrontDocs = await ProjectFrontModel.aggregate(pipeline);
+		const lastElement = projectFrontDocs[projectFrontDocs.length - 1];
+    	const newLastHotness = lastElement.hotness;
+
+        const projects = await Promise.all(
+            projectFrontDocs.map(async (frontDoc) => {
+                const metadataDoc = await db.findMetadataById(frontDoc.projectMetadataId);
+                return {
+                    front: frontDoc,
+                    metadata: ProjectMetadataTransformer.fromDoc(metadataDoc!),
+                } as ProjectReleased;
+            })
+        );
+
+        const reachedEnd = projects.length < boundedAmount;
+        res.json({
+            success: true,
+            projects: projects,
+			lastHotness: newLastHotness,
+            reachedEnd: reachedEnd,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            error: "Failed to fetch projects by hotness"
+        });
+    }
+}
+
+export async function search(req: Request, res: Response) {
+    try {
+        const userId = req.auth.sub;
+        const { amount, lastScore, lastProjectId, lastUserId, searchTerm } = req.body;
+
+        if (!searchTerm || searchTerm.trim().length === 0) {
+            return res.json({ success: true, results: [], reachedEnd: true });
+        }
+
+        const boundedAmount = Math.min(MAX_AMOUNT, amount);
+
+        const projectFrontDocs = await searchRelevantTracks(boundedAmount, searchTerm, lastScore, lastProjectId);
+        const userDocs = await searchRelevantUsers(boundedAmount, searchTerm, lastScore, lastUserId);
+
+        // Process tracks
+        const projects = await Promise.all(
+            projectFrontDocs.map(async (frontDoc) => {
+                const metadataDoc = await db.findMetadataById(frontDoc.projectMetadataId);
+                return {
+                    _itemType: 'track',
+                    _searchScore: frontDoc.searchScore,
+                    _id: frontDoc.projectId,
+					front: frontDoc,
+                    metadata: ProjectMetadataTransformer.fromDoc(metadataDoc!),
+                } as RelevantProjectOrUser;
+            })
+        );
+
+        // Process users
+        const users = await Promise.all(
+			userDocs.map(async (userDoc) => {
+				const pfp = await s3.getProfilePictureUrl(userDoc.auth0Id);
+				return {
+					_itemType: 'user',
+					_searchScore: userDoc.searchScore,
+					_id: userDoc.userId,
+					user: {...userDoc, profilePictureURL: pfp}, // technically they are already objs
+				} as RelevantProjectOrUser;
+			})
+		);
+
+        // Combine and sort all results by searchScore
+        const allResults = [...projects, ...users].sort((a, b) => {
+            if (b._searchScore !== a._searchScore) {
+                return b._searchScore! - a._searchScore!; // Higher score first
+            }
+            return a._id!.localeCompare(b._id!); // Secondary sort by ID for consistency
+        });
+
+        // Pagination
+        let paginatedResults = allResults;
+        if (lastScore !== undefined && (lastProjectId || lastUserId)) {
+            paginatedResults = allResults.filter(result => {
+                if (result._searchScore! < lastScore) return true;
+                if (result._searchScore === lastScore) {
+                    if (result._itemType === 'track' && lastProjectId) {
+                        return result._id! < lastProjectId;
+                    }
+                    if (result._itemType === 'user' && lastUserId) {
+                        return result._id! < lastUserId;
+                    }
+                }
+                return false;
+            });
+        }
+
+        const limitedResults = paginatedResults.slice(0, boundedAmount);
+
+        const lastResult = limitedResults[limitedResults.length - 1];
+        const newLastScore = lastResult?._searchScore;
+        const newLastProjectId = lastResult?._itemType === 'track' ? lastResult._id : undefined;
+        const newLastUserId = lastResult?._itemType === 'user' ? lastResult._id : undefined;
+
+        const reachedEnd = limitedResults.length < boundedAmount;
+        res.json({
+            success: true,
+            results: limitedResults,
+            lastScore: newLastScore,
+            lastProjectId: newLastProjectId,
+            lastUserId: newLastUserId,
+            reachedEnd: reachedEnd,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            error: "Failed to search"
+        });
+    }
+}
+
+async function searchRelevantTracks(boundedAmount: number, searchTerm: string, lastScore?: number, lastProjectId?: string) {
+	let pipeline: any[] = [
+		{
+			$search: {
+				index: "relevantTracks",
+				text: {
+					query: searchTerm,
+					path: ["description", "title"] // Search both fields
+				}
+			}
+		},
+		{
+			$addFields: {
+				searchScore: { $meta: "searchScore" }
+			}
+		}
+	];
+
+	if (lastScore !== undefined && lastProjectId) {
+		pipeline.push({
+			$match: {
+				$or: [
+					{ searchScore: { $lt: lastScore } },
+					{ searchScore: lastScore, projectId: { $lt: lastProjectId } }
+				]
+			}
+		});
+	}
+
+	pipeline.push(
+		{ $sort: { searchScore: -1, projectId: -1 } }, // Best matches first
+		{ $limit: boundedAmount }
+	);
+
+	const projectFrontDocs = await ProjectFrontModel.aggregate(pipeline);
+	return projectFrontDocs;
+}
+
+async function searchRelevantUsers(boundedAmount: number, searchTerm: string, lastScore?: number, lastUserId?: string) {
+    let pipeline: any[] = [
+        {
+            $search: {
+                index: "relevantUsers", // Your Atlas search index for users
+                text: {
+                    query: searchTerm,
+                    path: ["displayName"]
+                }
+            }
+        },
+        {
+            $addFields: {
+                searchScore: { $meta: "searchScore" }
+            }
+        }
+    ];
+
+    if (lastScore !== undefined && lastUserId) {
+        pipeline.push({
+            $match: {
+                $or: [
+                    { searchScore: { $lt: lastScore } },
+                    { searchScore: lastScore, userId: { $lt: lastUserId } }
+                ]
+            }
+        });
+    }
+
+    pipeline.push(
+        { $sort: { searchScore: -1, userId: -1 } },
+        { $limit: boundedAmount }
+    );
+
+    const userDocs = await UserModel.aggregate(pipeline); 
+    return userDocs;
+}
 
 // =============================================================================================
 // Helpers

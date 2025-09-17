@@ -225,6 +225,30 @@ export async function rename(req: Request, res: Response) {
 	res.json({ success: true });
 }
 
+export async function renameFront(req: Request, res: Response) {	
+	const projectId = req.body.projectId;
+	const userId = req.auth?.sub;
+	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+	const [{success, metadataDoc}, frontDoc] = await Promise.all([
+		await assertProjectAccess(projectId, userId),
+		db.findFrontByProjectId(projectId)
+	]);
+
+	if (!metadataDoc || !frontDoc) { 
+		console.error("Failed to load project metadata."); 
+		return res.status(404).json({ success: false, message: "Project not found" }); 
+	}
+
+	const newName = req.body.newName;
+	frontDoc.title = newName;
+
+	const savedDoc = await frontDoc.save();
+	if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
+
+	res.json({ success: true });
+}
+
 export async function getExport(req: Request, res: Response) {
 	try {
 		const projectId = req.body.projectId;
@@ -299,6 +323,7 @@ export async function publish(req: Request, res: Response) {
 			// create new
 			frontDoc = await ProjectFrontModel.create({
 				projectId,
+				title: metadataDoc!.title,
 				description,
 				projectMetadataId: metadataDoc!._id,
 			});

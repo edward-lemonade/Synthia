@@ -4,8 +4,9 @@ import { Comment, ProjectFront } from "@shared/types";
 const ProjectFrontSchema = new mongoose.Schema({ // interface ProjectMetadata
 	projectId: 	{ type: String, index: true },
 	projectMetadataId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProjectMetadata' },
-	
-	release: 	{ type: String }, // EP/album
+	title: 			{ type: String }, // EP/album
+
+	release: 		{ type: String }, // EP/album
 	
 	description: 	{ type: String },
 	access: 		{ type: String, enum: ["public", "unlisted", "private"], default: "public" }, // "public" | "unlisted" | "private"

@@ -1,6 +1,9 @@
 import { ProjectMetadata } from "./ProjectMetadata";
 
 export interface ProjectFront{ // public facing information for RELEASED projects
+	projectId: string;
+	title: string;
+
 	release: string; // EP/album
 	
 	description: string;

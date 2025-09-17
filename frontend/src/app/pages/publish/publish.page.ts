@@ -133,6 +133,7 @@ export class PublishPage implements OnInit {
 			if (this.projectMetadata?.isReleased) {
 				await this.publishService.loadFront();
 				this.description = this.projectFront?.description || '';
+				this.projectTitle = this.projectFront.title || '';
 			}
 		} catch (error) {
 			console.error('Error loading project data or audio export:', error);

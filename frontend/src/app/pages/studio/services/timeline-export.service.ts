@@ -7,9 +7,9 @@ import { ObjectStateNode } from '../state/state.factory';
 import { TracksService } from './tracks.service';
 import { StateService } from '../state/state.service';
 import { TimelinePlaybackService } from './timeline-playback.service';
+import { SynthesizerService } from './synthesizer.service';
 
 import 'lamejs/lame.min.js';
-import { SynthesizerService } from './synthesizer.service';
 declare const lamejs: any;
 
 @Injectable()

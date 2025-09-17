@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal, HostListener } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
-import { DiscoverService } from './discover.service';
+import { DiscoverService, ListMode } from './discover.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,40 +11,72 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { Author } from '@shared/types';
+import { TrackItem } from "./track-item/track-item.component";
+
+import { RelevantProjectOrUser } from '@shared/types';
+import { UserItem } from "./user-item/user-item.component";
 
 @Component({
 	selector: 'app-discover',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule],
+	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, TrackItem, UserItem],
 	providers: [DiscoverService],
 	template: `
-		<div class="container">
+		<div class="container" #scrollContainer>
 			<div class="controls">
+				<button 
+					class="control-btn"
+					[class.selected]="discoverService.listMode() == ListMode.New"
+					(click)="selectNew()">
+					<mat-icon>access_time</mat-icon>
+					<span class="control-label">New</span>
+				</button>
+				<button 
+					class="control-btn"
+					[class.selected]="discoverService.listMode() == ListMode.Hot"
+					(click)="selectHot()">
+					<mat-icon>whatshot</mat-icon>
+					<span class="control-label">Hot</span>
+				</button>
+				
+				<div class="search-container">
+					<div class="search-bar">
+						<mat-icon class="search-icon">search</mat-icon>
+						<input 
+							class="search-input" 
+							placeholder="search..." 
+							type="text"
+							[(ngModel)]="discoverService.searchTerm"/>
+					</div>
+					<button 
+						class="search-btn"
+						[class.selected]="discoverService.listMode() == ListMode.Search"
+						(click)="doSearch()">
+						<span class="control-label">Search</span>
+					</button>
+				</div>
 			</div>
 
-			<div class="list">
-				<div 
-					class="released-item" 
-					*ngFor="let track of discoverService.projects()"
-					(click)="onReleasedItemClick(track.metadata.projectId)">
-					<div class="metadata">
-						<div class="title">{{ track.metadata.title }}</div>
-						<div class="author">{{ authorsString(track.metadata.authors) }}</div>
-					</div>
-					<span class="spacer"></span>
-					<div class="stats">
-						<div class="stat">
-							<mat-icon>play_arrow</mat-icon>
-							<span>{{ track.front.plays }}</span>
-						</div>
-						<div class="stat">
-							<mat-icon>favorite</mat-icon>
-							<span>{{ track.front.likes }}</span>
-						</div>
-					</div>
-					<div class="data">
-						<mat-icon>calendar_today</mat-icon>
-						<span>{{ track.front.dateReleased | date:'mediumDate' }}</span>
-					</div>
+			<div class="list">		
+				<div *ngFor="let item of discoverService.projectsAndUsers()" class="item">
+					<app-discover-track-item class="item" *ngIf="!item._itemType || item._itemType == 'track'"
+						[item]="item"
+					/>
+					<app-discover-user-item class="item" *ngIf="item._itemType == 'user'"
+						[item]="item"
+					/>
+				</div>
+
+				<button 
+					class="load-btn"
+					(click)="loadMoreItems()"
+					*ngIf="!discoverService.reachedEnd">
+					<span class="label-text">Load more</span>
+				</button>
+				
+				<!-- Loading indicator at bottom -->
+				<div class="loading-more" *ngIf="isLoadingMore()">
+					<mat-spinner diameter="32"></mat-spinner>
+					<span>Loading more tracks...</span>
 				</div>
 			</div>
 		</div>
@@ -52,27 +84,49 @@ import { Author } from '@shared/types';
 	styleUrls: ['./discover.page.scss']
 })
 export class DiscoverPage {
+	@ViewChild('scrollContainer', { static: true }) scrollContainer!: ElementRef;
+
+	ListMode = ListMode;
+	
 	projectId: string | null = null;
+
+	get isLoadingMore() { return this.discoverService.isLoadingMore }
+	get items() { return this.discoverService.projectsAndUsers; }
 
 	constructor(
 		private route: ActivatedRoute,
 		private router: Router,
 		public discoverService: DiscoverService
 	) {
-		discoverService.getMoreTracks();
+		discoverService.getMoreItems();
 	}
 
-	get projects() { return this.discoverService.projects }
-
-	onReleasedItemClick(projectId: string) {
-		this.router.navigate(['/track', projectId]);
+	selectNew() {
+		this.discoverService.listMode.set(ListMode.New);
+		this.discoverService.getMoreItems(true);
+	}
+	selectHot() {
+		this.discoverService.listMode.set(ListMode.Hot);
+		this.discoverService.getMoreItems(true);
+	}
+	doSearch() {
+		this.discoverService.listMode.set(ListMode.Search);
+		this.discoverService.getMoreItems(true);
 	}
 
-	authorsString(authors: Author[]) {
-		if (authors.length === 0) {
-			return '';
+	async loadMoreItems() {
+		if (this.isLoadingMore() || this.discoverService.reachedEnd) {
+			return;
 		}
-		return authors.map(author => author.displayName).join(', ');
+
+		try {
+			this.isLoadingMore.set(true);
+			await this.discoverService.getMoreItems();
+		} catch (error) {
+			console.error('Error loading more tracks:', error);
+		} finally {
+			this.isLoadingMore.set(false);
+		}
 	}
 
 }

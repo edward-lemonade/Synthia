@@ -25,6 +25,7 @@ router.post('/api/projects/save_new', checkJwt, ProjectController.saveNew);
 router.post('/api/projects/get_studio', checkJwt, ProjectController.load);
 router.post('/api/projects/delete_studio', checkJwt, ProjectController.deleteStudio);
 router.post('/api/projects/rename', checkJwt, ProjectController.rename);
+router.post('/api/projects/rename_front', checkJwt, ProjectController.renameFront);
 router.post('/api/projects/get_export', checkJwt, ProjectController.getExport);
 router.post('/api/projects/get_front', checkJwt, ProjectController.getFront);
 router.post('/api/projects/publish', checkJwt, ProjectController.publish);
@@ -39,5 +40,7 @@ router.post('/api/track/:projectId/comment', checkJwt, TrackController.leaveComm
 router.post('/api/track/:projectId/toggle_like', checkJwt, TrackController.toggleLike);
 router.post('/api/track/:projectId/record_play', checkJwt, TrackController.recordPlay);
 router.post('/api/tracks/newest', checkJwt, TrackController.newest);
+router.post('/api/tracks/hottest', checkJwt, TrackController.hottest);
+router.post('/api/tracks/search', checkJwt, TrackController.search);
 
 export default router;

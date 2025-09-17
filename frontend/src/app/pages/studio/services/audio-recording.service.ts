@@ -4,6 +4,9 @@ import { RegionSelectService } from './region-select.service';
 import { Track } from '@shared/types';
 import { ObjectStateNode } from '../state/state.factory';
 
+import 'lamejs/lame.min.js';
+declare const lamejs: any;
+
 export interface AudioRecording {
 	blob: Blob;
 	duration: number;
@@ -48,35 +51,29 @@ export class AudioRecordingService {
 				}
 			});
 
-			// Create promise to await recording completion
 			this.recordingPromise = new Promise<AudioRecording>((resolve) => {
 				this.recordingResolve = resolve;
 			});
 
-			// Determine the best supported MIME type
 			const mimeType = this.getSupportedMimeType();
-			
 			this.mediaRecorder = new MediaRecorder(this.stream, {
 				mimeType: mimeType
 			});
 
+			console.log(mimeType);
+
 			this.audioChunks = [];
 			this.startTime = Date.now();
 
-			// Handle data availability
 			this.mediaRecorder.ondataavailable = (event) => {
 				if (event.data.size > 0) {
 					this.audioChunks.push(event.data);
 				}
 			};
-
-			// Handle recording stop
 			this.mediaRecorder.onstop = async () => {
 				await this.processRecordedAudio();
 				this.releaseMediaStream();
 			};
-
-			// Handle errors
 			this.mediaRecorder.onerror = (event) => {
 				console.error('MediaRecorder error:', event);
 				this.isRecording.set(false);
@@ -114,6 +111,67 @@ export class AudioRecordingService {
 		throw new Error('Recording promise not found');
 	}
 
+	private async convertToMp3(audioBlob: Blob): Promise<Blob> { // gotta convert recordings to mp3 because backend can't handle webp
+		try {
+			// Get raw binary data (works for any format)
+			const arrayBuffer = await audioBlob.arrayBuffer();
+			
+			// Create audio context to decode the audio (format-agnostic)
+			const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+			const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0)); // slice() creates a copy
+			
+			// Extract audio channel data
+			const left = audioBuffer.getChannelData(0);
+			const right = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : left;
+			
+			// Convert float32 samples to 16-bit PCM
+			const leftInt16 = new Int16Array(left.length);
+			const rightInt16 = new Int16Array(right.length);
+			
+			for (let i = 0; i < left.length; i++) {
+				leftInt16[i] = Math.max(-32768, Math.min(32767, Math.round(left[i] * 32767)));
+				rightInt16[i] = Math.max(-32768, Math.min(32767, Math.round(right[i] * 32767)));
+			}
+			
+			// Initialize MP3 encoder
+			const channels = audioBuffer.numberOfChannels;
+			const sampleRate = audioBuffer.sampleRate;
+			const bitRate = 128; // 128 kbps
+			
+			const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, bitRate);
+			const mp3Data: BlobPart[] = [];
+			
+			// Encode in chunks
+			const sampleBlockSize = 1152; // MP3 frame size
+			
+			for (let i = 0; i < leftInt16.length; i += sampleBlockSize) {
+				const leftChunk = leftInt16.subarray(i, i + sampleBlockSize);
+				const rightChunk = rightInt16.subarray(i, i + sampleBlockSize);
+				
+				const mp3buf = channels === 1 
+					? mp3encoder.encodeBuffer(leftChunk)
+					: mp3encoder.encodeBuffer(leftChunk, rightChunk);
+					
+				if (mp3buf.length > 0) {
+					mp3Data.push(mp3buf);
+				}
+			}
+			
+			// Flush the encoder
+			const mp3buf = mp3encoder.flush();
+			if (mp3buf.length > 0) {
+				mp3Data.push(mp3buf);
+			}
+			
+			// Create MP3 blob
+			return new Blob(mp3Data, { type: 'audio/mp3' });
+			
+		} catch (error) {
+			console.error('Error converting to MP3:', error);
+			throw new Error(`Failed to convert audio to MP3: ${error}`);
+		}
+	}
+
 	private async processRecordedAudio(): Promise<void> {
 		this.isProcessing.set(true);
 
@@ -122,11 +180,12 @@ export class AudioRecordingService {
 			const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
 			
 			const audioBlob = new Blob(this.audioChunks, { type: mimeType });
+			const mp3Blob = await this.convertToMp3(audioBlob);
 			
 			const recordingData: AudioRecording = {
-				blob: audioBlob,
+				blob: mp3Blob,
 				duration: duration,
-				mimeType: mimeType
+				mimeType: 'audio/mp3'
 			};
 
 			// Update signal with the new recording
@@ -153,10 +212,11 @@ export class AudioRecordingService {
 
 	private getSupportedMimeType(): string {
 		const mimeTypes = [
-			'audio/webm;codecs=opus',
-			'audio/webm',
+			'audio/wav',
+			'audio/mpeg',
 			'audio/mp4',
-			'audio/wav'
+			'audio/webm',
+			'audio/webm;codecs=opus',
 		];
 
 		for (const mimeType of mimeTypes) {
@@ -173,7 +233,7 @@ export class AudioRecordingService {
 			'audio/webm': 'webm',
 			'audio/mp4': 'mp4',
 			'audio/wav': 'wav',
-			'audio/mpeg': 'mp3'
+			'audio/mpeg': 'mp3',
 		};
 
 		// Extract base MIME type (remove codecs)

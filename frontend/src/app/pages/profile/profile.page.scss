@@ -179,6 +179,25 @@
 						width: 18px;
 						height: 18px;
 					}
+
+					.stat {
+						display: flex;
+						gap: 6px;
+						align-items: center;
+						justify-content: center;
+						mat-icon {
+							font-size: 18px;
+							width: 18px;
+							height: 18px;
+							color: $appbar-text;
+							opacity: 0.8;
+						}
+						span {
+							color: $appbar-text;
+							font-size: 14px;
+							font-weight: 500;
+						}
+					}
 				}
 			}
 		}

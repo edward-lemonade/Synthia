@@ -20,7 +20,7 @@ import { TrackService } from '../track.service';
 		<div class="audio-player">
 			<div class="shine"></div>
 			<div class="project-metadata">
-				<div class="project-name">{{ projectMetadata?.title }}</div>
+				<div class="project-name">{{ projectFront?.title }}</div>
 				<div class="project-authors">
 					<ng-container *ngFor="let author of projectMetadata?.authors; let last = last">
 						<span class="author" (click)="onAuthorClick(author)">{{ author.displayName }}</span><span *ngIf="!last">, </span>

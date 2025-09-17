@@ -4,8 +4,9 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 import { Router } from '@angular/router';
 import axios from 'axios';
 import { UserService } from '@src/app/services/user.service';
-import { ProjectReleased } from '@shared/types';
+import { ProjectReleased, RelevantProjectOrUser, User } from '@shared/types';
 
+export enum ListMode { New, Hot, Search }
 
 @Injectable()
 export class DiscoverService {
@@ -15,43 +16,110 @@ export class DiscoverService {
 		private router: Router,
 	) {}
 
-	projects = signal<ProjectReleased[]>([]);
+	listMode = signal<ListMode>(0);
+	isLoadingMore = signal<boolean>(false);
 
-	batchSize = 20;
+	BATCH_SIZE = 7;
 	reachedEnd = false;
+
+	projectsAndUsers = signal<RelevantProjectOrUser[]>([])
 	getLast = computed(() => {
-		const length = this.projects().length;
+		const length = this.projectsAndUsers().length;
 		if (length) {
-			return this.projects()[length-1];
+			return this.projectsAndUsers()[length-1];
 		} else {
 			return undefined;
 		}
 	})
 
-	async getMoreTracks() {
-		if (this.reachedEnd) return;
+	// hotness paginator
+	lastHotness = 0;
 
+	// search paginator
+	lastScore = 0;
+	lastProjectId = '';
+	lastUserId = '';
+
+	searchTerm = signal<string>('');
+
+	async getMoreItems(reset?: boolean) {
 		try {
 			const token = await this.auth.getAccessToken();
 			const user = this.auth.getUserAuth();
 			if (!user) return null;
+			
+			if (reset) { this.projectsAndUsers.set([]); }
+			
+			if (this.listMode() == ListMode.Search) {
+				const res = await axios.post<{ 
+					success: boolean, 
+					results: RelevantProjectOrUser[], 
+					lastScore: number,
+					lastProjectId: string,
+					lastUserId: string,
+					reachedEnd: boolean,
+				}>(
+					`/api/tracks/search`, 
+					{
+						amount: this.BATCH_SIZE,
+						lastScore: this.lastScore,
+						lastProjectId: this.lastProjectId,
+						lastUserId: this.lastUserId, 
+						searchTerm: this.searchTerm(),
+					},
+					{ headers: {Authorization: `Bearer ${token}`}},
+				);
+				this.lastScore = res.data.lastScore;
+				this.lastProjectId = res.data.lastProjectId;
+				this.lastUserId = res.data.lastUserId;
 
-			const res = await axios.post<{ success: boolean, projects: ProjectReleased[], reachedEnd: boolean }>(
-				`/api/tracks/newest`, 
-				{
-					amount: this.batchSize,
-					lastReleaseDate: this.getLast()?.front.dateReleased,
-					lastProjectId: this.getLast()?.metadata.projectId,
-				},
-				{ headers: {Authorization: `Bearer ${token}`}},
-			);
+				const data = res!.data;
+				this.reachedEnd = data.reachedEnd;
 
-			this.reachedEnd = res.data.reachedEnd;
-			this.projects.update((curr) => [...curr, ...res.data.projects]);
+				if (reset) {
+					this.projectsAndUsers.set(data.results);
+				} else {
+					this.projectsAndUsers.update((curr) => [...curr, ...data.results]);
+				}
+				return data.results;
+			} else {
+				let res = null;
 
-			return res.data.projects;
+				if (this.listMode() == ListMode.New) {
+					res = await axios.post<{ success: boolean, projects: ProjectReleased[], reachedEnd: boolean }>(
+						`/api/tracks/newest`, 
+						{
+							amount: this.BATCH_SIZE,
+							lastReleaseDate: (this.getLast() as ProjectReleased)?.front.dateReleased,
+							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
+						},
+						{ headers: {Authorization: `Bearer ${token}`}},
+					);
+				} else if (this.listMode() == ListMode.Hot) {
+					res = await axios.post<{ success: boolean, projects: ProjectReleased[], lastHotness: number, reachedEnd: boolean }>(
+						`/api/tracks/hottest`, 
+						{
+							amount: this.BATCH_SIZE,
+							lastHotness: this.lastHotness,
+							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
+						},
+						{ headers: {Authorization: `Bearer ${token}`}},
+					);
+					this.lastHotness = res.data.lastHotness;
+				}
+				const data = res!.data;
+				this.reachedEnd = data.reachedEnd;
+
+				if (reset) {
+					this.projectsAndUsers.set(data.projects);
+				} else {
+					this.projectsAndUsers.update((curr) => [...curr, ...data.projects]);
+				}
+				return data.projects;
+			}
 		} catch (err) {
 			console.error('Error during project loading:', err);
+
 			return null;
 		}
 	}

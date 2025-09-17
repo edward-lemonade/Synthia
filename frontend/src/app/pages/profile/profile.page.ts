@@ -44,12 +44,19 @@ import { ProfileService } from './profile.service';
 								class="released-item" 
 								*ngFor="let track of profileService.projects()"
 								(click)="onReleasedItemClick(track.metadata.projectId)">
-								<div class="released-title">{{ track.metadata.title }}</div>
+								<div class="released-title">{{ track.front.title }}</div>
 								<div class="released-meta">
 									<mat-icon>calendar_today</mat-icon>
 									<span>{{ track.front.dateReleased | date:'mediumDate' }}</span>
-									<mat-icon>favorite</mat-icon>
-									<span>{{ track.front.likes }}</span>
+									
+									<div class="stat">
+										<mat-icon>play_arrow</mat-icon>
+										<span>{{ track.front!.plays }}</span>
+									</div>
+									<div class="stat">
+										<mat-icon>favorite</mat-icon>
+										<span>{{ track.front!.likes }}</span>
+									</div>
 								</div>
 							</div>
 
