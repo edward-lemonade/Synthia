@@ -15,8 +15,8 @@ import { ProfilePage } from './pages/profile/profile.page';
 import { DiscoverPage } from './pages/discover/discover.page';
 
 export const routes: Routes = [
+	{path: '', component: HomePage, canActivate: [UnAuthGuard]},
 	{path: '', component: AppbarLayoutComponent, children: [
-		{path: '', component: HomePage, canActivate: [UnAuthGuard]},
 		{path: 'projects', component: ProjectsPage, canActivate: [AuthGuard]},
 		{path: 'settings', component: SettingsPage, canActivate: [AuthGuard]},
 		{path: 'discover', component: DiscoverPage},

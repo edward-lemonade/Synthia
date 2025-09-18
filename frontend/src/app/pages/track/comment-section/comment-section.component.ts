@@ -21,12 +21,12 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 		<div class="comments-section">
 			<div class="comments-header">
 				<h3>Comments</h3>
-				<span class="comment-count">{{ this.tracksService.comments().length }}</span>
+				<span class="comment-count">{{ trackService.comments().length }}</span>
 			</div>
 
 			<!-- New Comment Form -->
 			<div class="new-comment">
-				<div class="comment-form">
+				<div class="comment-form" *ngIf="!trackService.isGuestUser">
 					<mat-form-field appearance="outline" class="comment-input">
 						<mat-label>Add a comment...</mat-label>
 						<textarea 
@@ -48,10 +48,13 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 						{{ isSubmittingComment ? 'Posting...' : 'Comment' }}
 					</button>
 				</div>
+				<div class="guest-display">
+					<p *ngIf="trackService.isGuestUser"> Login to use social features </p>
+				</div>
 			</div>
 
-			<div class="comments-list" *ngIf="tracksService.comments().length > 0">
-				<div class="comment" *ngFor="let comment of tracksService.comments(); trackBy: trackComment">
+			<div class="comments-list" *ngIf="trackService.comments().length > 0">
+				<div class="comment" *ngFor="let comment of trackService.comments(); trackBy: trackComment">
 					<app-avatar 
 						[width]="40"
 						[profilePictureURL]="comment.profilePictureURL"
@@ -69,7 +72,7 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 			</div>
 
 			<!-- No Comments State -->
-			<div class="no-comments" *ngIf="tracksService.comments().length === 0">
+			<div class="no-comments" *ngIf="trackService.comments().length === 0 && !trackService.isGuestUser">
 				<mat-icon>chat_bubble_outline</mat-icon>
 				<p>No comments yet. Be the first to share your thoughts!</p>
 			</div>
@@ -82,13 +85,13 @@ export class CommentSectionComponent {
 	constructor(
 		private route: ActivatedRoute,
 		private router: Router,
-		public tracksService: TrackService,
+		public trackService: TrackService,
 	) {}
 
 	TimeUtils = TimeUtils;
 	projectId: string | null = null;
-	get projectMetadata() { return this.tracksService.projectMetadata()! };
-	get projectFront() { return this.tracksService.projectFront()! };
+	get projectMetadata() { return this.trackService.projectMetadata()! };
+	get projectFront() { return this.trackService.projectFront()! };
 
 	newComment: string = '';
 	isSubmittingComment: boolean = false;
@@ -99,7 +102,7 @@ export class CommentSectionComponent {
 		this.isSubmittingComment = true;
 		
 		try {
-			const result = await this.tracksService.leaveComment(this.newComment.trim());
+			const result = await this.trackService.leaveComment(this.newComment.trim());
 		} catch (error) {
 			console.error('Failed to post comment:', error);
 		} finally {

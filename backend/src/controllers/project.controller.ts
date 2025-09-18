@@ -160,7 +160,7 @@ export async function load(req: Request, res: Response) {
 
 		const [{success, metadataDoc}, studioDoc] = await Promise.all([
 			await assertProjectAccess(projectId, userId),
-			db.findStudioByProjectId(projectId)
+			await db.findStudioByProjectId(projectId)
 		]);
 
 		if (!metadataDoc || !studioDoc) { 

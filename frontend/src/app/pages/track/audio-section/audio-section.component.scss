@@ -282,7 +282,6 @@
 				transform: translateY(-2px);
 				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 			}
-
 			&:active {
 				transform: translateY(0);
 			}
@@ -301,6 +300,38 @@
 					color: #ff4444;
 				}
 			}
+
+			&.disabled {
+				background: rgba(255, 255, 255, 0.2);
+				border-color: rgba(255, 255, 255, 0.2);
+				color: rgba(0, 0, 0, 0.5);
+				cursor: not-allowed;
+				transform: none;
+				
+				mat-icon {
+					color: rgba(0, 0, 0, 0.5);
+				}
+				
+				&:hover {
+					background: rgba(255, 255, 255, 0.2);
+					transform: none;
+					box-shadow: none;
+				}
+				
+				&:active {
+					transform: none;
+				}
+				
+				&.liked {
+					background: rgba(255, 255, 255, 0.2);
+					border-color: rgba(255, 255, 255, 0.2);
+					
+					mat-icon {
+						color: rgba(0, 0, 0, 0.5);
+					}
+				}
+			}
+
 		}
 	}
 }

@@ -12,10 +12,13 @@ import { FormsModule } from '@angular/forms';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
 import * as TimeUtils from '@src/app/utils/time';
 import { TrackService } from '../track.service';
+import { UserService } from '@src/app/services/user.service';
+import { AuthService } from '@auth0/auth0-angular';
+import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 
 @Component({
 	selector: 'app-track-audio',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule],
+	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, LoadingSpinnerComponent],
 	template: `
 		<div class="audio-player">
 			<div class="shine"></div>
@@ -44,7 +47,7 @@ import { TrackService } from '../track.service';
 				<div #waveformWrapper class="waveform-wrapper">
 					<ng-container *ngIf="!trackService.isAudioLoaded">
 						<div class="loading-content">
-							<mat-spinner diameter="30"></mat-spinner>
+							<app-loading-spinner/>
 						</div>
 					</ng-container>
 					<ng-container *ngIf="trackService.isAudioLoaded">
@@ -74,6 +77,8 @@ import { TrackService } from '../track.service';
 				
 				<button 
 					class="control-btn"
+					[disabled]="!(auth.isAuthenticated$ | async)"
+					[class.disabled]="!(auth.isAuthenticated$ | async)"
 					[class.liked]="trackService.hasLiked()"
 					(click)="onToggleLike()">
 					<mat-icon>{{ trackService.hasLiked() ? 'favorite' : 'favorite_border' }}</mat-icon>
@@ -82,6 +87,8 @@ import { TrackService } from '../track.service';
 
 				<button 
 					class="control-btn"
+					[disabled]="!(auth.isAuthenticated$ | async)"
+					[class.disabled]="!(auth.isAuthenticated$ | async)"
 					(click)="onShare()">
 					<mat-icon>share</mat-icon>
 					<span class="label-text">Share</span>
@@ -89,6 +96,8 @@ import { TrackService } from '../track.service';
 
 				<button 
 					class="control-btn"
+					[disabled]="!(auth.isAuthenticated$ | async)"
+					[class.disabled]="!(auth.isAuthenticated$ | async)"
 					(click)="onDownload()">
 					<mat-icon>download</mat-icon>
 					<span class="label-text">Download</span>
@@ -126,6 +135,7 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 		private route: ActivatedRoute,
 		private router: Router,
 		public trackService: TrackService,
+		public auth: AuthService
 	) {}
 
 	ngAfterViewInit() {
@@ -178,7 +188,7 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 		
 		this.audioElement.addEventListener('ended', this.onAudioEnded.bind(this));
 		this.audioElement.addEventListener('error', this.onAudioError.bind(this));
-		this.audioElement.addEventListener('timeupdate', this.onTimeUpdate.bind(this));
+		//this.audioElement.addEventListener('timeupdate', (this.updateProgress.bind(this)));
 		
 		this.isAudioInitialized = true;
 	}
@@ -200,12 +210,22 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 		this.playbackTime.set(0);
 	}
 
-	private onTimeUpdate() {
-		this.updateProgress();
+	private cleanup() {
+		if (this.audioElement) {
+			this.audioElement.removeEventListener('ended', this.onAudioEnded);
+			this.audioElement.removeEventListener('error', this.onAudioError);
+			//this.audioElement.removeEventListener('timeupdate', this.updateProgress);
+			
+			this.audioElement.pause();
+			this.audioElement.src = '';
+			this.audioElement = null;
+		}
+		this.isAudioInitialized = false;
+		this.isPlaying = false;
 	}
 
 	// ==================================================================================================
-	// Audio Playback Methods
+	// Controls
 
 	onPlayButton() {
 		this.initializeAudio();
@@ -237,18 +257,20 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 					this.hasRecordedPlay = true;
 				}
 			}, 0.4 * this.audioElement!.duration);
+
+			this.startProgressTimer();
 			
 		}).catch(error => {
 			console.error('Failed to start playback:', error);
 			this.isPlaying = false;
 		});
 	}
-
 	private pauseAudio() {
 		if (this.audioElement) {
 			this.audioElement.pause();
 			this.isPlaying = false;
-			console.log("pause");
+
+			this.stopProgressTimer();
 		}
 	}
 
@@ -274,23 +296,22 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 		}
 	}
 
-	private cleanup() {
-		if (this.audioElement) {
-			this.audioElement.removeEventListener('ended', this.onAudioEnded);
-			this.audioElement.removeEventListener('error', this.onAudioError);
-			this.audioElement.removeEventListener('timeupdate', this.onTimeUpdate);
-			
-			this.audioElement.pause();
-			this.audioElement.src = '';
-			this.audioElement = null;
-		}
-		this.isAudioInitialized = false;
-		this.isPlaying = false;
-	}
-
 	// ==================================================================================================
-	// Progress Updates
-	
+	// Progress Bar
+
+	private progressTimer: any = null;
+	private startProgressTimer() {
+		this.stopProgressTimer(); // avoid duplicates
+		this.progressTimer = setInterval(() => {
+			this.updateProgress();
+		}, 50); // update every 50ms (~20 fps, smooth and light)
+	}
+	private stopProgressTimer() {
+		if (this.progressTimer) {
+			clearInterval(this.progressTimer);
+			this.progressTimer = null;
+		}
+	}
 	private updateProgress() {
 		if (this.audioElement && !isNaN(this.audioElement.currentTime)) {
 			const currentTime = this.audioElement.currentTime;
@@ -299,7 +320,7 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 			this.playbackTime.set(currentTime);
 		}
 	}
-
+	
 	// ==================================================================================================
 	// User Interactions
 

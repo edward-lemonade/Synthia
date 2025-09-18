@@ -13,17 +13,17 @@ import { FormsModule } from '@angular/forms';
 
 import { AudioSectionComponent } from "./audio-section/audio-section.component";
 import { CommentSectionComponent } from "./comment-section/comment-section.component";
+import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 
 @Component({
 	selector: 'app-track',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, AudioSectionComponent, CommentSectionComponent],
+	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, AudioSectionComponent, CommentSectionComponent, LoadingSpinnerComponent],
 	providers: [TrackService],
 	template: `
 		<!-- Loading Screen -->
 		<div class="loading-container" *ngIf="!tracksService.isDataLoaded">
 			<div class="loading-content">
-				<mat-spinner diameter="60"></mat-spinner>
-				<p class="loading-text">Loading track...</p>
+				<app-loading-spinner/>
 			</div>
 		</div>
 

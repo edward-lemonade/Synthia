@@ -3,7 +3,7 @@ import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { Author, User } from '@shared/types';
 import { HttpClient } from '@angular/common/http';
 import { AppAuthService } from './app-auth.service';
-import { User as UserAuth } from '@auth0/auth0-angular';
+import { AuthService, User as UserAuth } from '@auth0/auth0-angular';
 import { Router } from '@angular/router';
 import axios from 'axios';
 
@@ -17,6 +17,7 @@ export class UserService {
 
 	constructor(
 		private http: HttpClient,
+		private auth: AuthService,
 		private appAuthService: AppAuthService
 	) {
 		UserService._instance = this;
@@ -37,13 +38,29 @@ export class UserService {
 
 	private async initializeUser() {
 		try {
-			const user = await this.getUser();
-			this.gotUser = true;
-			this.checkAndRedirect();
+			if (this.auth.isAuthenticated$) {
+				await this.getUser();
+				this.checkAndRedirect();
+			} else {
+				console.log("Proceed as guest")
+			}
 		} catch (err) {
 			console.error('Error initializing user:', err);
 		}
 	}
+	checkAndRedirect() {
+		if (this.needsAccountSetup()) {
+			this.router.navigate(['/registration']);
+		}
+	}
+	needsAccountSetup(): boolean {
+		if (!this.gotUser) { return false; }
+		const user = this.user();
+		return !user || !user.displayName || user.displayName.trim() === '';
+	}
+
+	// ====================================================================================
+	// API Calls
 
 	async getUser(): Promise<User|null> {		
 		try {
@@ -56,10 +73,11 @@ export class UserService {
 
 			this.user.set(res.data.user);
 			this.isNewUser.set(res.data.isNew);
+			this.gotUser = true;
 			return res.data.user;
 
 		} catch (err) {
-			console.error('Error getting user:', err);
+			console.log('Unable to get user, either user does not exist or user is a guest.');
 			return null;
 		}
 	}
@@ -160,17 +178,6 @@ export class UserService {
 			console.error('Error updating profile picture:', err);
 			throw new Error(err.response?.data?.error || 'Failed to update profile picture');
 		}
-	}
-
-	checkAndRedirect() {
-		if (this.needsAccountSetup()) {
-			this.router.navigate(['/registration']);
-		}
-	}
-	needsAccountSetup(): boolean {
-		if (!this.gotUser) { return false; }
-		const user = this.user();
-		return !user || !user.displayName || user.displayName.trim() === '';
 	}
 
 }

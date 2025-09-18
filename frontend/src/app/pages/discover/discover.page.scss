@@ -5,15 +5,13 @@
 	flex-direction: column;
 	flex: 1;
 
-	height: 100%;
+
 	padding: 0 400px;
 	background: $app-bg;
 	gap: 32px;
 	padding-top: 40px;
 	padding-bottom: 40px;
 	box-sizing: border-box;
-
-
 }
 
 .controls {
@@ -273,71 +271,10 @@
 	z-index: 1;
 }
 
-// Loading state styling
-.loading-container {
+
+.loading-more {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	height: 60vh;
-	gap: 16px;
-	position: relative;
-	z-index: 1;
+	flex: 1;
+	flex-direction: row;
 
-	mat-spinner {
-		::ng-deep circle {
-			stroke: $accent-purple-l;
-		}
-	}
-}
-
-.loading-text {
-	color: $appbar-text;
-	font-size: 16px;
-	font-weight: 500;
-}
-
-// Responsive design
-@media (max-width: 768px) {
-	.container {
-		padding: 20px $pad-ends;
-		gap: 20px;
-	}
-
-	.controls,
-	.list {
-		padding: 20px;
-		border-radius: 16px;
-	}
-
-	.controls {
-		min-height: 80px;
-	}
-
-	.released-item {
-		padding: 16px !important;
-		
-		.metadata .title {
-			font-size: 16px !important;
-		}
-
-		.stats {
-			gap: 16px !important;
-			flex-wrap: wrap;
-		}
-	}
-}
-
-@media (max-width: 480px) {
-	.released-item {
-		.stats {
-			gap: 12px !important;
-			
-			mat-icon {
-				font-size: 16px !important;
-				width: 16px !important;
-				height: 16px !important;
-			}
-		}
-	}
 }

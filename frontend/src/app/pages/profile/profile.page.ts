@@ -5,17 +5,17 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProfileService } from './profile.service';
+import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 
 @Component({
 	selector: 'app-profile',
 	standalone: true,
-	imports: [CommonModule, RouterModule, AvatarComponent, MatIconModule, MatProgressSpinnerModule],
+	imports: [CommonModule, RouterModule, AvatarComponent, MatIconModule, MatProgressSpinnerModule, LoadingSpinnerComponent],
 	providers: [ProfileService],
 	template: `
 		<div class="loading-container" *ngIf="!profileService.isDataLoaded">
 			<div class="loading-content">
-				<mat-spinner diameter="60"></mat-spinner>
-				<p class="loading-text">Loading profile...</p>
+				<app-loading-spinner/>
 			</div>
 		</div>
 

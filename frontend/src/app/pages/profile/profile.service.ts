@@ -13,11 +13,13 @@ export class ProfileService {
 
 	async loadProfile(displayName?: string) {
 		try {
-			const token = await this.auth.getAccessToken();
+			const headers = await this.auth.getAuthHeaders();
+
 			const res = await axios.get<{ user: User, projects: ProjectReleased[] }>(
 				`/api/profile/${displayName}`,
-				{ headers: { Authorization: `Bearer ${token}` } }
+				{ headers }
 			);
+			
 			this.user.set(res.data.user);
 			this.projects.set(res.data.projects.map(r => ({ 
 				front: {...r.front, dateReleased: new Date(r.front.dateReleased) },

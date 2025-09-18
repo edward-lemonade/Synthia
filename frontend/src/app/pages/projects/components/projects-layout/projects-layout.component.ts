@@ -17,10 +17,10 @@ import { ProjectsService } from '../../projects.service';
 				[fixedInViewport]="true" 
 				[fixedTopGap]="64" [fixedBottomGap]="0">
 				<mat-nav-list >
-					<button mat-button class="sidebar-btn2" (click)="newProjectOnClick()">
+					<div mat class="sidebar-btn" (click)="newProjectOnClick()">
 						<mat-icon>add</mat-icon>	
 						New Project
-					</button>
+					</div>
 				</mat-nav-list>
 			</mat-sidenav>
 			<mat-sidenav-content class="projects-content">

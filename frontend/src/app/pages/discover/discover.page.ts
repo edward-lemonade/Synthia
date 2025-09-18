@@ -15,10 +15,11 @@ import { TrackItem } from "./track-item/track-item.component";
 
 import { RelevantProjectOrUser } from '@shared/types';
 import { UserItem } from "./user-item/user-item.component";
+import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 
 @Component({
 	selector: 'app-discover',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, TrackItem, UserItem],
+	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, TrackItem, UserItem, LoadingSpinnerComponent],
 	providers: [DiscoverService],
 	template: `
 		<div class="container" #scrollContainer>
@@ -75,8 +76,7 @@ import { UserItem } from "./user-item/user-item.component";
 				
 				<!-- Loading indicator at bottom -->
 				<div class="loading-more" *ngIf="isLoadingMore()">
-					<mat-spinner diameter="32"></mat-spinner>
-					<span>Loading more tracks...</span>
+					<app-loading-spinner/>
 				</div>
 			</div>
 		</div>

@@ -19,43 +19,33 @@ mat-nav-list {
 	align-items: flex-start;
 	padding-top: 10px; 
 	padding-left: $pad-ends;
+	padding-right: 30px;
 	background: $sidebar-bg;
 	border-radius: 0;
 }
+
 .sidebar-btn {
-	gap: 8px;
-	justify-content: flex-start; 
-	text-align: left;
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	width: 100%;
+	gap: 12px;
+	padding: 12px;
+	box-sizing: border-box;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.12);
+	backdrop-filter: blur(18px);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	transition: all 0.2s ease;
+	cursor: pointer;
+	position: relative;
+	z-index: 1;
 
-	background: $accent-orange;
-	color: $app-bg;
-	transition: background 0.2s;
-
-	margin-bottom: 8px;
-	width: 200px;
-}
-.sidebar-btn[routerLinkActive].sidebar-btn-active {
-	background: #fff !important;
-	font-weight: bold;
-}
-.sidebar-btn:hover {
-	background: $accent-orange-l !important;
-}
-
-.sidebar-btn2 {
-	gap: 8px;
-	justify-content: flex-start; 
-	text-align: left;
-
-	background: $accent-purple;
-	color: $app-bg !important;
-	transition: background 0.2s;
-
-	//margin-top: 24px;
-	width: 200px;
-}
-.sidebar-btn2:hover {
-	background: $accent-purple-l !important;
+	&:hover {
+		background: rgba(255, 255, 255, 0.18);
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+	}
 }
 
 .projects-content {

@@ -20,7 +20,7 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 		<div class="page-container">
 			<ng-container *ngIf="auth.isAuthenticated$ | async">	
 				<mat-toolbar class="appbar">
-					<span>Synthia</span>
+					<span class="title-button" (click)="title()">Synthia</span>
 
 					<mat-tab-nav-panel #panel>
 						<nav mat-tab-nav-bar class="nav" [tabPanel]="panel">
@@ -89,15 +89,15 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 
 			<ng-container *ngIf="!(auth.isAuthenticated$ | async)">	
 				<mat-toolbar class="appbar">
-					<span>Synthia</span>
+					<span class="title-button" (click)="title()">Synthia</span>
+
+					<button mat-button class="appbar-btn discover-btn" (click)="discover()"> Discover </button>
 
 					<span class="spacer"></span>
 					
-					<button mat-button class="appbar-btn" (click)="auth.loginWithRedirect({
+					<button mat-button class="appbar-btn login-btn" (click)="auth.loginWithRedirect({
 						appState: { target: '/projects/all-projects' }
-					})">
-						Login
-					</button>
+					})"> Login </button>
 				</mat-toolbar>
 
 				<div class="page-content">
@@ -120,12 +120,20 @@ export class AppbarLayoutComponent {
 	userDisplayName = computed(() => { return this.userService.user()?.displayName })
 	userPicture = computed(() => { return this.userService.user()?.profilePictureURL });
 
+	title() {
+		this.router.navigate(['/']);
+	}
+
 	profile() {
 		this.router.navigate(['/profile', this.userDisplayName()]);
 	}
 
 	settings() {
 		this.router.navigate(['/settings']);
+	}
+
+	discover() {
+		this.router.navigate(['/discover']);
 	}
 
 	logout() {

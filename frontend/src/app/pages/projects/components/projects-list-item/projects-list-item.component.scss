@@ -15,7 +15,7 @@
 	flex-direction: row;
 
 	background-color: $accent-purple-l;
-	border: 0px;
+	border: 1px solid $app-bg;
 	border-radius: 16px;
 
 	background: linear-gradient(90deg, 
@@ -27,7 +27,9 @@
 
 	&:hover {
 		background-color: var(--mat-hover-color, rgba(0, 0, 0, 0.04));
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 0 30px rgba(255, 255, 255, 0.2	);
+		border: 1px solid white;
+		transform: translateY(-2px);
 	}
 	
 	&:last-child {

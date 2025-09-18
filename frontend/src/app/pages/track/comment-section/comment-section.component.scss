@@ -84,6 +84,29 @@
 				padding: 8px 24px;
 			}
 		}
+
+		.guest-display {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			color: $appbar-text;
+			text-align: center;
+
+			mat-icon {
+				font-size: 48px;
+				width: 48px;
+				height: 48px;
+				margin-bottom: 16px;
+				opacity: 0.5;
+			}
+
+			p {
+				font-size: 20px;
+				opacity: 0.7;
+				margin: 0;
+			}
+		}
 	}
 
 	.comments-list {

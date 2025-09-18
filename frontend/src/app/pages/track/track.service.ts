@@ -6,15 +6,19 @@ import axios from 'axios';
 import { AudioFileData, Comment, CommentDTO, fillDates, InteractionState, ProjectFront, ProjectFrontDTO, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
 import { UserService } from '@src/app/services/user.service';
+import { AuthService } from '@auth0/auth0-angular';
 
 
 @Injectable()
 export class TrackService {
 	constructor(
-		private auth: AppAuthService,
+		private auth: AuthService,
+		private appAuthService: AppAuthService,
 		private userService: UserService,
 		private router: Router,
-	) {}
+	) {
+		this.auth.isAuthenticated$.subscribe(isAuth => {this.isGuestUser = !isAuth;});
+	}
 
 	projectMetadata = signal<ProjectMetadata|null>(null);
 	projectFront = signal<ProjectFront|null>(null);
@@ -28,15 +32,15 @@ export class TrackService {
 	hasLiked = signal(false);
 	likes = signal(0);
 
+	isGuestUser = true;
+
 	public async loadTrack(projectId: string) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return null;
+			const headers = await this.appAuthService.getAuthHeaders();
 
 			const res = await axios.get<{ metadata: ProjectMetadata, front: ProjectFrontDTO, comments: CommentDTO[], interactionState: InteractionState }>(
 				`/api/track/${projectId}/data`, 
-				{ headers: {Authorization: `Bearer ${token}`}}
+				{ headers }
 			);
 
 			if (res.data.metadata && res.data.front) {
@@ -61,13 +65,11 @@ export class TrackService {
 
 	public async loadAudio(projectId: string) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return null;
+			const headers = await this.appAuthService.getAuthHeaders();
 
 			const res = await axios.get<{ audioFileData: AudioFileData }>(
 				`/api/track/${projectId}/audio`, 
-				{ headers: {Authorization: `Bearer ${token}`}}
+				{ headers }
 			);
 
 			const audioFileData = res.data.audioFileData;
@@ -103,13 +105,13 @@ export class TrackService {
 	// User Interactions
 
 	public async leaveComment(comment: string): Promise<Comment|null> {
-		try {
-			if (!comment || comment.trim().length === 0) {
-				return null;
-			}
+		if (this.isGuestUser) {return null};
 
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
+		try {
+			if (!comment || comment.trim().length === 0) {return null;}
+		
+			const token = await this.appAuthService.getAccessToken();
+			const user = this.appAuthService.getUserAuth();
 			if (!user) return null;
 
 			const res = await axios.post<{ success: boolean, newComment: CommentDTO }>(
@@ -132,9 +134,11 @@ export class TrackService {
 	}
 
 	public async toggleLike(): Promise<boolean> {
+		if (this.isGuestUser) {return true};
+
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
+			const token = await this.appAuthService.getAccessToken();
+			const user = this.appAuthService.getUserAuth();
 			if (!user) return false;
 
 			const res = await axios.post<{ success: boolean, isLiked: boolean }>(
@@ -162,12 +166,14 @@ export class TrackService {
 	}
 
 	public async recordPlay(): Promise<boolean> {
-		try {
-			const now = Date.now();
+		if (this.isGuestUser) {return false};
 
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
+		try {
+			const token = await this.appAuthService.getAccessToken();
+			const user = this.appAuthService.getUserAuth();
 			if (!user) return false;
+
+			const now = Date.now();
 
 			const res = await axios.post<{ success: boolean }>(
 				`/api/track/${this.projectMetadata()!.projectId}/record_play`, 

@@ -1,0 +1,211 @@
+@use "theme" as *;
+
+.container {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+
+	background: linear-gradient(135deg,
+		rgb(57, 40, 69) 0%,
+		rgb(37, 42, 53) 100%
+	) !important;
+	background-attachment: fixed !important;
+
+	height: 100%;
+	padding: 0 400px;
+	padding-top: 20px;
+	box-sizing: border-box; 
+
+	justify-content: start;
+	align-items: center;
+	gap: 60px;
+
+	.huge {
+		display: flex;
+		flex-direction: column;
+		flex: 0;
+		justify-content: start;
+		align-items: center;
+		padding-top: 40px;
+		text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);;
+		
+		.welcome {
+			font-size: 3rem;
+			font-weight: bold;
+			color: $appbar-text;
+		}
+
+		.title {
+			font-size: 6rem;
+			font-weight: 500;
+			color: $appbar-text;
+		}
+	}
+
+	.card {
+		background: rgba(255, 255, 255, 0.07);
+		backdrop-filter: blur(10px);
+		border-radius: 20px;
+		padding: 2rem;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+		display: flex;
+		align-items: center;
+		gap: 2rem;
+
+		transition: 0.2s;
+		&:hover {
+			background: rgba(255, 255, 255, 0.10);
+			border-color: rgba(255, 255, 255, 0.3);
+			transform: translateY(-1px);
+			box-shadow: 0 0 25px rgba(255, 255, 255, 0.05);
+		}
+
+		.card-left {
+			flex: 1;
+			text-align: left;
+
+			.motto {
+				font-size: 1.8rem;
+				line-height: 1.4;
+				text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+				.line1 {
+					color: $accent-purple;
+					display: block;
+					margin-bottom: 0.5rem;
+				}
+				.line2 {
+					color: $accent-pink;
+					display: block;
+					margin-bottom: 0.5rem;
+				}
+				.line3 {
+					color: $accent-yellow;
+					display: block;
+				}
+			}
+		}
+
+		.card-right {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 1rem;
+
+			.btn-login {
+				width: 200px;
+				background: linear-gradient(135deg, 
+					$accent-purple-l 0%, 
+					$accent-pink 35%,
+					$accent-orange 70%,
+					$accent-yellow 100%
+				);
+				color: black;
+				transition: 0.1s;
+
+				&:hover {
+					transform: translateY(-2px);
+					box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+				}
+			}
+
+			.btn-register {
+				width: 200px;
+				background: transparent;
+				color: white;
+				border: 2px solid rgba(255, 255, 255, 0.6);
+				transition: 0.2s;
+				
+				&:hover {
+					background: rgba(255, 255, 255, 0.1);
+					border-color: white;
+					transform: translateY(-2px);
+					box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+				}
+			}
+		}
+
+	}
+
+	.btn {
+		padding: 12px 24px;
+		font-size: 1.1rem;
+		font-weight: 600;
+		border: none;
+		border-radius: 50px;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+	}
+	.btn-discover {
+		width: 300px;
+		background: transparent;
+		color: white;
+		border: 2px solid rgba(255, 255, 255, 0.6);
+		box-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
+		transition: 0.2s;
+		
+		&:hover {
+			border-color: white;
+			transform: translateY(-2px);
+			box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+		}
+	}
+
+	.desc {
+		font-size: 20px;
+		font-weight: 400;
+		color: white;
+		text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);;
+	}
+}	
+
+
+.particle-container {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	z-index: 0;
+
+	.particle {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(2px);
+		animation: spiral 60s linear infinite;
+	}
+	.particle:nth-child(1) { background: rgba(255, 107, 107, 0.08); width: 100px; height: 100px; }
+	.particle:nth-child(2) { background: rgba(78, 205, 196, 0.08); width: 90px; height: 90px; animation-delay: -20s; }
+	.particle:nth-child(3) { background: rgba(69, 183, 209, 0.1); width: 80px; height: 80px; animation-delay: -40s; }
+	.particle:nth-child(4) { background: rgba(255, 255, 255, 0.1); width: 60px; height: 60px; animation-delay: -6s; }
+	.particle:nth-child(5) { background: rgba(255, 107, 107, 0.15); width: 30px; height: 30px; animation-delay: -8s; }
+	.particle:nth-child(6) { background: rgba(78, 205, 196, 0.15); width: 20px; height: 20px; animation-delay: -15s; }
+	.particle:nth-child(7) { background: rgba(69, 183, 209, 0.2); width: 10px; height: 10px; animation-delay: -37s; }
+	.particle:nth-child(8) { background: rgba(255, 255, 255, 0.2); width: 11px; height: 11px; animation-delay: -55s; }
+	.particle:nth-child(9) { background: rgba(255, 107, 107, 0.2); width: 13px; height: 13px; animation-delay: -30s; }
+	.particle:nth-child(10) { background: rgba(78, 205, 196, 0.2); width: 5px; height: 5px; animation-delay: -45s; }
+	.particle:nth-child(11) { background: rgba(69, 183, 209, 0.2); width: 15px; height: 15px; animation-delay: -50s; }
+	.particle:nth-child(12) { background: rgba(255, 255, 255, 0.2); width: 8px; height: 8px; animation-delay: -12s; }
+
+	@keyframes spiral {
+		0% {
+			transform: rotate(0deg) translateX(150px) rotate(0deg) scale(0.5);
+			opacity: 0;
+		}
+		10% {
+			opacity: 1;
+		}
+		90% {
+			opacity: 1;
+		}
+		100% {
+			transform: rotate(360deg) translateX(300px) rotate(-360deg) scale(1.5);
+			opacity: 0;
+		}
+	}
+
+}

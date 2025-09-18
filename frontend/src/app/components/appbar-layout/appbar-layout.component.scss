@@ -14,6 +14,17 @@
 	color: $appbar-text;
 
 	z-index: 1000;
+	gap: 30px;
+
+	.title-button {
+		font-weight: 400;
+		cursor: pointer;
+		transition: 0.2s;
+		&:hover {
+			transform: translateY(-2px);
+			text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+		}
+	}
 
 	.nav {
 		display: flex;
@@ -29,6 +40,24 @@
 
 	.spacer {
 		flex: 1 1 auto;
+	}
+
+	.appbar-btn {
+		border-radius: 100px;
+		color: $appbar-bg;	
+		transition: 0.2s;
+	}
+	.discover-btn {
+		background: $accent-purple;
+		&:hover {
+			background: $accent-purple-l
+		}
+	}
+	.login-btn {
+		background: $accent-orange;
+		&:hover {
+			background: $accent-orange-l
+		}
 	}
 
 	.profile-picture-button {
