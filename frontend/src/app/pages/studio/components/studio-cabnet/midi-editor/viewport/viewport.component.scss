@@ -52,28 +52,6 @@
 			box-sizing: border-box;
 		}
 
-		// scrollbar
-
-		&::-webkit-scrollbar {
-			width: 8px; // Width of the scrollbar
-			height: 8px; 
-		}
-		&::-webkit-scrollbar-track {
-			background: $app-bg-l; // Track background
-			border-radius: 10px;
-		}
-		&::-webkit-scrollbar-thumb {
-			background: $app-bg-ll; // Thumb color
-			border-radius: 10px;
-			
-			&:hover {
-				background: $near-white; // Hover color
-			}
-		}
-		&::-webkit-scrollbar-corner {
-			background: transparent; // Corner where scrollbars meet
-		}
-
 		// box select
 
 		.box-selection-overlay {
