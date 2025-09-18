@@ -39,6 +39,7 @@
     "mongoose-autopopulate": "^1.1.0",
     "multer": "^2.0.2",
     "node-web-audio-api": "^1.0.4",
+    "redis": "^5.8.2",
     "sharp": "^0.34.3",
     "tsx": "^4.20.3",
     "uuid": "^11.1.0",
