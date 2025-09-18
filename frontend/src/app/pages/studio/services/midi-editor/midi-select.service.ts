@@ -3,6 +3,7 @@ import { BoxSelectBounds } from "../region-select.service";
 import { CabnetService } from "../cabnet.service";
 import { MidiNote, MidiRegion } from "@shared/types";
 import { ObjectStateNode } from "../../state/state.factory";
+import { MidiEditorService } from "./midi-editor.service";
 
 @Injectable()
 export class MidiSelectService { // SINGLETON
@@ -43,9 +44,13 @@ export class MidiSelectService { // SINGLETON
 		}
 
 		this.selectedNotes.set([note]);
+		MidiEditorService.instance.playSampleNote(note.midiNote());
 	}
 	public setSelectedNotes(notes: ObjectStateNode<MidiNote>[]) {
 		this.selectedNotes.set([...notes]);
+		notes.forEach((note) => {
+			MidiEditorService.instance.playSampleNote(note.midiNote());
+		})
 	}
 	public addSelectedNote(note: ObjectStateNode<MidiNote>) {
 		const alreadySelected = this.isNoteSelected(note);
@@ -54,6 +59,7 @@ export class MidiSelectService { // SINGLETON
 			const current = this.selectedNotes();
 			const updated = [...current, note];
 			this.selectedNotes.set(updated);
+			MidiEditorService.instance.playSampleNote(note.midiNote());
 		}
 	}
 	public removeSelectedNote(note: ObjectStateNode<MidiNote>) {

@@ -8,6 +8,8 @@ import { v4 as uuid } from "uuid";
 import { MidiSelectService } from "./midi-select.service";
 import { ViewportService } from "../viewport.service";
 import { TracksService } from "../tracks.service";
+import { SynthesizerService } from "../synthesizer.service";
+import { TimelinePlaybackService } from "../timeline-playback.service";
 
 export enum EditingMode {Select, Draw, Velocity, Erase}
 
@@ -41,9 +43,6 @@ export class MidiEditorService { // SINGLETON
 		return unit;
 	})
 
-	// ==============================================================================================
-	// [Draw]
-
 	public readonly SCALES: number = 9;
 	public readonly SCALE_HEIGHT: number = 200;
 	public readonly ROW_HEIGHT: number = 200/12;
@@ -65,6 +64,8 @@ export class MidiEditorService { // SINGLETON
 		const region = this.getOrMakeRegionForNote(props.start || 0, props.duration || 1, actionId);
 		props.start = props.start! - region.start(); 
 		RegionSelectService.instance.setSelectedRegion(region);
+
+		this.playSampleNote(props.midiNote!);
 		return region.midiData.insertValue(props, undefined, actionId);
 	}
 	updateRegionBoundsForNoteBounds(region: ObjectStateNode<Region>, start: number, duration: number, actionId?: string) {
@@ -130,6 +131,8 @@ export class MidiEditorService { // SINGLETON
 		const region = this.getOrMakeRegionForNote(absStart, note.duration(), actionId);
 		note.start.set(absStart-region.start(), actionId);
 		note.midiNote.set(newMidiNote, actionId);
+
+		this.playSampleNote(newMidiNote);
 	}
 	moveNotes(notes: ObjectStateNode<MidiNote>[], startOffset: number, midiNoteOffset: number, actionId = uuid()) {
 		notes.forEach(note => {
@@ -155,5 +158,30 @@ export class MidiEditorService { // SINGLETON
 			}
 		}
 		return null;
+	}
+	
+	playSampleNoteFromIndex(index: number) {
+		const note: MidiNote = {
+			start: 0,
+			midiNote: this.indexToMidiNote(index),
+			velocity: 100,
+			duration: 0.3,
+		}
+		TimelinePlaybackService.instance.startOneMidiNote(
+			note,
+			this.track()!._id,
+		);
+	}
+	playSampleNote(midiNote: number) {
+		const note: MidiNote = {
+			start: 0,
+			midiNote: midiNote,
+			velocity: 100,
+			duration: 0.3,
+		}
+		TimelinePlaybackService.instance.startOneMidiNote(
+			note,
+			this.track()!._id,
+		);
 	}
 }

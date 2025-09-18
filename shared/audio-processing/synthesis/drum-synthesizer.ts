@@ -47,8 +47,6 @@ export interface DrumParams {
 	drive: number;
 }
 
-export type DrumType = 'kick' | 'snare' | 'hihat' | 'openhat' | 'crash' | 'ride' | 'tom' | 'clap' | 'rim' | 'cowbell';
-
 interface CreateDrumParams {
 	ctx: AudioContext | OfflineAudioContext, 
 	output: AudioNode, 
@@ -612,11 +610,11 @@ export class DrumSynthesizer {
 	// Utility
 
 	private velocityToGain(velocity: number): number { return Math.pow(velocity / 127, 1.5); }
-	getDrumParams(drumType: DrumType): DrumParams { return {...DEFAULT_KICK, ...DRUM_PRESETS[drumType] ?? {}} }
-	getDrumTypeFromMidiNote(midiNote: number): DrumType {
+	getDrumParams(drumType: string): DrumParams { return {...DEFAULT_KICK, ...DRUM_PRESETS[drumType] ?? {}} }
+	getDrumTypeFromMidiNote(midiNote: number) {
 		const presetName = MIDI_DRUM_MAPPING[midiNote];
 		if (presetName) {
-			const drumType = presetName.split('-')[0] as DrumType;
+			const drumType = presetName;
 			return drumType;
 		}
 		return 'kick'; // Default

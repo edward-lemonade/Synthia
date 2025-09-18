@@ -48,6 +48,11 @@
 		width: 80px;
 		z-index: 1;
 		color: gray;
+
+		&:hover {
+			background: rgb(230,230,230)
+		}
+		cursor: pointer;
 	}
 	
 	.black-key {
@@ -56,6 +61,11 @@
 		width: 40px;
 		z-index: 2;
 		color: white;
+
+		&:hover {
+			background: rgb(100,100,100)
+		}
+		cursor: pointer;
 	}	
 }	
 .drum-key {

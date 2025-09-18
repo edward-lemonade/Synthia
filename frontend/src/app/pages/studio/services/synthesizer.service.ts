@@ -3,13 +3,8 @@ import { MidiNote, MidiRegion, MidiTrackType } from '@shared/types';
 import { ViewportService } from './viewport.service';
 import { TracksService } from './tracks.service';
 
-// MIDI Synthesizer imports
 import { MidiSynthesizer, SynthParams, SynthVoice } from '@shared/audio-processing/synthesis/midi-synthesizer';
-import { DEFAULT_SYNTH, SYNTHS } from '@shared/audio-processing/synthesis/presets/instruments';
-
-// Drum Synthesizer imports
-import { DrumSynthesizer, DrumParams, DrumVoice, DrumType } from '@shared/audio-processing/synthesis/drum-synthesizer';
-import { DRUM_PRESETS, DEFAULT_KICK, MIDI_DRUM_MAPPING } from "@shared/audio-processing/synthesis/presets/drums";
+import { DrumSynthesizer, DrumParams, DrumVoice } from '@shared/audio-processing/synthesis/drum-synthesizer';
 
 export interface MidiSource {
 	notes: MidiNote[];
@@ -51,16 +46,11 @@ export class SynthesizerService {
 		public viewportService: ViewportService,
 	) {
 		SynthesizerService._instance = this;
-	}
-
-	initialize(audioContext: AudioContext) {
-		this.audioContext = audioContext;
 		this.midiSynthesizer = new MidiSynthesizer(this.viewportService.posToTime);
 		this.drumSynthesizer = new DrumSynthesizer(this.viewportService.posToTime);
 	}
 
-	// ========================================================================================
-	// MIDI Source Creation (Shared)
+	initializeAudioContext(audioContext: AudioContext) {this.audioContext = audioContext;}
 
 	createMidiSource(
 		midiData: MidiNote[], 
@@ -129,7 +119,7 @@ export class SynthesizerService {
 	}
 
 	// ========================================================================================
-	// Note Processing (Shared Logic)
+	// Note Processing
 
 	private processNotesRealtime(
 		midiData: MidiNote[],
@@ -162,7 +152,19 @@ export class SynthesizerService {
 				noteIds.push(noteId);
 				
 				// Add cleanup event listener
-				this.addVoiceCleanupListener(voice, noteId, trackType);
+				const endedHandler = () => {this.activeVoices.delete(noteId);};
+				if (trackType === 'drums') {
+					const drumVoice = voice as DrumVoice;
+					if (drumVoice.oscillators[0]) {
+						drumVoice.oscillators[0].addEventListener('ended', endedHandler);
+					} else if (drumVoice.noiseNode) {
+						drumVoice.noiseNode.addEventListener('ended', endedHandler);
+					}
+				} else {
+					const synthVoice = voice as SynthVoice;
+					synthVoice.oscillators[0]?.addEventListener('ended', endedHandler);
+				}
+
 				this.activeVoices.set(noteId, voice);
 			}
 		});
@@ -231,7 +233,7 @@ export class SynthesizerService {
 	}
 
 	// ========================================================================================
-	// Note Starting (Type-Specific)
+	// Note Controls
 
 	private startNoteByType(
 		trackType: MidiTrackType,
@@ -254,7 +256,7 @@ export class SynthesizerService {
 			return this.midiSynthesizer.startNote(
 				this.audioContext!,
 				outputNode,
-				this.getTrackSynthParams(trackId),
+				this.getSynthParams(trackId),
 				note,
 				startTime,
 				endTime,
@@ -284,32 +286,11 @@ export class SynthesizerService {
 			return this.midiSynthesizer.startNote(
 				offlineAudioContext,
 				outputNode,
-				this.getTrackSynthParams(trackId),
+				this.getSynthParams(trackId),
 				note,
 				startTime,
 				endTime,
 			);
-		}
-	}
-
-	// ========================================================================================
-	// Voice Management
-
-	private addVoiceCleanupListener(voice: Voice, noteId: string, trackType: MidiTrackType): void {
-		const endedHandler = () => {
-			this.activeVoices.delete(noteId);
-		};
-
-		if (trackType === 'drums') {
-			const drumVoice = voice as DrumVoice;
-			if (drumVoice.oscillators[0]) {
-				drumVoice.oscillators[0].addEventListener('ended', endedHandler);
-			} else if (drumVoice.noiseNode) {
-				drumVoice.noiseNode.addEventListener('ended', endedHandler);
-			}
-		} else {
-			const synthVoice = voice as SynthVoice;
-			synthVoice.oscillators[0]?.addEventListener('ended', endedHandler);
 		}
 	}
 
@@ -329,7 +310,7 @@ export class SynthesizerService {
 				const synthVoice = voice as SynthVoice;
 				this.midiSynthesizer.stopNote(
 					synthVoice, 
-					this.getTrackSynthParams(synthVoice.trackId!), 
+					this.getSynthParams(synthVoice.trackId!), 
 					stopTime
 				);
 			}
@@ -345,12 +326,14 @@ export class SynthesizerService {
 		this.activeVoices.forEach((voice, noteId) => {
 			if ('trackId' in voice && voice.trackId) {
 				const synthVoice = voice as SynthVoice;
-				this.midiSynthesizer.stopNote(synthVoice, this.getTrackSynthParams(synthVoice.trackId!), currentTime);
+				this.midiSynthesizer.stopNote(synthVoice, this.getSynthParams(synthVoice.trackId!), currentTime);
 			} else {
 				const drumVoice = voice as DrumVoice;
 				this.drumSynthesizer.stopNote(drumVoice, this.getDrumParams(drumVoice.midiNote), currentTime);
 			}
 		});
+
+		//this.cleanup(audioContext); i dont think this is needed since active voices already get deleted onEnded
 	}
 
 	cleanup(): void {
@@ -368,14 +351,10 @@ export class SynthesizerService {
 	// ========================================================================================
 	// Parameter Management
 
-	getTrackSynthParams(trackId: string): SynthParams {
+	getSynthParams(trackId: string): SynthParams {
 		const instrument = TracksService.instance.getTrack(trackId)?.instrument();
-		return instrument ? this.getSynthParams(instrument) : { ...DEFAULT_SYNTH };
+		return this.midiSynthesizer.getSynthParams(instrument ?? '');
 	}
-	getSynthParams(instrument: string): SynthParams {
-		return {...DEFAULT_SYNTH, ...SYNTHS[instrument] ?? {}}
-	}
-
 	getDrumParams(midiNote: number): DrumParams {
 		return this.drumSynthesizer.getDrumParams(this.drumSynthesizer.getDrumTypeFromMidiNote(midiNote));
 	}
