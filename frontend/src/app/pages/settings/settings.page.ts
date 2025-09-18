@@ -107,9 +107,7 @@ import { UserService } from '@src/app/services/user.service';
 	`,
 	styleUrls: ['./settings.page.scss']
 })
-export class SettingsPage implements OnDestroy {
-	private destroy$ = new Subject<void>();
-
+export class SettingsPage {
 	constructor(
 		public userService: UserService,
 	) {
@@ -134,11 +132,6 @@ export class SettingsPage implements OnDestroy {
 	displayNameError = '';
 	bioError = '';
 	profilePictureError = '';
-
-	ngOnDestroy() {
-		this.destroy$.next();
-		this.destroy$.complete();
-	}
 
 	onFileSelected(event: any) {
 		const file = event.target.files[0];

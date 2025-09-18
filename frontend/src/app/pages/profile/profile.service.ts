@@ -11,13 +11,13 @@ export class ProfileService {
 	projects = signal<ProjectReleased[]>([]);
 	isDataLoaded = false;
 
-	async loadProfile(displayName?: string) {
+	async loadProfile(displayName: string, signal: AbortSignal) {
 		try {
 			const headers = await this.auth.getAuthHeaders();
 
 			const res = await axios.get<{ user: User, projects: ProjectReleased[] }>(
 				`/api/profile/${displayName}`,
-				{ headers }
+				{ headers, signal }
 			);
 			
 			this.user.set(res.data.user);
@@ -26,7 +26,8 @@ export class ProfileService {
 				metadata: r.metadata, 
 			})));
 			this.isDataLoaded = true;
-		} catch (err) {
+		} catch (err: any) {
+			if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {return;}
 			console.error('Error loading profile:', err);
 			this.isDataLoaded = true;
 		}

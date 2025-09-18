@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { AudioSectionComponent } from "./audio-section/audio-section.component";
 import { CommentSectionComponent } from "./comment-section/comment-section.component";
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
+import { take } from 'rxjs';
 
 @Component({
 	selector: 'app-track',
@@ -37,7 +38,8 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 	`,
 	styleUrls: ['./track.page.scss']
 })
-export class TrackPage {
+export class TrackPage implements OnInit, OnDestroy {
+	private abortController = new AbortController();
 	projectId: string | null = null;
 	
 	// Direct property access since we know data is loaded
@@ -52,14 +54,19 @@ export class TrackPage {
 	) {}
 
 	async ngOnInit() {
-		this.route.params.subscribe(async params => {
-			this.projectId = params['trackId'];
-			
-			if (this.projectId) {
-				await this.tracksService.loadTrack(this.projectId);
-				await this.tracksService.loadAudio(this.projectId);
-			}
-		});
+		this.route.paramMap
+			.pipe(take(1))
+			.subscribe(async (params) => {
+			const trackId = params.get('trackId');
+				if (trackId) {
+					this.projectId = trackId;
+					await this.tracksService.loadTrack(this.projectId, this.abortController.signal);
+					await this.tracksService.loadAudio(this.projectId, this.abortController.signal);
+				}
+			});
+	}
+	ngOnDestroy(): void {
+		this.abortController.abort();
 	}
 
 

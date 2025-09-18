@@ -1,4 +1,4 @@
-import { WaveformData } from "./audio";
+import { WaveformData } from "@shared/types";
 
 export interface WaveformRenderOptions {
 	barWidth: number;
@@ -28,7 +28,9 @@ export async function createWaveformViewport(
 	options?: Partial<WaveformRenderOptions>
 ) {
 	const startTime = performance.now();
-
+	const floatPeaks = new Float32Array(Object.values(waveformData.peaks));
+	waveformData = {...waveformData, peaks: floatPeaks};
+	
 	try {
 		if (!waveformData) {
 			console.error('Waveform data not found');

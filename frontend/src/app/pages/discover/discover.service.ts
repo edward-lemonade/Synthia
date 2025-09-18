@@ -42,7 +42,7 @@ export class DiscoverService {
 
 	searchTerm = signal<string>('');
 
-	async getMoreItems(reset?: boolean) {
+	async getMoreItems(reset: boolean, signal: AbortSignal) {
 		try {
 			const headers = await this.auth.getAuthHeaders();
 			
@@ -65,7 +65,7 @@ export class DiscoverService {
 						lastUserId: this.lastUserId, 
 						searchTerm: this.searchTerm(),
 					},
-					{ headers: headers},
+					{ headers, signal},
 				);
 				this.lastScore = res.data.lastScore;
 				this.lastProjectId = res.data.lastProjectId;
@@ -91,7 +91,7 @@ export class DiscoverService {
 							lastReleaseDate: (this.getLast() as ProjectReleased)?.front.dateReleased,
 							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
 						},
-						{ headers: headers},
+						{ headers, signal },
 					);
 				} else if (this.listMode() == ListMode.Hot) {
 					res = await axios.post<{ success: boolean, projects: ProjectReleased[], lastHotness: number, reachedEnd: boolean }>(
@@ -101,7 +101,7 @@ export class DiscoverService {
 							lastHotness: this.lastHotness,
 							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
 						},
-						{ headers: headers},
+						{ headers, signal },
 					);
 					this.lastHotness = res.data.lastHotness;
 				}
@@ -115,9 +115,9 @@ export class DiscoverService {
 				}
 				return data.projects;
 			}
-		} catch (err) {
+		} catch (err: any) {
+			if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {return null;}
 			console.error('Error during project loading:', err);
-
 			return null;
 		}
 	}

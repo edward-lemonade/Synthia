@@ -1,9 +1,11 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { AudioFileData } from "@shared/types";
+import { AudioFileData, WaveformData } from "@shared/types";
 import { Readable } from "stream";
 import * as redis_client from './redis_client';
 import { redis } from './redis_client';
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { Base64 } from "js-base64";
+import { AudioContext } from "isomorphic-web-audio-api";
 
 const s3 = new S3Client({ region: 'us-west-1' });
 
@@ -30,14 +32,12 @@ export async function putAudioFile(projectId: string, fileId: string, file: Expr
 export async function getAudioFile(projectId: string, fileId: string) : Promise<AudioFileData> {
 	// Query redis
 
-	
 	const cacheKey = redis_client.getAudioFileKey(projectId, fileId);
 	const cachedData = await redis_client.getCachedAudioFileData(cacheKey);
 	if (cachedData) {
 		return cachedData;
 	}
 	
-
 	// Query AWS
 
 	const key = 'projects/' + projectId + '/files/' + fileId;
@@ -94,7 +94,6 @@ export async function putExportFile(projectId: string, file: Blob): Promise<void
 }
 export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	// Query Redis
-
 	
 	const cacheKey = redis_client.getExportFileKey(projectId);
 	const cachedData = await redis_client.getCachedAudioFileData(cacheKey);
@@ -102,7 +101,6 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 		return cachedData;
 	}
 	
-
 	// Query AWS
 
 	const key = 'project/' + projectId + '/export';
@@ -131,8 +129,14 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 		mimeType: response.ContentType || 'audio/wav',
 	};
 
-	redis_client.setCachedAudioFileData(cacheKey, audioFileData, redis_client.CACHE_CONFIG.exportFile.ttl);
-
+	(async () => {
+		const audioFileDataWithWaveform = await populateWaveformData(audioFileData);
+		await redis_client.setCachedAudioFileData(
+			cacheKey,
+			audioFileDataWithWaveform,
+			redis_client.CACHE_CONFIG.exportFile.ttl
+		);
+	})();
 	return audioFileData;
 }
 
@@ -229,4 +233,51 @@ export async function getProfilePictureUrl(userId: string, options?: {
 		console.error(`Failed to get profile picture URL for user ${userId}:`, error);
 		throw new Error(`Failed to retrieve profile picture URL: ${error.message}`);
 	}
+}
+
+// ========================================================================================
+// Helpers
+
+async function populateWaveformData(audioFileData: AudioFileData): Promise<AudioFileData> {
+	const arrayBuffer = base64ToArrayBuffer(audioFileData.buffer64);
+	const waveformData = audioFileData.waveformData ?? await generateAudioWaveform(arrayBuffer);
+
+	return {...audioFileData, waveformData}
+}
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+	const bytes = Base64.toUint8Array(base64);
+	return bytes.buffer as ArrayBuffer;
+}
+async function generateAudioWaveform(audioBuffer: ArrayBuffer): Promise<WaveformData> {
+	const audioContext = new AudioContext();
+	const decodedBuffer = await audioContext.decodeAudioData(audioBuffer);
+	
+	// Generate peaks at high resolution (we'll downsample for display)
+	const peaks = extractPeaks(decodedBuffer, 8192); // High resolution base
+	
+	const waveformData: WaveformData = {
+		peaks,
+		sampleRate: decodedBuffer.sampleRate,
+		duration: decodedBuffer.duration,
+		channels: decodedBuffer.numberOfChannels
+	};
+	return waveformData;
+}
+function extractPeaks(audioBuffer: AudioBuffer, targetLength: number): Float32Array {
+	const channelData = audioBuffer.getChannelData(0); // Use first channel
+	const blockSize = Math.floor(channelData.length / targetLength);
+	const peaks = new Float32Array(targetLength);
+
+	for (let i = 0; i < targetLength; i++) {
+		const start = i * blockSize;
+		const end = Math.min(start + blockSize, channelData.length);
+		let max = 0;
+
+		for (let j = start; j < end; j++) {
+			max = Math.max(max, Math.abs(channelData[j]));
+		}
+		peaks[i] = max;
+	}
+
+	return peaks;
 }

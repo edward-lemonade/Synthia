@@ -5,7 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { Base64 } from 'js-base64'
 import axios from 'axios';
-import { arrayBufferToBase64, base64ToArrayBuffer, CachedAudioFile, fileToArrayBuffer, makeCacheAudioFile, WaveformData } from '@src/app/utils/audio';
+import { arrayBufferToBase64, base64ToArrayBuffer, CachedAudioFile, fileToArrayBuffer, makeCacheAudioFile } from '@src/app/utils/audio';
+import { WaveformData } from '@shared/types';
 
 @Injectable()
 export class AudioCacheService {

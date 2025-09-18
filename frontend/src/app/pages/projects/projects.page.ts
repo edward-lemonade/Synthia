@@ -37,13 +37,18 @@ import { ProjectMetadata } from '@shared/types';
 	`]
 })
 export class ProjectsPage implements OnInit {
+	private abortController = new AbortController();
 	constructor(private projectsService: ProjectsService) {}
 
 	ngOnInit() {
-		this.projectsService.loadProjects();
+		this.projectsService.loadProjects(this.abortController.signal);
 	}
 
 	getProjectsList(): ProjectMetadata[] { 
 		return this.projectsService.projectsList(); 
+	}
+
+	ngOnDestroy(): void {
+		this.abortController.abort();
 	}
 }
