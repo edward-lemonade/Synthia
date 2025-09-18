@@ -11,5 +11,5 @@ import { AppbarLayoutComponent } from './components/appbar-layout/appbar-layout.
 	`,
 })
 export class AppComponent {
-	title = 'NoteFlyte';
+	title = 'Synthia';
 }

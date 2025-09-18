@@ -2,7 +2,7 @@ import { Region, Track, BaseFileRef } from '@shared/types';
 import { Schema } from 'mongoose';
 
 export enum RegionType { Audio="audio", Midi="midi" }
-export enum AudioTrackType { Audio="audio", Microphone="midi" }
+export enum AudioTrackType { Audio="audio", Microphone="microphone" }
 export enum MidiTrackType { Instrument="instrument", Drums="drums" }
 export type TrackType = AudioTrackType | MidiTrackType
 

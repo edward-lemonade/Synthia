@@ -1,0 +1,494 @@
+@use "theme" as *;
+
+.container {
+	display: flex;
+	flex: 1;
+	padding: 0 $pad-ends;
+	min-height: 100vh;
+	background: $app-bg;
+}
+
+.track-container {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	margin: 0 0;
+	padding: 40px 0;
+	gap: 32px;
+
+
+	.audio-player {
+		.project-metadata {
+			box-sizing: border-box;
+			margin-bottom: 30px;
+
+			.project-name {
+				font-size: 48px;
+				font-weight: 700;
+				color: $app-bg;
+				text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+				opacity: 0.9;
+				margin-bottom: 10px;
+			}
+			.project-authors {
+				font-size: 20px;
+				font-weight: 600;
+				color: $app-bg;
+				text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+				opacity: 0.8;
+			}
+			.project-date {
+				font-size: 14px;
+				font-weight: 400;
+				color: $app-bg;
+				text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+				opacity: 0.8;
+			}
+		}
+		.shine {
+			position: absolute;
+			top: 0;
+			left: 0;
+			height: 170px;
+			width: 100%;
+			background: linear-gradient(300deg, 
+				rgba(255,255,255,0) 0%,
+				rgba(255,255,255,0.3) 100%,
+			);
+		}
+
+		.audio-controls {
+			display: flex;
+			align-items: center;
+			gap: 24px;
+			position: relative;
+			z-index: 1;
+
+			.play-button {
+				width: 72px;
+				height: 72px;
+				border-radius: 36px;
+				border: none;
+				background: linear-gradient(135deg, $app-bg-l, $app-bg-ll);
+				color: white;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.2s ease;
+				box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+				position: relative;
+
+				&:disabled {
+					opacity: 0.6;
+					cursor: not-allowed;
+					transform: none !important;
+				}
+
+				&:hover:not(:disabled) {
+					background: linear-gradient(135deg, $app-bg-ll, $app-bg-lll);
+					transform: scale(1.08);
+					box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+				}
+
+				&:active:not(:disabled) {
+					transform: scale(1.02);
+				}
+
+				mat-icon {
+					font-size: 36px;
+					width: 36px;
+					height: 36px;
+				}
+			}
+
+			.playback-display {
+				flex: 1;
+
+				font-size: 28px;
+				font-weight: 700;
+				color: rgb(255,255,255,0.8);
+				text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+				min-width: 100px;
+				font-family: 'Courier New', monospace;
+			}
+
+			.duration-display {
+				text-align: right;
+				
+				font-size: 28px;
+				font-weight: 700;
+				color: $app-bg;
+				text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+				min-width: 100px;
+				font-family: 'Courier New', monospace;
+			}
+		}
+
+		.waveform-container {
+			display: flex;
+			align-items: center;
+			width: 100%;
+			height: 140px;
+			position: relative;
+			z-index: 1;
+			
+			.waveform-wrapper {
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+				min-width: 0;
+				height: 100%;
+				position: relative;
+				border-radius: 16px;
+				overflow: hidden;
+				background: rgba(255, 255, 255, 0.15);
+				backdrop-filter: blur(20px);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				
+				.waveform-canvas {
+					position: relative;
+					height: calc(100% - 10px);
+					background: none;
+					cursor: pointer;
+					transition: opacity 0.2s ease;
+					
+					&:hover {
+						opacity: 0.9;
+					}
+				}
+				
+				.progress-container {
+					position: relative;
+					height: 10px;
+					background: rgba(255, 255, 255, 0.25);
+					border-radius: 0 0 16px 16px;
+					overflow: hidden;
+					
+					.progress-bar {
+						position: absolute;
+						top: 0;
+						left: 0;
+						height: 100%;
+						background: linear-gradient(90deg, 
+							rgba(255, 255, 255, 0.9) 0%,
+							rgba(255, 255, 255, 1) 50%,
+							rgba(255, 255, 255, 0.9) 100%
+						);
+						border-radius: 0 0 16px 16px;
+						transition: width 0.1s ease;
+						box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+					}
+				}
+			}
+		}
+
+		.description {
+			color: $app-bg;
+			font-size: 16px;
+			line-height: 1.6;
+			background: rgba(255, 255, 255, 0.1);
+			padding: 20px;
+			border-radius: 12px;
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.15);
+			position: relative;
+			z-index: 1;
+		}
+
+		.controls {
+			display: flex;
+			gap: 16px;
+			flex-wrap: wrap;
+			position: relative;
+			z-index: 1;
+
+			.control-btn {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 4px;
+				padding: 12px 16px;
+				border: none;
+				border-radius: 12px;
+				background: rgba(255, 255, 255, 0.1);
+				color: $app-bg;
+				cursor: pointer;
+				transition: all 0.2s ease;
+				min-width: 80px;
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+
+				&:hover {
+					background: rgba(255, 255, 255, 0.2);
+					transform: translateY(-2px);
+					box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+				}
+
+				&:active {
+					transform: translateY(0);
+				}
+
+				mat-icon {
+					font-size: 20px;
+					width: 20px;
+					height: 20px;
+				}
+
+				.control-label {
+					font-size: 12px;
+					font-weight: 600;
+					text-transform: uppercase;
+					letter-spacing: 0.5px;
+				}
+
+				&.liked {
+					background: rgba(255, 100, 100, 0.2);
+					border-color: rgba(255, 100, 100, 0.3);
+
+					mat-icon {
+						color: #ff4444;
+					}
+				}
+			}
+		}
+
+		background: linear-gradient(135deg, 
+			$accent-purple-l 0%, 
+			$accent-pink 35%,
+			$accent-orange 70%,
+			$accent-yellow 100%
+		);
+		border-radius: 24px;
+		padding: 32px;
+		display: flex;
+		flex-direction: column;
+		gap: 32px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+		transition: all 0.3s ease;
+		position: relative;
+		overflow: hidden;
+		&::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: rgba(255, 255, 255, 0.05);
+			backdrop-filter: blur(10px);
+			pointer-events: none;
+		}
+		&:hover {
+			box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+			transform: translateY(-4px);
+		}
+	}
+
+	// Comments Section
+	.comments-section {
+		background: $app-bg-l;
+		border-radius: 20px;
+		padding: 32px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+
+		.comments-header {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 24px;
+
+			h3 {
+				color: white;
+				font-size: 24px;
+				font-weight: 600;
+				margin: 0;
+			}
+
+			.comment-count {
+				background: $accent-purple-l;
+				color: $app-bg;
+				padding: 4px 12px;
+				border-radius: 20px;
+				font-size: 14px;
+				font-weight: 600;
+			}
+		}
+
+		.new-comment {
+			margin-bottom: 32px;
+
+			.comment-form {
+				display: flex;
+				flex-direction: column;
+				gap: 16px;
+
+				.comment-input {
+					width: 100%;
+
+					::ng-deep .mat-mdc-form-field {
+						.mat-mdc-text-field-wrapper {
+							background: $app-bg-ll;
+							border-radius: 12px;
+						}
+
+						.mat-mdc-form-field-flex {
+							.mat-mdc-floating-label {
+								color: $appbar-text;
+							}
+						}
+
+						textarea {
+							color: white;
+							resize: vertical;
+						}
+					}
+				}
+
+				.submit-comment-btn {
+					align-self: flex-start;
+					border-radius: 8px;
+					padding: 8px 24px;
+				}
+			}
+		}
+
+		.comments-list {
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+
+			.comment {
+				display: flex;
+				gap: 16px;
+				padding: 20px;
+				background: $app-bg-ll;
+				border-radius: 12px;
+				transition: background-color 0.2s ease;
+
+				&:hover {
+					background: $app-bg-lll;
+				}
+
+				.comment-avatar {
+					width: 40px;
+					height: 40px;
+					border-radius: 20px;
+					background: $accent-purple-l;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+
+					mat-icon {
+						color: white;
+						font-size: 20px;
+						width: 20px;
+						height: 20px;
+					}
+				}
+
+				.comment-content {
+					flex: 1;
+
+					.comment-header {
+						display: flex;
+						align-items: center;
+						gap: 12px;
+						margin-bottom: 8px;
+
+						.comment-author {
+							color: white;
+							font-weight: 600;
+							font-size: 14px;
+						}
+
+						.comment-time {
+							color: $appbar-text;
+							font-size: 12px;
+							opacity: 0.7;
+						}
+					}
+
+					.comment-text {
+						color: $appbar-text;
+						line-height: 1.5;
+						margin-bottom: 12px;
+						font-size: 14px;
+					}
+
+					.comment-actions {
+						display: flex;
+						gap: 16px;
+
+						.comment-action-btn {
+							display: flex;
+							align-items: center;
+							gap: 4px;
+							background: none;
+							border: none;
+							color: $appbar-text;
+							cursor: pointer;
+							padding: 4px 8px;
+							border-radius: 6px;
+							font-size: 12px;
+							transition: all 0.2s ease;
+
+							&:hover {
+								background: $app-bg-lll;
+								color: white;
+							}
+
+							mat-icon {
+								font-size: 16px;
+								width: 16px;
+								height: 16px;
+
+								&.liked {
+									color: #ff4444;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		.no-comments {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 60px 20px;
+			color: $appbar-text;
+			text-align: center;
+
+			mat-icon {
+				font-size: 48px;
+				width: 48px;
+				height: 48px;
+				margin-bottom: 16px;
+				opacity: 0.5;
+			}
+
+			p {
+				font-size: 16px;
+				opacity: 0.7;
+				margin: 0;
+			}
+		}
+	}
+}
+
+.loading-container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+}
+.loading-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+}

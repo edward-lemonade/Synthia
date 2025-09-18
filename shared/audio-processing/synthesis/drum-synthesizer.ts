@@ -1,7 +1,7 @@
 import { MidiNote, ProjectStudio } from "../../types";
 import { MIDI_DRUM_MAPPING, DRUM_PRESETS, DEFAULT_KICK } from "./presets/drums";
 
-import { AudioContext, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+import { AudioContext, AudioBuffer, AudioBufferSourceNode, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
 
 export interface DrumVoice {
 	oscillators: OscillatorNode[];
@@ -47,8 +47,6 @@ export interface DrumParams {
 	drive: number;
 }
 
-export type DrumType = 'kick' | 'snare' | 'hihat' | 'openhat' | 'crash' | 'ride' | 'tom' | 'clap' | 'rim' | 'cowbell';
-
 interface CreateDrumParams {
 	ctx: AudioContext | OfflineAudioContext, 
 	output: AudioNode, 
@@ -65,18 +63,25 @@ interface CreateDrumParams {
 export class DrumSynthesizer {
 	declare posToTime: (pos: number) => number;
 	
-	declare noiseBuffer?: AudioBuffer;
-	
 	constructor(
 		posToTime: (pos: number) => number,
-		audioContext: AudioContext,
 	) {
 		this.posToTime = posToTime;
-		this.initializeNoiseBuffer(audioContext);
 	}
 
-	async initializeNoiseBuffer(audioContext: AudioContext) {
-		this.noiseBuffer = await this.generateNoiseBuffer(audioContext) ?? undefined;
+	initializeNoiseBuffer(audioContext: AudioContext | OfflineAudioContext) {
+		const ctx = audioContext;
+		
+		const bufferSize = ctx.sampleRate * 2; // 2 seconds
+		const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+
+		const output = noiseBuffer.getChannelData(0);
+		
+		for (let i = 0; i < bufferSize; i++) {
+			output[i] = Math.random() * 2 - 1;
+		}
+
+		return noiseBuffer;
 	}
 
 	// ========================================================================================
@@ -156,6 +161,7 @@ export class DrumSynthesizer {
 					return this.createKickDrum(params);
 			}
 		} catch (error) {
+			console.error(error);
 			return null;
 		}
 	}
@@ -187,21 +193,6 @@ export class DrumSynthesizer {
 		}
 
 		voice.endTime = stopTime + release;
-	}
-
-	private async generateNoiseBuffer(audioContext: AudioContext | OfflineAudioContext): Promise<AudioBuffer | null> {
-		const ctx = audioContext;
-		if (!ctx) return null;
-		
-		const bufferSize = ctx.sampleRate * 2; // 2 seconds
-		const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-		const output = noiseBuffer.getChannelData(0);
-		
-		for (let i = 0; i < bufferSize; i++) {
-			output[i] = Math.random() * 2 - 1;
-		}
-		
-		return noiseBuffer;
 	}
 
 	private createKickDrum(params: CreateDrumParams): DrumVoice {
@@ -254,14 +245,16 @@ export class DrumSynthesizer {
 		toneOsc.type = 'triangle';
 		toneOsc.frequency.setValueAtTime(drumParams.frequency, startTime);
 		oscillators.push(toneOsc);
-		
-		// Create noise for the "snap"
+
 		let noiseNode: AudioBufferSourceNode | undefined;
-		if (this.noiseBuffer && drumParams.noiseLevel > 0) {
+		if (drumParams.noiseLevel > 0) {
+			const noiseBuffer = this.initializeNoiseBuffer(ctx);
 			noiseNode = ctx!.createBufferSource();
-			noiseNode.buffer = this.noiseBuffer;
+			noiseNode.buffer = noiseBuffer;
 			noiseNode.loop = true;
 		}
+
+		//console.log(noiseNode, !!this.noiseBuffer);
 		
 		// Mix tone and noise
 		const mixer = ctx!.createGain();
@@ -313,9 +306,10 @@ export class DrumSynthesizer {
 		
 		// Hi-hat is mostly filtered noise
 		let noiseNode: AudioBufferSourceNode | undefined;
-		if (this.noiseBuffer) {
+		if (drumParams.noiseLevel > 0) {
+			const noiseBuffer = this.initializeNoiseBuffer(ctx);
 			noiseNode = ctx!.createBufferSource();
-			noiseNode.buffer = this.noiseBuffer;
+			noiseNode.buffer = noiseBuffer;
 			noiseNode.loop = true;
 		}
 		
@@ -361,9 +355,10 @@ export class DrumSynthesizer {
 		
 		// Cymbal is filtered noise with some tonal content
 		let noiseNode: AudioBufferSourceNode | undefined;
-		if (this.noiseBuffer) {
+		if (drumParams.noiseLevel > 0) {
+			const noiseBuffer = this.initializeNoiseBuffer(ctx);
 			noiseNode = ctx!.createBufferSource();
-			noiseNode.buffer = this.noiseBuffer;
+			noiseNode.buffer = noiseBuffer;
 			noiseNode.loop = true;
 		}
 		
@@ -472,9 +467,10 @@ export class DrumSynthesizer {
 		
 		// Clap is multiple noise bursts
 		let noiseNode: AudioBufferSourceNode | undefined;
-		if (this.noiseBuffer) {
+		if (drumParams.noiseLevel > 0) {
+			const noiseBuffer = this.initializeNoiseBuffer(ctx);
 			noiseNode = ctx!.createBufferSource();
-			noiseNode.buffer = this.noiseBuffer;
+			noiseNode.buffer = noiseBuffer;
 			noiseNode.loop = true;
 		}
 		
@@ -614,11 +610,11 @@ export class DrumSynthesizer {
 	// Utility
 
 	private velocityToGain(velocity: number): number { return Math.pow(velocity / 127, 1.5); }
-	getDrumParams(drumType: DrumType): DrumParams { return {...DEFAULT_KICK, ...DRUM_PRESETS[drumType] ?? {}} }
-	getDrumTypeFromMidiNote(midiNote: number): DrumType {
+	getDrumParams(drumType: string): DrumParams { return {...DEFAULT_KICK, ...DRUM_PRESETS[drumType] ?? {}} }
+	getDrumTypeFromMidiNote(midiNote: number) {
 		const presetName = MIDI_DRUM_MAPPING[midiNote];
 		if (presetName) {
-			const drumType = presetName.split('-')[0] as DrumType;
+			const drumType = presetName;
 			return drumType;
 		}
 		return 'kick'; // Default

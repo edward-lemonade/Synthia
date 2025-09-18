@@ -11,7 +11,7 @@ declare global {
 	}
 }
 
-export const checkJwt = jwt({
+export const requireAuth = jwt({
 	secret: jwksRsa.expressJwtSecret({
 		cache: true,
 		rateLimit: true,
@@ -20,5 +20,21 @@ export const checkJwt = jwt({
 	}),
 	audience: `${AUTH0_AUDIENCE}`,
 	issuer: `https://${AUTH0_DOMAIN}/`,
-	algorithms: ["RS256"]
+	algorithms: ["RS256"],
+
+	credentialsRequired: true,
+});
+
+export const optionalAuth = jwt({
+	secret: jwksRsa.expressJwtSecret({
+		cache: true,
+		rateLimit: true,
+		jwksRequestsPerMinute: 5,
+		jwksUri: `https://${AUTH0_DOMAIN}/.well-known/jwks.json`
+	}),
+	audience: `${AUTH0_AUDIENCE}`,
+	issuer: `https://${AUTH0_DOMAIN}/`,
+	algorithms: ["RS256"],
+	
+	credentialsRequired: false,
 });

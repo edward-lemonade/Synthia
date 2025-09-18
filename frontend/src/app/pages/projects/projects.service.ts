@@ -23,7 +23,7 @@ export class ProjectsService {
 	public async loadProjects() {
 		try {
 			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUser();
+			const user = this.auth.getUserAuth();
 			if (!user) return [];
 
 			const res = await axios.post<{ projects: ProjectMetadata[] }>(
@@ -52,7 +52,7 @@ export class ProjectsService {
 	public async loadExport(projectId: string) {
 		try {
 			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUser();
+			const user = this.auth.getUserAuth();
 			if (!user) return [];
 
 			const res = await axios.post<{ exportFileData: AudioFileData }>(
@@ -112,6 +112,17 @@ export class ProjectsService {
 			}});
 		} catch (err) {
 			console.error('Error during project opening:', err);
+		}
+	}
+
+	public async publishProject(project: ProjectMetadata) {
+		try {
+			const token = await this.auth.getAccessToken();
+			if (!token) { console.error('No valid token'); return; }
+
+			this.router.navigate(['/publish', project.projectId]);
+		} catch (err) {
+			console.error('Error navigating to publish page:', err);
 		}
 	}
 

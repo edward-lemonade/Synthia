@@ -19,11 +19,13 @@ import { CabnetService } from './services/cabnet.service';
 import { AudioRecordingService } from './services/audio-recording.service';
 import { TimelineExportService } from './services/timeline-export.service';
 import { SynthesizerService } from './services/synthesizer.service';
+import { InstantSynthesizerService } from './services/instant-synthesizer.service';
+import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 
 @Component({
 	selector: 'app-studio',
-	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, TimelinePlaybackService, CabnetService, AudioRecordingService, TimelineExportService, SynthesizerService],
+	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent, LoadingSpinnerComponent],
+	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, TimelinePlaybackService, CabnetService, AudioRecordingService, TimelineExportService, SynthesizerService, InstantSynthesizerService],
 	template: `
 		<div class="page-container">
 			@if (stateService.isStateReady()) {
@@ -32,10 +34,7 @@ import { SynthesizerService } from './services/synthesizer.service';
 				<app-studio-editor></app-studio-editor>
 				<app-studio-cabnet/>
 			} @else {
-				<div class="loading-container">
-					<div class="loading-spinner"></div>
-					<p>Loading project...</p>
-				</div>
+				<app-loading-spinner/>
 			}
 		</div>
 	`,
@@ -46,29 +45,7 @@ import { SynthesizerService } from './services/synthesizer.service';
 			height: 100vh;
 			width: 100%;
 		}
-		.loading-container {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			height: 100vh;
-			gap: 1rem;
-
-			.loading-spinner {
-				width: 40px;
-				height: 40px;
-				border: 4px solid #f3f3f3;
-				border-top: 4px solid #3498db;
-				border-radius: 50%;
-				animation: spin 1s linear infinite;
-			}
-
-			@keyframes spin {
-				0% { transform: rotate(0deg); }
-				100% { transform: rotate(360deg); }
-			}
-		}
-
+	
 		app-studio-toolbar-top {
 			flex-shrink: 0;
 		}

@@ -188,12 +188,10 @@ export class ReverbProcessor {
 		const wetLevel = Math.max(0, Math.min(100, reverbAmount)) / 100;
 		const dryLevel = 1 - (wetLevel * 0.7);
 		
-		// For offline rendering, set values immediately
 		if (offline) {
 			mixNode.dryGain.gain.value = dryLevel;
 			mixNode.wetGain.gain.value = wetLevel * 0.3;
 		} else {
-			// For realtime, use smooth transitions
 			const currentTime = audioContext.currentTime;
 			mixNode.dryGain.gain.setTargetAtTime(dryLevel, currentTime, 0.01);
 			mixNode.wetGain.gain.setTargetAtTime(wetLevel * 0.3, currentTime, 0.01);

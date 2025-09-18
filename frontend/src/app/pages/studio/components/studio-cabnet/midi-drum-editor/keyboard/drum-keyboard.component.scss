@@ -40,4 +40,9 @@
 	z-index: 1;
 	color: rgb(77, 77, 77);
 	font-size: 10px;
+	
+	&:hover {
+		background: rgb(230,230,230)
+	}
+	cursor: pointer;
 }
