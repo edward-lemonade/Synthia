@@ -82,6 +82,7 @@ export async function deleteFrontByProjectId(projectId: string) {
 // ===========================================================
 
 export async function hasLikedTrack(projectId: string, userId: string) {
+	if (!userId) {return null}
 	const like = await LikeModel.findOne({ userId, projectId }).select('likes');
 	return like;
 }

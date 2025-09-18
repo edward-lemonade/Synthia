@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { checkJwt } from "./middleware/auth.middleware";
+import { requireAuth, optionalAuth } from "./middleware/auth.middleware";
 
 import * as ProjectController from "./controllers/project.controller";
 import * as ProjectFilesController from "./controllers/project_files.controller";
@@ -12,35 +12,35 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
-router.get('/api/me', checkJwt, UserController.getUser)
-router.put('/api/me/create', checkJwt, UserController.createUser)
-router.put('/api/user/profile', checkJwt, UserController.updateUserProfile)
-router.put('/api/user/profile_picture', checkJwt, upload.single('profilePicture'), UserController.updateProfilePicture)
-router.get('/api/profile/:displayName', checkJwt, UserController.getProfile);
+router.get('/api/me', requireAuth, UserController.getUser)
+router.put('/api/me/create', requireAuth, UserController.createUser)
+router.put('/api/user/profile', requireAuth, UserController.updateUserProfile)
+router.put('/api/user/profile_picture', requireAuth, upload.single('profilePicture'), UserController.updateProfilePicture)
+router.get('/api/profile/:displayName', optionalAuth, UserController.getProfile);
 
-router.post('/api/projects/get_mine', checkJwt, ProjectController.getMine);
-router.post('/api/projects/get_project', checkJwt, ProjectController.getProject);
-router.post('/api/projects/save_overwrite', checkJwt, ProjectController.saveOverwrite);
-router.post('/api/projects/save_new', checkJwt, ProjectController.saveNew);
-router.post('/api/projects/get_studio', checkJwt, ProjectController.load);
-router.post('/api/projects/delete_studio', checkJwt, ProjectController.deleteStudio);
-router.post('/api/projects/rename', checkJwt, ProjectController.rename);
-router.post('/api/projects/rename_front', checkJwt, ProjectController.renameFront);
-router.post('/api/projects/get_export', checkJwt, ProjectController.getExport);
-router.post('/api/projects/get_front', checkJwt, ProjectController.getFront);
-router.post('/api/projects/publish', checkJwt, ProjectController.publish);
-router.post('/api/projects/unpublish', checkJwt, ProjectController.unpublish);
+router.post('/api/projects/get_mine', requireAuth, ProjectController.getMine);
+router.post('/api/projects/get_project', requireAuth, ProjectController.getProject);
+router.post('/api/projects/save_overwrite', requireAuth, ProjectController.saveOverwrite);
+router.post('/api/projects/save_new', requireAuth, ProjectController.saveNew);
+router.post('/api/projects/get_studio', requireAuth, ProjectController.load);
+router.post('/api/projects/delete_studio', requireAuth, ProjectController.deleteStudio);
+router.post('/api/projects/rename', requireAuth, ProjectController.rename);
+router.post('/api/projects/rename_front', requireAuth, ProjectController.renameFront);
+router.post('/api/projects/get_export', requireAuth, ProjectController.getExport);
+router.post('/api/projects/get_front', requireAuth, ProjectController.getFront);
+router.post('/api/projects/publish', requireAuth, ProjectController.publish);
+router.post('/api/projects/unpublish', requireAuth, ProjectController.unpublish);
 
-router.post('/api/project_files/save', checkJwt, upload.any(), ProjectFilesController.saveAudioFiles);
-router.post('/api/project_files/load', checkJwt, ProjectFilesController.loadAudioFiles);
+router.post('/api/project_files/save', requireAuth, upload.any(), ProjectFilesController.saveAudioFiles);
+router.post('/api/project_files/load', requireAuth, ProjectFilesController.loadAudioFiles);
 
-router.get('/api/track/:projectId/data', checkJwt, TrackController.data);
-router.get('/api/track/:projectId/audio', checkJwt, TrackController.audio);
-router.post('/api/track/:projectId/comment', checkJwt, TrackController.leaveComment);
-router.post('/api/track/:projectId/toggle_like', checkJwt, TrackController.toggleLike);
-router.post('/api/track/:projectId/record_play', checkJwt, TrackController.recordPlay);
-router.post('/api/tracks/newest', checkJwt, TrackController.newest);
-router.post('/api/tracks/hottest', checkJwt, TrackController.hottest);
-router.post('/api/tracks/search', checkJwt, TrackController.search);
+router.get('/api/track/:projectId/data', optionalAuth, TrackController.data);
+router.get('/api/track/:projectId/audio', optionalAuth, TrackController.audio);
+router.post('/api/track/:projectId/comment', requireAuth, TrackController.leaveComment);
+router.post('/api/track/:projectId/toggle_like', requireAuth, TrackController.toggleLike);
+router.post('/api/track/:projectId/record_play', requireAuth, TrackController.recordPlay);
+router.post('/api/tracks/newest', optionalAuth, TrackController.newest);
+router.post('/api/tracks/hottest', optionalAuth, TrackController.hottest);
+router.post('/api/tracks/search', optionalAuth, TrackController.search);
 
 export default router;

@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -55,6 +55,7 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 					<app-avatar 
 						[width]="40"
 						[profilePictureURL]="comment.profilePictureURL"
+						(click)="onPfpClick(comment.displayName)"
 						[altText]="comment.displayName + ' avatar'">
 					</app-avatar>
 					<div class="comment-content">
@@ -80,6 +81,7 @@ export class CommentSectionComponent {
 	
 	constructor(
 		private route: ActivatedRoute,
+		private router: Router,
 		public tracksService: TrackService,
 	) {}
 
@@ -107,6 +109,10 @@ export class CommentSectionComponent {
 
 	trackComment(index: number, comment: any): string {
 		return comment.id;
+	}
+
+	onPfpClick(displayName: string) {
+		this.router.navigate(['/profile', displayName]);
 	}
 
 }

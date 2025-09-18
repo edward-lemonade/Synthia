@@ -39,4 +39,18 @@ export class AppAuthService {
 			})
 		);
 	}
+
+	async getAuthHeaders(): Promise<{ [key: string]: string }> {
+		try {
+			const token = await this.getAccessToken();
+			const user = this.getUserAuth();
+			
+			if (user && token) {
+				return { Authorization: `Bearer ${token}` };
+			}
+		} catch (error) {
+			console.log('User not authenticated, proceeding without auth headers');
+		}
+		return {};
+	}
 }

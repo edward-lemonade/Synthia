@@ -44,9 +44,7 @@ export class DiscoverService {
 
 	async getMoreItems(reset?: boolean) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return null;
+			const headers = await this.auth.getAuthHeaders();
 			
 			if (reset) { this.projectsAndUsers.set([]); }
 			
@@ -67,7 +65,7 @@ export class DiscoverService {
 						lastUserId: this.lastUserId, 
 						searchTerm: this.searchTerm(),
 					},
-					{ headers: {Authorization: `Bearer ${token}`}},
+					{ headers: headers},
 				);
 				this.lastScore = res.data.lastScore;
 				this.lastProjectId = res.data.lastProjectId;
@@ -93,7 +91,7 @@ export class DiscoverService {
 							lastReleaseDate: (this.getLast() as ProjectReleased)?.front.dateReleased,
 							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
 						},
-						{ headers: {Authorization: `Bearer ${token}`}},
+						{ headers: headers},
 					);
 				} else if (this.listMode() == ListMode.Hot) {
 					res = await axios.post<{ success: boolean, projects: ProjectReleased[], lastHotness: number, reachedEnd: boolean }>(
@@ -103,7 +101,7 @@ export class DiscoverService {
 							lastHotness: this.lastHotness,
 							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
 						},
-						{ headers: {Authorization: `Bearer ${token}`}},
+						{ headers: headers},
 					);
 					this.lastHotness = res.data.lastHotness;
 				}

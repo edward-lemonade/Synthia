@@ -149,11 +149,6 @@ export async function updateProfilePicture(req: Request, res: Response) {
 
 export async function getProfile(req: Request, res: Response) {
 	try {
-		const sub = req.auth.sub;
-		if (!sub) {
-			return res.status(401).json({ error: 'No sub claim in token' });
-		}
-
 		const { displayName } = req.params;
 
 		let userDoc = await UserModel.findOne({ displayName });

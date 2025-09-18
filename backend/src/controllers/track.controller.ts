@@ -11,7 +11,7 @@ import { Request, Response } from "express";
 
 export async function data(req: Request, res: Response) {
 	const { projectId } = req.params;
-    const userId = req.auth.sub;
+    const userId = req.auth?.sub ?? null;
 
 	try { 
 		const metadataDoc = await db.findMetadataByProjectId(projectId);
@@ -48,7 +48,6 @@ export async function data(req: Request, res: Response) {
 
 export async function audio(req: Request, res: Response) {
 	const { projectId } = req.params;
-    const userId = req.auth.sub;
 
 	try {
 		const audioFileData: AudioFileData = await s3.getExportFile(projectId);
@@ -196,7 +195,6 @@ const MAX_AMOUNT = 40;
 
 export async function newest(req: Request, res: Response) {
     try {
-        const userId = req.auth.sub; // in case you need it later for filtering
         const { amount, lastReleaseDate, lastProjectId } = req.body;
 
         let query: any = {};
@@ -242,7 +240,6 @@ export async function newest(req: Request, res: Response) {
 
 export async function hottest(req: Request, res: Response) {
     try {
-        const userId = req.auth.sub;
         const { amount, lastHotness, lastProjectId } = req.body;
 
 		// Use "aggregation pipeline" since hotness isn't actually stored
@@ -307,7 +304,6 @@ export async function hottest(req: Request, res: Response) {
 
 export async function search(req: Request, res: Response) {
     try {
-        const userId = req.auth.sub;
         const { amount, lastScore, lastProjectId, lastUserId, searchTerm } = req.body;
 
         if (!searchTerm || searchTerm.trim().length === 0) {
