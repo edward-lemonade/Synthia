@@ -1,8 +1,9 @@
 import { IProjectFrontDocument, IProjectMetadataDocument, IProjectStudioDocument, } from "@src/models";
-import { AudioFileRef, BaseFileRef, ProjectFront, ProjectMetadata, ProjectState, ProjectStudio } from "@shared/types";
+import { AudioFileRef, BaseFileRef, ProjectFront, ProjectMetadata, ProjectReleased, ProjectState, ProjectStudio } from "@shared/types";
 import mongoose from "mongoose";
 import { getAudioFile } from "@src/db/s3_client";
 import { RegionType } from "@src/models/project/Track.model";
+import { Comment } from "@shared/types";
 
 export class ProjectMetadataTransformer {
 	static fromDoc(docMeta: IProjectMetadataDocument): ProjectMetadata {
@@ -14,13 +15,16 @@ export class ProjectMetadataTransformer {
 }
 
 export class ProjectFrontTransformer {
-	static fromDocs(docMeta: IProjectMetadataDocument, docFront: IProjectFrontDocument): ProjectFront {
+	static toReleased(docMeta: IProjectMetadataDocument, docFront: IProjectFrontDocument): ProjectReleased {
 		const { projectId, projectMetadataId, ...rest } = docFront.toObject();
-
 		return {
 			metadata: ProjectMetadataTransformer.fromDoc(docMeta),
-			...rest,
+			front: {...rest},
 		}
+	}
+	static fromDoc(docFront: IProjectFrontDocument): ProjectFront {
+		const {projectId, projectMetadataId, ...rest} = docFront.toObject();
+		return {...rest};
 	}
 	static toDoc(objMeta: ProjectFront) {
 		return objMeta as IProjectFrontDocument
@@ -35,6 +39,10 @@ export class ProjectStudioTransformer {
 			metadata: ProjectMetadataTransformer.fromDoc(docMeta),
 			studio: {...rest},
 		}
+	}
+	static fromDoc(docStudio: IProjectStudioDocument): IProjectStudioDocument {
+		const {projectId, projectMetadataId, ...rest} = docStudio.toObject();
+		return {...rest};
 	}
 	static toDoc(docMeta: IProjectMetadataDocument, objStudio: ProjectStudio): IProjectStudioDocument {
 		const { _id, projectId, ...rest } = docMeta;

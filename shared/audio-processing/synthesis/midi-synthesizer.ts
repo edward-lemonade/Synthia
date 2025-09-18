@@ -1,7 +1,7 @@
 import { MidiNote, MidiTrackType, ProjectStudio, Track } from "../../types";
 import { DEFAULT_SYNTH, SYNTHS } from "./presets/instruments";
 
-import { AudioContext, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+import { AudioContext, AudioBuffer, AudioBufferSourceNode, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
 
 export interface OfflineMidiSource {
 	notes: MidiNote[];

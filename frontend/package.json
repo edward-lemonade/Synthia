@@ -30,6 +30,7 @@
     "audio-decode": "^2.2.3",
     "axios": "^1.11.0",
     "immer": "^10.1.1",
+    "isomorphic-web-audio-api": "^1.0.2",
     "js-base64": "^3.7.8",
     "lamejs": "^1.2.1",
     "rxjs": "~7.8.0",

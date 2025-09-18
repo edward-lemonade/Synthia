@@ -3,6 +3,8 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, O
 import { MidiEditorService } from "@src/app/pages/studio/services/midi-editor/midi-editor.service";
 import { ViewportService } from "@src/app/pages/studio/services/viewport.service";
 import { MIDI_DRUM_MAPPING } from "@shared/audio-processing/synthesis/presets/drums";
+import { MidiNote } from "@shared/types";
+import { TimelinePlaybackService } from "@src/app/pages/studio/services/timeline-playback.service";
 
 @Component({
 	selector: 'midi-drum-editor-keyboard',
@@ -10,10 +12,11 @@ import { MIDI_DRUM_MAPPING } from "@shared/audio-processing/synthesis/presets/dr
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #keyboard class="keyboard" (scroll)="onScroll()">
-			<div class="keyboard-content" [style.height.px]="totalHeight">
+			<div class="keyboard-content" [style.height.px]="TOTAL_HEIGHT">
 				<div 
 					*ngFor="let key of drumKeys; let keyIndex = index"
 					class="key drum-key" 
+					(click)="onKeyClick(keyIndex)"
 					[style.height.px]="ROW_HEIGHT">
 					{{ MIDI_DRUM_MAPPING[midiService.indexToMidiNote(keyIndex)] }}
 				</div>
@@ -29,11 +32,14 @@ export class MidiDrumEditorKeyboardComponent implements OnInit {
 	constructor (
 		public viewportService: ViewportService,
 		public midiService: MidiEditorService,
+		public playbackService: TimelinePlaybackService,
 	) {}
 
 	get SCALES() { return this.midiService.SCALES };
 	get SCALE_HEIGHT() { return this.midiService.SCALE_HEIGHT };
 	get ROW_HEIGHT() { return this.midiService.ROW_HEIGHT };
+	get TOTAL_HEIGHT(): number { return this.SCALES! * this.SCALE_HEIGHT! };
+
 	declare drumKeys: Array<number>;
 
 	ngOnInit() {
@@ -41,14 +47,9 @@ export class MidiDrumEditorKeyboardComponent implements OnInit {
 		this.drumKeys = Array(this.SCALES * 12).fill(0).map((_, i) => i);
 	}
 
-
-	// ==============================================================================================
-	// Keyboard Render
-	
-	get totalHeight(): number {
-		return this.SCALES! * this.SCALE_HEIGHT!;
+	onKeyClick(index: number) {
+		this.midiService.playSampleNoteFromIndex(index);
 	}
-
 
 	// ==============================================================================================
 	// Mouse Events

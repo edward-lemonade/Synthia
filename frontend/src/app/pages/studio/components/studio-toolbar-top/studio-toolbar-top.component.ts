@@ -20,7 +20,7 @@ import { StateService } from '../../state/state.service';
 		<mat-toolbar class="toolbar">
 			<div class="toolbar-section left-section">
 				<studio-toolbar-top-menu-btn/>
-				<span>NoteFlyte</span>
+				<span>Synthia</span>
 			</div>
 
 			<div class="toolbar-section center-section">

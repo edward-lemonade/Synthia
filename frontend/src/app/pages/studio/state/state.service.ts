@@ -9,6 +9,7 @@ import axios from "axios";
 import { AudioCacheService } from "../services/audio-cache.service";
 import { DeepPartial, ObjectStateNode, objectStateNode, propStateNode, StateNode } from "./state.factory";
 import { ObjectScaffold, Scaffold, STATE_SCAFFOLD } from "./state.scaffolds";
+import { UserService } from "@src/app/services/user.service";
 
 
 @Injectable()
@@ -24,6 +25,7 @@ export class StateService { // SINGLETON
 
 	constructor(
 		private auth: AppAuthService,
+		private userService: UserService,
 		private route: ActivatedRoute,
 		private router: Router,
 
@@ -35,17 +37,18 @@ export class StateService { // SINGLETON
 		combineLatest([
 			this.route.paramMap,
 			this.route.queryParams,
-			this.auth.getAuthor$(),
 		]).pipe(
-			filter(([params, queryParams, author]) => {
+			filter(([params, queryParams]) => {
 				const projectId = params.get('projectId');
 				const isNew = queryParams['isNew'];
-				return !!(projectId && author);
+				const author = this.userService.author();
+				return !!(projectId);
 			}),
 			take(1)
-		).subscribe(([params, queryParams, author]) => {
+		).subscribe(([params, queryParams]) => {
 			this.projectId = params.get('projectId');
 			this.isNew = queryParams['isNew']==='true';
+			const author = this.userService.author();
 			
 			this.initState(author!, this.projectId!, this.isNew!)
 		});
@@ -92,7 +95,7 @@ export class StateService { // SINGLETON
 			console.log('Got JWT token:', token ? 'Token received' : 'No token');
 
 			const res = await axios.post<{state: ProjectState}>(
-				'/api/projects/load', 
+				'/api/projects/get_studio', 
 				{ 
 					projectId: projectId, 
 				},
@@ -120,7 +123,7 @@ export class StateService { // SINGLETON
 			if (this.isNew && token) {
 				const res = await axios.post<{ success: boolean }>(
 					'/api/projects/save_new', 
-					{state: this.state.snapshot() as ProjectState},
+					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
 					{
 						headers: {
 							Authorization: `Bearer ${token}`
@@ -140,7 +143,7 @@ export class StateService { // SINGLETON
 			} else {
 				const res = await axios.post<{ success: boolean }>(
 					'/api/projects/save_overwrite', 
-					{state: this.state.snapshot() as ProjectState},
+					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
 					{
 						headers: {
 							Authorization: `Bearer ${token}`

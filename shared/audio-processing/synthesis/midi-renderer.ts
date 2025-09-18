@@ -1,9 +1,10 @@
-import { MidiNote, MidiTrackType, ProjectState, Track } from "types";
+import { MidiNote, MidiTrackType, ProjectState, Track } from "../../types";
 import { MidiSynthesizer, OfflineMidiSource, SynthParams, SynthVoice } from "./midi-synthesizer";
 import { DrumParams, DrumSynthesizer, DrumVoice } from "./drum-synthesizer";
 import { DEFAULT_SYNTH, SYNTHS } from "./presets/instruments";
 
-import { AudioContext, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+import { AudioContext, AudioBufferSourceNode, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+
 
 export class MidiRenderer {
 	declare projectState: ProjectState;
@@ -12,8 +13,8 @@ export class MidiRenderer {
 		projectState: ProjectState,
 	) {
 		this.projectState = projectState;
+		this.drumSynthesizer = new DrumSynthesizer(this.posToTime);
 		this.midiSynthesizer = new MidiSynthesizer(this.posToTime);
-		this.drumSynthesizer = new DrumSynthesizer(this.posToTime, new AudioContext());
 	}
 
 	posToTime(pos: number) {
@@ -112,7 +113,7 @@ export class MidiRenderer {
 		track: Track,
 		offlineAudioContext: OfflineAudioContext
 	): DrumVoice | SynthVoice | null {
-		if (trackType === 'drums') {
+		if (trackType === MidiTrackType.Drums) {
 			return this.drumSynthesizer.startNote(
 				offlineAudioContext,
 				outputNode,

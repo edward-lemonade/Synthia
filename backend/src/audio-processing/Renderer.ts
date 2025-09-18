@@ -1,10 +1,10 @@
-import { AudioFileData, AudioRegion, BaseFileRef, MidiNote, MidiRegion, MidiTrackType, ProjectState, RegionType, Track } from "@shared/types/index.js";
+import { AudioFileData, AudioRegion, BaseFileRef, MidiNote, MidiRegion, MidiTrackType, ProjectState, RegionType, Track } from "@shared/types";
 import { ReverbProcessor } from "@shared/audio-processing/synthesis/effects/reverb-handler";
 import { getAudioFile } from "./../../src/db/s3_client";
 import { MidiRenderer } from "@shared/audio-processing/synthesis/midi-renderer";
 import WavEncoder from 'wav-encoder';
 
-import { AudioContext, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
+import { AudioContext, AudioBuffer, OfflineAudioContext, OscillatorNode, GainNode, BiquadFilterNode } from 'isomorphic-web-audio-api';
 
 export class Renderer {
 	declare projectState: ProjectState;
@@ -42,7 +42,7 @@ export class Renderer {
 		return this.projectState.studio.tracks.reduce((max, track) => {
 			return Math.max(max, track.regions.reduce((regionMax, region) => {
 				return Math.max(regionMax, region.start + region.duration);
-				}, 0));
+			}, 0));
 		}, 0) * this.projectState.studio.timeSignature.N  / this.projectState.studio.bpm * 60; 
 	}
 
@@ -215,7 +215,7 @@ export class Renderer {
 	}
 
 	async base64ToAudioBuffer(base64: string, audioContext: OfflineAudioContext): Promise<AudioBuffer> {
-		// 1. Convert base64 string → ArrayBuffer
+		// base64 to ArrayBuffer
 		const binary = atob(base64);
 		const len = binary.length;
 		const bytes = new Uint8Array(len);
@@ -224,7 +224,7 @@ export class Renderer {
 		}
 		const arrayBuffer = bytes.buffer;
 
-		// 2. Decode audio data into AudioBuffer
+		// ArrayBuffer to AudioBuffer
 		return await audioContext.decodeAudioData(arrayBuffer);
 	}
 }

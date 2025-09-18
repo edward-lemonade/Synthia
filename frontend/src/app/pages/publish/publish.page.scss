@@ -1,0 +1,199 @@
+@use "theme" as *;
+
+.container {
+	display: flex;
+	min-height: calc(100vh - 64px);
+	padding: 0 $pad-ends;
+}
+
+.publish-container {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	padding: 10px 0;
+	gap: 24px;
+	
+	.header {
+        justify-content: left;
+        color: $appbar-text;
+        font-size: 26px;
+        font-weight: 700;
+    }
+
+    .title-section {
+		.title-field {
+			width: 100%;
+			
+			::ng-deep .mat-mdc-form-field {
+				.mat-mdc-text-field-wrapper {
+					background-color: rgba(255, 255, 255, 0.05);
+					border-radius: 8px;
+				}
+				
+				.mat-mdc-form-field-label {
+					color: rgba(255, 255, 255, 0.8);
+				}
+				
+				.mat-mdc-input-element {
+					color: white;
+					font-size: 24px;
+					font-weight: 300;
+				}
+				
+				.mat-mdc-form-field-outline {
+					color: rgba(255, 255, 255, 0.3);
+				}
+				
+				&.mat-focused .mat-mdc-form-field-outline {
+					color: rgba(255, 255, 255, 0.6);
+				}
+			}
+		}
+	}
+
+	.description-section {
+		.description-field {
+			width: 100%;
+			
+			::ng-deep .mat-mdc-form-field {
+				.mat-mdc-text-field-wrapper {
+					background-color: rgba(255, 255, 255, 0.05);
+					border-radius: 8px;
+				}
+				
+				.mat-mdc-form-field-label {
+					color: rgba(255, 255, 255, 0.8);
+				}
+				
+				.mat-mdc-input-element {
+					color: white;
+				}
+				
+				.mat-mdc-form-field-outline {
+					color: rgba(255, 255, 255, 0.3);
+				}
+				
+				&.mat-focused .mat-mdc-form-field-outline {
+					color: rgba(255, 255, 255, 0.6);
+				}
+			}
+		}
+	}
+
+	.publish-options {
+		flex: 1;
+		min-height: 100px; // Ensure some minimum space
+	}
+	
+	.publish-button-container {
+		display: flex;
+		justify-content: center;
+		margin-top: auto;
+		padding-top: 24px;
+		
+		.loading-section {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 20px;
+			
+			.loading-text {
+				color: rgba(255, 255, 255, 0.7);
+				font-size: 16px;
+			}
+		}
+		
+		.button {
+			display: flex;
+			padding: 0 20px;
+			height: 48px;
+			min-width: 140px;
+			border-radius: 24px;
+			border: 0px;
+			font-size: 16px;
+			font-weight: 600;
+			cursor: pointer;
+			align-items: center;
+			transition: all 0.2s ease;
+			
+			&:hover:not(:disabled) {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+			}
+			
+			&:disabled {
+				opacity: 0.6;
+			}
+			
+			mat-icon {
+				margin-right: 8px;
+			}
+		}
+
+		.published-section {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 20px;
+			width: 100%;
+			
+			.published-status {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				padding: 16px 24px;
+				background-color: rgba(76, 175, 80, 0.1);
+				border: 1px solid rgba(76, 175, 80, 0.3);
+				border-radius: 12px;
+				
+				.published-icon {
+					color: #4CAF50;
+					font-size: 24px;
+					width: 24px;
+					height: 24px;
+				}
+				
+				.published-text {
+					color: #4CAF50;
+					font-size: 16px;
+					font-weight: 500;
+				}
+			}
+			
+			.published-actions {
+				display: flex;
+				gap: 16px;
+				justify-content: center;
+				flex-wrap: wrap;
+				
+				.update-button {
+					color: $appbar-text;
+					background-color: $app-bg-l;
+					box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+				}
+				
+				.unpublish-button {
+					color: white;
+					background-color: #f44336;
+					box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+					
+					&:hover:not(:disabled) {
+						background-color: #d32f2f;
+						box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+					}
+				}
+			}
+		}
+	}
+}
+
+.loading, .error {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	flex: 1;
+	text-align: center;
+	color: $appbar-text;
+	padding: 40px;
+}

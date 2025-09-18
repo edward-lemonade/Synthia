@@ -1,5 +1,6 @@
 import { TimeSignature } from '../studio/TimeSignature';
 import { Key } from '../studio/Key';
+import { ProjectMetadata } from './ProjectMetadata';
 
 export enum RegionType { Audio="audio", Midi="midi" }
 export enum AudioTrackType { Audio="audio", Microphone="microphone" }

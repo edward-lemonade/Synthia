@@ -1,5 +1,8 @@
 import { PORT } from "./env";
 
+// Initialize isomorphic-web-audio-api for Node.js
+import 'isomorphic-web-audio-api';
+
 import express from "express";
 import cors from "cors";
 

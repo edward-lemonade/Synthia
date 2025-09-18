@@ -1,0 +1,219 @@
+@use "theme" as *;
+
+.comments-section {
+	background: linear-gradient(135deg, 
+		rgb(57, 40, 69) 0%, 
+		rgb(37, 42, 53) 100%, 
+	);
+	border-radius: 24px;
+	padding: 32px;
+	transition: all 0.3s ease;
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		pointer-events: none;
+	}
+	&:hover {
+		transform: translateY(-4px);
+	}
+
+	.comments-header {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 24px;
+
+		h3 {
+			color: white;
+			font-size: 24px;
+			font-weight: 600;
+			margin: 0;
+		}
+
+		.comment-count {
+			background: $accent-purple-l;
+			color: $app-bg;
+			padding: 4px 12px;
+			border-radius: 20px;
+			font-size: 14px;
+			font-weight: 600;
+		}
+	}
+
+	.new-comment {
+		margin-bottom: 32px;
+
+		.comment-form {
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+
+			.comment-input {
+				width: 100%;
+
+				::ng-deep .mat-mdc-form-field {
+					.mat-mdc-text-field-wrapper {
+						background: $app-bg-ll;
+						border-radius: 12px;
+					}
+
+					.mat-mdc-form-field-flex {
+						.mat-mdc-floating-label {
+							color: $appbar-text;
+						}
+					}
+
+					textarea {
+						color: white;
+						resize: vertical;
+					}
+				}
+			}
+
+			mat-hint {
+				color: white;
+			}
+
+			.submit-comment-btn {
+				align-self: flex-start;
+				border-radius: 8px;
+				padding: 8px 24px;
+			}
+		}
+
+		.guest-display {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			color: $appbar-text;
+			text-align: center;
+
+			mat-icon {
+				font-size: 48px;
+				width: 48px;
+				height: 48px;
+				margin-bottom: 16px;
+				opacity: 0.5;
+			}
+
+			p {
+				font-size: 20px;
+				opacity: 0.7;
+				margin: 0;
+			}
+		}
+	}
+
+	.comments-list {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+
+		.comment {
+			display: flex;
+			gap: 16px;
+			padding: 20px;
+			background: rgba(255,255,255,0.1);
+			border-radius: 12px;
+			transition: background-color 0.2s ease;
+
+			&:hover {
+				background: rgba(255,255,255,0.2);
+			}
+
+
+			.comment-content {
+				flex: 1;
+
+				.comment-header {
+					display: flex;
+					align-items: center;
+					gap: 12px;
+					margin-bottom: 8px;
+
+					.comment-author {
+						color: white;
+						font-weight: 600;
+						font-size: 14px;
+					}
+
+					.comment-time {
+						color: $appbar-text;
+						font-size: 12px;
+						opacity: 0.7;
+					}
+				}
+
+				.comment-text {
+					color: $appbar-text;
+					line-height: 1.5;
+					margin-bottom: 12px;
+					font-size: 14px;
+				}
+
+				.comment-actions {
+					display: flex;
+					gap: 16px;
+
+					.comment-action-btn {
+						display: flex;
+						align-items: center;
+						gap: 4px;
+						background: none;
+						border: none;
+						color: $appbar-text;
+						cursor: pointer;
+						padding: 4px 8px;
+						border-radius: 6px;
+						font-size: 12px;
+						transition: all 0.2s ease;
+
+						&:hover {
+							background: $app-bg-lll;
+							color: white;
+						}
+
+						mat-icon {
+							font-size: 16px;
+							width: 16px;
+							height: 16px;
+
+							&.liked {
+								color: #ff4444;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	.no-comments {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 60px 20px;
+		color: $appbar-text;
+		text-align: center;
+
+		mat-icon {
+			font-size: 48px;
+			width: 48px;
+			height: 48px;
+			margin-bottom: 16px;
+			opacity: 0.5;
+		}
+
+		p {
+			font-size: 16px;
+			opacity: 0.7;
+			margin: 0;
+		}
+	}
+}

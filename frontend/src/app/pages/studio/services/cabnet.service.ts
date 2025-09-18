@@ -29,6 +29,7 @@ export class CabnetService { // SINGLETON
 				untracked(() => {
 					const isOpen = this.isOpen();
 					this.closeCabnet();
+					if (!trackType) {return}
 					if (isOpen) this.openCabnet();
 				});
 			});
@@ -61,6 +62,7 @@ export class CabnetService { // SINGLETON
 	trackType = computed<TrackType|null>(() => { return RegionSelectService.instance.selectedTrack()?.trackType() ?? null });
 
 	openCabnet(tabOption: number = this.TAB_OPTIONS[this.trackType()!][0]) {
+		if (tabOption == undefined) { this.closeCabnet(); return}
 		this.isOpen.set(true);
 		this.selectedTabIndex.set(tabOption);
 	}
