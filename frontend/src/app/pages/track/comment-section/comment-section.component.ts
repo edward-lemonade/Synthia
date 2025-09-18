@@ -103,6 +103,9 @@ export class CommentSectionComponent {
 		
 		try {
 			const result = await this.trackService.leaveComment(this.newComment.trim());
+			if (result) {
+				this.newComment = '';
+			}
 		} catch (error) {
 			console.error('Failed to post comment:', error);
 		} finally {

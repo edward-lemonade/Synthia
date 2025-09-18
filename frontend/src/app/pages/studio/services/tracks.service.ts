@@ -1,4 +1,4 @@
-import { computed, Injectable, Injector, Signal } from "@angular/core";
+import { computed, Injectable, Injector, signal, Signal } from "@angular/core";
 import { AudioRegion, AudioTrackType, MidiRegion, Region, RegionType, regionTypeFromTrack, Track, TrackType } from "@shared/types";
 import { StateService } from "../state/state.service";
 
@@ -99,5 +99,14 @@ export class TracksService {
 		return this.COLORS[this.numTracks() % this.COLORS.length];
 	}
 
+	// ========================================================
+	// Mute/Solo
+
+	soloedTracks = computed<string[]>(() => this.tracks().filter(track => track.solo()).map(track => track._id));
+	isSoloing = computed(() => {return this.soloedTracks().length > 0})
+
+	isTrackMutedBySolo(trackId: string) {
+		return this.isSoloing() && !(this.soloedTracks().includes(trackId));
+	}
 	
 }
