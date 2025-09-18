@@ -20,7 +20,7 @@ export class ProjectsService {
 	// Rename state management
 	public renamingProjectId: WritableSignal<string | null> = signal(null);
 
-	public async loadProjects() {
+	public async loadProjects(signal: AbortSignal) {
 		try {
 			const token = await this.auth.getAccessToken();
 			const user = this.auth.getUserAuth();
@@ -29,7 +29,7 @@ export class ProjectsService {
 			const res = await axios.post<{ projects: ProjectMetadata[] }>(
 				'/api/projects/get_mine', 
 				{ userId: user.sub },
-				{ headers: {Authorization: `Bearer ${token}`}}
+				{ headers: {Authorization: `Bearer ${token}`}, signal}
 			);
 
 			if (res.data.projects) {
@@ -39,17 +39,18 @@ export class ProjectsService {
 				
 				this.projectsList.set(sortedProjects);
 				sortedProjects.forEach((projectMetadata) => {
-					this.loadExport(projectMetadata.projectId);
+					this.loadExport(projectMetadata.projectId, signal);
 				});
 			}
 			return res.data.projects;
-		} catch (err) {
+		} catch (err: any) {
+			if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {return [];}
 			console.error('Error during project loading:', err);
 			return [];
 		}
 	}
 
-	public async loadExport(projectId: string) {
+	public async loadExport(projectId: string, signal: AbortSignal) {
 		try {
 			const token = await this.auth.getAccessToken();
 			const user = this.auth.getUserAuth();
@@ -58,7 +59,7 @@ export class ProjectsService {
 			const res = await axios.post<{ exportFileData: AudioFileData }>(
 				'/api/projects/get_export', 
 				{ projectId: projectId },
-				{ headers: {Authorization: `Bearer ${token}`}}
+				{ headers: {Authorization: `Bearer ${token}`}, signal}
 			);
 
 			const exportFileData = res.data.exportFileData;
@@ -67,7 +68,8 @@ export class ProjectsService {
 				this.projectExports[projectId] = cachedExportData;
 			}
 			return exportFileData;
-		} catch (err) {
+		} catch (err: any) {
+			if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {return [];}
 			console.error('Error during export loading:', err);
 			return [];
 		}

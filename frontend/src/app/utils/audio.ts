@@ -1,4 +1,4 @@
-import { AudioFileData } from "@shared/types";
+import { AudioFileData, WaveformData } from "@shared/types";
 import { Base64 } from "js-base64";
 
 export function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
@@ -10,23 +10,17 @@ export function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
 	});
 }
 
-export function  arrayBufferToBase64(buffer: ArrayBuffer): string {
+export function arrayBufferToBase64(buffer: ArrayBuffer): string {
 	const bytes = new Uint8Array(buffer);
 	return Base64.fromUint8Array(bytes);
 }
 
-export function  base64ToArrayBuffer(base64: string): ArrayBuffer {
+export function base64ToArrayBuffer(base64: string): ArrayBuffer {
 	const bytes = Base64.toUint8Array(base64);
 	return bytes.buffer as ArrayBuffer;
 }
 
 
-export interface WaveformData {
-	duration: number;
-	sampleRate: number;
-	channels: number;
-	peaks: Float32Array;
-}
 export interface CachedAudioFile {
 	fileId: string;
 	arrayBuffer: ArrayBuffer;
@@ -38,13 +32,13 @@ export interface CachedAudioFile {
 	waveformData: WaveformData;
 }
 export async function makeCacheAudioFile(audioFileData: AudioFileData) {
-	const arrayBuffer = base64ToArrayBuffer(audioFileData.buffer64);
+	const arrayBuffer = base64ToArrayBuffer(audioFileData.buffer64); // THIS is the bottleneck
 	const blob = new Blob([arrayBuffer], { type: audioFileData.mimeType });
 	const url = URL.createObjectURL(blob);
 
 	const audioContext = new AudioContext();
 	const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice());
-	const waveformData = await generateAudioWaveform(arrayBuffer);
+	const waveformData = audioFileData.waveformData ?? await generateAudioWaveform(arrayBuffer);
 
 	const cachedFile: CachedAudioFile = {
 		fileId: audioFileData.fileId,

@@ -45,12 +45,12 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 			
 			<div class="waveform-container">
 				<div #waveformWrapper class="waveform-wrapper">
-					<ng-container *ngIf="!trackService.isAudioLoaded">
+					<ng-container *ngIf="!trackService.isAudioLoaded()">
 						<div class="loading-content">
 							<app-loading-spinner/>
 						</div>
 					</ng-container>
-					<ng-container *ngIf="trackService.isAudioLoaded">
+					<ng-container *ngIf="trackService.isAudioLoaded()">
 						<canvas #canvas 
 							class="waveform-canvas"
 							(click)="onWaveformClick($event)">

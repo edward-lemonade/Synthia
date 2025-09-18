@@ -1,13 +1,13 @@
 import { AudioFileData } from '@shared/types';
+import { REDIS_URL } from '@src/env';
 import { createClient } from 'redis';
 
 export const redis = createClient({
-	url: 'redis://localhost:6379'
+	url: REDIS_URL
 });
 
 redis.on('error', (err) => console.error('Redis Client Error', err));
 
-console.log("activating redis")
 await redis.connect(); 
 console.log("activated redis")
 

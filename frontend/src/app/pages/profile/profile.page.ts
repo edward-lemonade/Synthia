@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProfileService } from './profile.service';
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
+import { take } from 'rxjs';
 
 @Component({
 	selector: 'app-profile',
@@ -71,7 +72,9 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 	`,
 	styleUrls: ['./profile.page.scss']
 })
-export class ProfilePage {
+export class ProfilePage implements OnInit, OnDestroy {
+	private abortController = new AbortController();
+
 	constructor(
 		private route: ActivatedRoute, 
 		private router: Router, 
@@ -79,10 +82,15 @@ export class ProfilePage {
 	) {}
 
 	async ngOnInit() {
-		this.route.params.subscribe(async params => {
-			const displayName = params['displayName'];
-			await this.profileService.loadProfile(displayName);
-		});
+		this.route.params
+			.pipe(take(1))
+			.subscribe(async params => {
+				const displayName = params['displayName'];
+				await this.profileService.loadProfile(displayName, this.abortController.signal);
+			});
+	}
+	ngOnDestroy(): void {
+		this.abortController.abort();
 	}
 
 	onReleasedItemClick(projectId: string) {

@@ -83,8 +83,9 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 	`,
 	styleUrls: ['./discover.page.scss']
 })
-export class DiscoverPage {
+export class DiscoverPage implements OnDestroy {
 	@ViewChild('scrollContainer', { static: true }) scrollContainer!: ElementRef;
+	private abortController = new AbortController();
 
 	ListMode = ListMode;
 	
@@ -98,20 +99,24 @@ export class DiscoverPage {
 		private router: Router,
 		public discoverService: DiscoverService
 	) {
-		discoverService.getMoreItems();
+		discoverService.getMoreItems(false, this.abortController.signal);
+	}
+
+	ngOnDestroy(): void {
+		this.abortController.abort();
 	}
 
 	selectNew() {
 		this.discoverService.listMode.set(ListMode.New);
-		this.discoverService.getMoreItems(true);
+		this.discoverService.getMoreItems(true, this.abortController.signal);
 	}
 	selectHot() {
 		this.discoverService.listMode.set(ListMode.Hot);
-		this.discoverService.getMoreItems(true);
+		this.discoverService.getMoreItems(true, this.abortController.signal);
 	}
 	doSearch() {
 		this.discoverService.listMode.set(ListMode.Search);
-		this.discoverService.getMoreItems(true);
+		this.discoverService.getMoreItems(true, this.abortController.signal);
 	}
 
 	async loadMoreItems() {
@@ -121,7 +126,7 @@ export class DiscoverPage {
 
 		try {
 			this.isLoadingMore.set(true);
-			await this.discoverService.getMoreItems();
+			await this.discoverService.getMoreItems(false, this.abortController.signal);
 		} catch (error) {
 			console.error('Error loading more tracks:', error);
 		} finally {

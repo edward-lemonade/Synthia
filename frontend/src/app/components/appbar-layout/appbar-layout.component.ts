@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, inject, Inject } from '@angular/core';
+import { AfterViewInit, Component, computed, inject, Inject, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -12,13 +12,18 @@ import { UserService } from '@src/app/services/user.service';
 import { MatMenu, MatMenuModule } from "@angular/material/menu";
 import { MatIconModule } from '@angular/material/icon';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
+import { LoadingSpinnerComponent } from "../loading-spinner/loading-spinner.component";
 
 @Component({
 	selector: 'app-appbar-layout',
-	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, MatIconButton, AvatarComponent],
+	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, MatIconButton, AvatarComponent, LoadingSpinnerComponent],
 	template: `
 		<div class="page-container">
-			<ng-container *ngIf="auth.isAuthenticated$ | async">	
+			<ng-container *ngIf="!appAuthService.firstCheckCompleted()">
+				<app-loading-spinner/>
+			</ng-container>
+
+			<ng-container *ngIf="(auth.isAuthenticated$ | async) && appAuthService.firstCheckCompleted()">	
 				<mat-toolbar class="appbar">
 					<span class="title-button" (click)="title()">Synthia</span>
 
@@ -87,7 +92,7 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 				</div>
 			</ng-container>
 
-			<ng-container *ngIf="!(auth.isAuthenticated$ | async)">	
+			<ng-container *ngIf="!(auth.isAuthenticated$ | async) && appAuthService.firstCheckCompleted()">
 				<mat-toolbar class="appbar">
 					<span class="title-button" (click)="title()">Synthia</span>
 
@@ -114,6 +119,7 @@ export class AppbarLayoutComponent {
 	constructor(
 		@Inject(DOCUMENT) public document: Document, 
 		public auth: AuthService,
+		public appAuthService: AppAuthService,
 		public router: Router,
 	) {}
 

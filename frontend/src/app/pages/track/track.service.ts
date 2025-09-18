@@ -23,8 +23,8 @@ export class TrackService {
 	projectMetadata = signal<ProjectMetadata|null>(null);
 	projectFront = signal<ProjectFront|null>(null);
 	cachedAudioFile = signal<CachedAudioFile|null>(null);
-	isDataLoaded = false;
-	isAudioLoaded = false;
+	isDataLoaded = signal(false);
+	isAudioLoaded = signal(false);
 
 	comments = signal<Comment[]>([])
 
@@ -34,13 +34,13 @@ export class TrackService {
 
 	isGuestUser = true;
 
-	public async loadTrack(projectId: string) {
+	public async loadTrack(projectId: string, signal: AbortSignal) {
 		try {
 			const headers = await this.appAuthService.getAuthHeaders();
 
 			const res = await axios.get<{ metadata: ProjectMetadata, front: ProjectFrontDTO, comments: CommentDTO[], interactionState: InteractionState }>(
 				`/api/track/${projectId}/data`, 
-				{ headers }
+				{ headers, signal }
 			);
 
 			if (res.data.metadata && res.data.front) {
@@ -54,33 +54,36 @@ export class TrackService {
 
 				this.likes.set(res.data.front.likes);
 				this.hasLiked.set(this.interactionState.hasLiked);
-				this.isDataLoaded = true;
+				this.isDataLoaded.set(true);
 			}
 			return res.data.metadata;
-		} catch (err) {
+		} catch (err: any) {
+			if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {return null;}
 			console.error('Error during project loading:', err);
 			return null;
 		}
 	}
 
-	public async loadAudio(projectId: string) {
+	public async loadAudio(projectId: string, signal: AbortSignal) {
 		try {
 			const headers = await this.appAuthService.getAuthHeaders();
-
+			
 			const res = await axios.get<{ audioFileData: AudioFileData }>(
 				`/api/track/${projectId}/audio`, 
-				{ headers }
+				{ headers, signal }
 			);
 
 			const audioFileData = res.data.audioFileData;
 			if (audioFileData) {
 				const cachedExportData = await makeCacheAudioFile(audioFileData);
 				this.cachedAudioFile.set(cachedExportData);
-				this.isAudioLoaded = true;
+				this.isAudioLoaded.set(true);
 				return cachedExportData;
 			}
+			
 			return null;
-		} catch (err) {
+		} catch (err: any) {
+			if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {return null;}
 			console.error('Error during export loading:', err);
 			return null;
 		}
