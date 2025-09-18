@@ -19,6 +19,8 @@ import { StateNode } from '@src/app/pages/studio/state/state.factory';
 import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 
+import { v4 as uuidv4 } from 'uuid';
+
 @Component({
 	selector: 'tracklist-track',
 	imports: [CommonModule, MatIconModule, MatSliderModule, FormsModule, RotaryKnobComponent, MatButtonToggleModule, MatDivider, MatMenuModule],
@@ -103,9 +105,18 @@ import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 						/>
 					
 					<mat-button-toggle-group multiple class="ms-btn-group">
-						<button 	class="ms-btn" [class.selected]="mute()" (click)="toggleMute()">M</button>
-						<mat-divider 	class="divider" [vertical]="true"></mat-divider>
-						<button 	class="ms-btn" [class.selected]="solo()" (click)="toggleSolo()">S</button>
+						<button 	
+							class="ms-btn" 
+							[class.selected]="mute()" 
+							[class.greyed-out]="isMutedBySolo()"
+							(click)="toggleMute()">M
+						</button>
+						<mat-divider class="divider" [vertical]="true"></mat-divider>
+						<button 	
+							class="ms-btn" 
+							[class.selected]="solo()" 
+							(click)="toggleSolo()">S
+						</button>
 					</mat-button-toggle-group>
 				</div>
 			</div>
@@ -148,7 +159,7 @@ export class TrackComponent implements OnInit {
 		this.panInput.set(this.track.pan());
 	}
 
-	color = computed(() => this.track.color());
+	get color() { return this.track.color };
 	colorSelectedBg = computed(() => this.selectService.selectedTrackBgColor(this.track.color()));
 	isSelected = computed(() => this.selectService.selectedTrack()?._id == this.track._id);
 	select() { this.selectService.setSelectedTrack(this.track); }
@@ -170,10 +181,23 @@ export class TrackComponent implements OnInit {
 		this.playbackService.updateNodePan(this.track._id, this.panInput());
 	}
 
-	mute = computed(() => this.track.mute());
-	toggleMute() { this.track.mute.update(m => !m);this.playbackService.updateNodeVolumeMute(this.track._id, this.volumeInput(), this.mute()); }
-	solo = computed(() => this.track.solo());
-	toggleSolo() { this.track.solo.update(s => !s) }
+	get mute() { return this.track.mute };
+	toggleMute() { this.track.mute.update(m => !m); this.playbackService.updateNodeVolumeMute(this.track._id, this.volumeInput(), this.mute()); }
+	get solo() { return this.track.solo };
+	toggleSolo() { 
+		if (this.tracksService.soloedTracks().length == this.tracksService.tracks().length-1) {
+			const actionId = uuidv4();
+			this.tracksService.tracks().forEach((trackNode) => {trackNode.solo.set(false, actionId)});
+		} else {
+			this.track.solo.update(s => !s);
+		}
+	}
+
+	isMutedBySolo = computed(() => { 
+		const isMutedBySolo = this.tracksService.isTrackMutedBySolo(this.track._id);
+		this.playbackService.updateNodeVolumeMute(this.track._id, this.volumeInput(), this.mute() || isMutedBySolo);
+		return isMutedBySolo}
+	)
 
 	menuMoveUp() {
 		this.tracksService.moveTrack(this.index, Math.max(0, this.index-1))

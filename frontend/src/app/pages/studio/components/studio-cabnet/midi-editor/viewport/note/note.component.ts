@@ -170,7 +170,7 @@ export class NoteComponent {
 				Math.max(0, this.viewportService.snap(regionStart + this.originalNote.start + this.originalNote.duration + deltaPos)) :
 				Math.max(0, regionStart + this.originalNote.start + this.originalNote.duration + deltaPos);
 		}
-		newDuration = Math.max(0.1, newAbsEnd - newAbsStart);
+		newDuration = Math.max(0.03, newAbsEnd - newAbsStart);
 
 		this.ghostNote.set({
 			start: newAbsStart - regionStart,

@@ -247,6 +247,24 @@
 
 				cursor: pointer;
 				transition: all 0.2s ease;
+
+				position: relative;
+		
+				&.greyed-out::before {
+					content: '';
+					position: absolute;
+					top: 0;
+					left: 0;
+					right: 0;
+					bottom: 0;
+					background: rgba(0, 0, 0, 0.6); // Semi-transparent grey overlay
+					pointer-events: none;
+					z-index: 100;
+				}
+				&.greyed-out > * {
+					position: relative;
+					z-index: 101;
+				}
 			}
 
 			.ms-btn:hover {

@@ -148,7 +148,6 @@ export class TrackService {
 			);
 
 			if (res.data.success) {
-				console.log(res.data)
 				if (res.data.isLiked) {
 					this.likes.update(v => v+1);
 					this.hasLiked.set(true);

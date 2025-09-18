@@ -349,7 +349,7 @@ export class TimelinePlaybackService { // SINGLETON
 		let nodes = this.trackNodes.get(trackId);
 		if (!nodes) { nodes = this.createTrackNodes(trackId) }
 
-		this.updateNodeVolumeMute(trackId, track.volume(), track.mute());
+		this.updateNodeVolumeMute(trackId, track.volume(), track.mute() || TracksService.instance.isTrackMutedBySolo(trackId));
 		this.updateNodePan(trackId, track.pan());
 		this.updateNodeReverb(trackId, track.reverb());
 		return nodes;	
