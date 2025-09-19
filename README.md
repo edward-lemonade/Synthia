@@ -1,4 +1,6 @@
 # Synthia
+Online DAW (Digital Audio Workstation) with community features. Create music, share music, and discover other peoples' music.
+
 Started in July, still WIP and will be actively updated moving forward. Has lots of bugs/limitations but is usable and fun to play with.
 
 https://synthia-f.vercel.app/
