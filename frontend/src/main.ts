@@ -1,12 +1,12 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 
-import { env } from './env/environment';
+import { environment } from './environments/environment.development';
 
 import { enablePatches } from "immer";
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
 
-if (env.production) {
+if (environment.PRODUCTION) {
 	console.log('Running in production mode');
 } else {
 	console.log('Running in development mode');

@@ -16,14 +16,10 @@ import { LoadingSpinnerComponent } from "../loading-spinner/loading-spinner.comp
 
 @Component({
 	selector: 'app-appbar-layout',
-	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, MatIconButton, AvatarComponent, LoadingSpinnerComponent],
+	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, MatIconButton, AvatarComponent],
 	template: `
 		<div class="page-container">
-			<ng-container *ngIf="!appAuthService.firstCheckCompleted()">
-				<app-loading-spinner/>
-			</ng-container>
-
-			<ng-container *ngIf="(auth.isAuthenticated$ | async) && appAuthService.firstCheckCompleted()">	
+			<ng-container *ngIf="(auth.isAuthenticated$ | async)">	
 				<mat-toolbar class="appbar">
 					<span class="title-button" (click)="title()">Synthia</span>
 
@@ -92,7 +88,7 @@ import { LoadingSpinnerComponent } from "../loading-spinner/loading-spinner.comp
 				</div>
 			</ng-container>
 
-			<ng-container *ngIf="!(auth.isAuthenticated$ | async) && appAuthService.firstCheckCompleted()">
+			<ng-container *ngIf="!(auth.isAuthenticated$ | async)">
 				<mat-toolbar class="appbar">
 					<span class="title-button" (click)="title()">Synthia</span>
 
