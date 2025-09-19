@@ -17,14 +17,19 @@ const app = express();
 app.use(cors(
 	{
 		origin: `${FRONTEND_URL}`,
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 		allowedHeaders: [
 			'Content-Type',
 			'Authorization', 
+			"Origin", 
+			"Accept"
 		],
 		credentials: true,
 		optionsSuccessStatus: 200,
 	}
 ))
+app.options("/{*any}", cors())
+
 app.use(express.json())
 app.use(routes);
 

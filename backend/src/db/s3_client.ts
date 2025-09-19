@@ -8,10 +8,18 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Base64 } from "js-base64";
 import { AudioContext } from "isomorphic-web-audio-api";
 
-const s3 = new S3Client({ region: 'us-west-1' });
+const s3Config = { region: 'us-west-1' } as any;
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+	s3Config.credentials = {
+		accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+		secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+	};
+}
+
+const s3 = new S3Client(s3Config);
 
 export async function putAudioFile(projectId: string, fileId: string, file: Express.Multer.File) {
-	const key = 'projects/' + projectId + '/files/' + fileId;
+	const key = 'project/' + projectId + '/files/' + fileId;
 	const command = new PutObjectCommand({
 		Bucket: 'app-synthia',
 		Key: key,
@@ -41,7 +49,7 @@ export async function getAudioFile(projectId: string, fileId: string) : Promise<
 	
 	// Query AWS
 
-	const key = 'projects/' + projectId + '/files/' + fileId;
+	const key = 'project/' + projectId + '/files/' + fileId;
 	const command = new GetObjectCommand({
 		Bucket: "app-synthia",
 		Key: key,
@@ -131,10 +139,9 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	};
 
 	(async () => {
-		const audioFileDataWithWaveform = await populateWaveformData(audioFileData);
 		await redis_client.setCachedAudioFileData(
 			cacheKey,
-			audioFileDataWithWaveform,
+			audioFileData,
 			redis_client.CACHE_CONFIG.exportFile.ttl
 		);
 	})();
@@ -238,14 +245,3 @@ export async function getProfilePictureUrl(userId: string, options?: {
 
 // ========================================================================================
 // Helpers
-
-async function populateWaveformData(audioFileData: AudioFileData): Promise<AudioFileData> {
-	const arrayBuffer = base64ToArrayBuffer(audioFileData.buffer64);
-	const waveformData = audioFileData.waveformData ?? await generateAudioWaveformB(arrayBuffer);
-
-	return {...audioFileData, waveformData}
-}
-function base64ToArrayBuffer(base64: string): ArrayBuffer {
-	const bytes = Base64.toUint8Array(base64);
-	return bytes.buffer as ArrayBuffer;
-}
