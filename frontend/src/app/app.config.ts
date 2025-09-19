@@ -6,7 +6,7 @@ import { provideHttpClient } from '@angular/common/http';
 
 
 import { routes } from './app.routes';
-import { env } from '../env/environment';
+import { environment } from '../environments/environment.development';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
@@ -15,11 +15,11 @@ export const appConfig: ApplicationConfig = {
 		provideAnimations(),
 		provideHttpClient(),
 		provideAuth0({
-			domain: env.auth0_domain,
-			clientId: env.auth0_client,
+			domain: environment.AUTH0_DOMAIN,
+			clientId: environment.AUTH0_CLIENT,
 			authorizationParams: {
 				redirect_uri: window.location.origin,
-				audience: env.auth0_api_aud,
+				audience: environment.AUTH0_API_AUD,
 				scope: 'openid profile email offline_access',
 			},
 			cacheLocation: 'localstorage', // or 'memory' for better security in production
