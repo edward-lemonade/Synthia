@@ -1,5 +1,5 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { AudioFileData, WaveformData } from "@shared/types";
+import { AudioFileData, generateAudioWaveform, WaveformData } from "@shared/types";
 import { Readable } from "stream";
 import * as redis_client from './redis_client';
 import { redis } from './redis_client';
@@ -247,37 +247,4 @@ async function populateWaveformData(audioFileData: AudioFileData): Promise<Audio
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
 	const bytes = Base64.toUint8Array(base64);
 	return bytes.buffer as ArrayBuffer;
-}
-async function generateAudioWaveform(audioBuffer: ArrayBuffer): Promise<WaveformData> {
-	const audioContext = new AudioContext();
-	const decodedBuffer = await audioContext.decodeAudioData(audioBuffer);
-	
-	// Generate peaks at high resolution (we'll downsample for display)
-	const peaks = extractPeaks(decodedBuffer, 8192); // High resolution base
-	
-	const waveformData: WaveformData = {
-		peaks,
-		sampleRate: decodedBuffer.sampleRate,
-		duration: decodedBuffer.duration,
-		channels: decodedBuffer.numberOfChannels
-	};
-	return waveformData;
-}
-function extractPeaks(audioBuffer: AudioBuffer, targetLength: number): Float32Array {
-	const channelData = audioBuffer.getChannelData(0); // Use first channel
-	const blockSize = Math.floor(channelData.length / targetLength);
-	const peaks = new Float32Array(targetLength);
-
-	for (let i = 0; i < targetLength; i++) {
-		const start = i * blockSize;
-		const end = Math.min(start + blockSize, channelData.length);
-		let max = 0;
-
-		for (let j = start; j < end; j++) {
-			max = Math.max(max, Math.abs(channelData[j]));
-		}
-		peaks[i] = max;
-	}
-
-	return peaks;
 }
