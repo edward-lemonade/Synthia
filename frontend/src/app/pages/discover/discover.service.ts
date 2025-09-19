@@ -46,7 +46,7 @@ export class DiscoverService {
 	async getMoreItems(reset: boolean, signal: AbortSignal) {
 		try {
 			const headers = await this.auth.getAuthHeaders();
-			console.log(`${environment.API_URL}/api/tracks/search`);
+			console.log(`${environment.API_URL}/api/tracks/`);
 			
 			if (reset) { this.projectsAndUsers.set([]); }
 			
@@ -87,7 +87,7 @@ export class DiscoverService {
 
 				if (this.listMode() == ListMode.New) {
 					res = await axios.post<{ success: boolean, projects: ProjectReleased[], reachedEnd: boolean }>(
-						`/api/tracks/newest`, 
+						`${environment.API_URL}/api/tracks/newest`, 
 						{
 							amount: this.BATCH_SIZE,
 							lastReleaseDate: (this.getLast() as ProjectReleased)?.front.dateReleased,
@@ -97,7 +97,7 @@ export class DiscoverService {
 					);
 				} else if (this.listMode() == ListMode.Hot) {
 					res = await axios.post<{ success: boolean, projects: ProjectReleased[], lastHotness: number, reachedEnd: boolean }>(
-						`/api/tracks/hottest`, 
+						`${environment.API_URL}/api/tracks/hottest`, 
 						{
 							amount: this.BATCH_SIZE,
 							lastHotness: this.lastHotness,
