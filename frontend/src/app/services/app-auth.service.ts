@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { AuthService as Auth0Service, User as UserAuth } from '@auth0/auth0-angular';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { env } from '@env/environment';
+import { environment } from '@src/environments/environment.development';
 
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +19,6 @@ export class AppAuthService {
 	private userAuthSubject = new BehaviorSubject<UserAuth | null>(null);
 	getUserAuth(): UserAuth | null { return this.userAuth; }
 	getUserAuth$() { return this.userAuthSubject.asObservable(); }
-	firstCheckCompleted = signal(false);
 
 	private initializeUser() {
 		this.auth0.user$.pipe(
@@ -27,7 +26,6 @@ export class AppAuthService {
 		).subscribe(user => {
 			this.userAuth = user;
 			this.userAuthSubject.next(this.userAuth);
-			this.firstCheckCompleted.set(true);
 		});
 	}
 
@@ -35,7 +33,7 @@ export class AppAuthService {
 		return firstValueFrom(
 			this.auth0.getAccessTokenSilently({
 				authorizationParams: {
-					audience: env.auth0_api_aud,
+					audience: environment.AUTH0_API_AUD,
 					prompt: 'consent'
 				}
 			})
