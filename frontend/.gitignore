@@ -43,5 +43,5 @@ Thumbs.db
 
 # Environment
 /src/env
-/src/environments
+#/src/environments
 .env
