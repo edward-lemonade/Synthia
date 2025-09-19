@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { AudioFileData, generateAudioWaveform, WaveformData } from "@shared/types";
+import { AudioFileData, WaveformData } from "@shared/types";
+import { generateAudioWaveformB } from "@shared/audio-processing/waveform/waveform.backend";
 import { Readable } from "stream";
 import * as redis_client from './redis_client';
 import { redis } from './redis_client';
@@ -240,7 +241,7 @@ export async function getProfilePictureUrl(userId: string, options?: {
 
 async function populateWaveformData(audioFileData: AudioFileData): Promise<AudioFileData> {
 	const arrayBuffer = base64ToArrayBuffer(audioFileData.buffer64);
-	const waveformData = audioFileData.waveformData ?? await generateAudioWaveform(arrayBuffer);
+	const waveformData = audioFileData.waveformData ?? await generateAudioWaveformB(arrayBuffer);
 
 	return {...audioFileData, waveformData}
 }

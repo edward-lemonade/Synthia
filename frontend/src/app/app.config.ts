@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { PreloadAllModules, provideRouter, withPreloading } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideAuth0 } from '@auth0/auth0-angular';
 import { provideHttpClient } from '@angular/common/http';
@@ -10,7 +10,7 @@ import { env } from '../env/environment';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
-		provideRouter(routes),
+		provideRouter(routes, withPreloading(PreloadAllModules)),
 		provideZoneChangeDetection({ eventCoalescing: true }),
 		provideAnimations(),
 		provideHttpClient(),

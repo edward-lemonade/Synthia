@@ -20,6 +20,7 @@ import { take } from 'rxjs';
 	selector: 'app-track',
 	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, AudioSectionComponent, CommentSectionComponent, LoadingSpinnerComponent],
 	providers: [TrackService],
+	standalone: true,
 	template: `
 		<!-- Loading Screen -->
 		<div class="loading-container" *ngIf="!tracksService.isDataLoaded">
