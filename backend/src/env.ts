@@ -13,3 +13,5 @@ export const AUTH0_SECRET = process.env.AUTH0_SECRET
 export const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE
 
 export const REDIS_URL = process.env.REDIS_URL
+
+export const FRONTEND_URL = process.env.FRONTEND_URL

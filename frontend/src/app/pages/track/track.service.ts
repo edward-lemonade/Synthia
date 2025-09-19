@@ -7,6 +7,7 @@ import { AudioFileData, Comment, CommentDTO, fillDates, InteractionState, Projec
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
 import { UserService } from '@src/app/services/user.service';
 import { AuthService } from '@auth0/auth0-angular';
+import { environment } from '@src/environments/environment.development';
 
 
 @Injectable()
@@ -39,7 +40,7 @@ export class TrackService {
 			const headers = await this.appAuthService.getAuthHeaders();
 
 			const res = await axios.get<{ metadata: ProjectMetadata, front: ProjectFrontDTO, comments: CommentDTO[], interactionState: InteractionState }>(
-				`/api/track/${projectId}/data`, 
+				`${environment.API_URL}/api/track/${projectId}/data`, 
 				{ headers, signal }
 			);
 
@@ -69,7 +70,7 @@ export class TrackService {
 			const headers = await this.appAuthService.getAuthHeaders();
 			
 			const res = await axios.get<{ audioFileData: AudioFileData }>(
-				`/api/track/${projectId}/audio`, 
+				`${environment.API_URL}/api/track/${projectId}/audio`, 
 				{ headers, signal }
 			);
 
@@ -118,7 +119,7 @@ export class TrackService {
 			if (!user) return null;
 
 			const res = await axios.post<{ success: boolean, newComment: CommentDTO }>(
-				`/api/track/${this.projectMetadata()!.projectId}/comment`, 
+				`${environment.API_URL}/api/track/${this.projectMetadata()!.projectId}/comment`, 
 				{
 					comment: comment.trim(),
 					timestamp: Date.now()
@@ -145,7 +146,7 @@ export class TrackService {
 			if (!user) return false;
 
 			const res = await axios.post<{ success: boolean, isLiked: boolean }>(
-				`/api/track/${this.projectMetadata()!.projectId}/toggle_like`, 
+				`${environment.API_URL}/api/track/${this.projectMetadata()!.projectId}/toggle_like`, 
 				{},
 				{ headers: { Authorization: `Bearer ${token}` }}
 			);
@@ -178,7 +179,7 @@ export class TrackService {
 			const now = Date.now();
 
 			const res = await axios.post<{ success: boolean }>(
-				`/api/track/${this.projectMetadata()!.projectId}/record_play`, 
+				`${environment.API_URL}/api/track/${this.projectMetadata()!.projectId}/record_play`, 
 				{ 
 					timestamp: now
 				},

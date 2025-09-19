@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import axios from 'axios';
 import { AudioFileData, ProjectFront, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
+import { environment } from '@src/environments/environment.development';
 
 @Injectable()
 export class PublishService {
@@ -24,7 +25,7 @@ export class PublishService {
 			if (!user) return null;
 
 			const res = await axios.post<{ project: ProjectMetadata }>(
-				'/api/projects/get_project', 
+				`${environment.API_URL}/api/projects/get_project`, 
 				{ userId: user.sub, projectId: projectId},
 				{ headers: {Authorization: `Bearer ${token}`}}
 			);
@@ -47,7 +48,7 @@ export class PublishService {
 			if (!user) return null;
 
 			const res = await axios.post<{ exportFileData: AudioFileData }>(
-				'/api/projects/get_export', 
+				`${environment.API_URL}/api/projects/get_export`, 
 				{ projectId: projectId },
 				{ headers: {Authorization: `Bearer ${token}`}}
 			);
@@ -90,7 +91,7 @@ export class PublishService {
 			if (!user || !this.projectMetadata?.projectId) return null;
 
 			const res = await axios.post<{ projectFront: any }>(
-				'/api/projects/get_front', 
+				`${environment.API_URL}/api/projects/get_front`, 
 				{ projectId: this.projectMetadata.projectId },
 				{ headers: {Authorization: `Bearer ${token}`}}
 			);
@@ -120,13 +121,13 @@ export class PublishService {
 			let res = null;
 			if (project.isReleased) {
 				res = await axios.post<{ success: boolean }>(
-					'/api/projects/rename_front', 
+					`${environment.API_URL}/api/projects/rename_front`, 
 					{ projectId: project.projectId, newName: newName },
 					{ headers: {Authorization: `Bearer ${token}`}}
 				);
 			} else {
 				 res = await axios.post<{ success: boolean }>(
-					'/api/projects/rename', 
+					`${environment.API_URL}/api/projects/rename`, 
 					{ projectId: project.projectId, newName: newName },
 					{ headers: {Authorization: `Bearer ${token}`}}
 				);
@@ -159,7 +160,7 @@ export class PublishService {
 			}
 
 			const res = await axios.post<{ success: boolean }>(
-				'/api/projects/publish', 
+				`${environment.API_URL}/api/projects/publish`, 
 				{ 
 					userId: user.sub, 
 					title: title,
@@ -187,7 +188,7 @@ export class PublishService {
 			if (!user) return null;
 
 			const res = await axios.post<{ success: boolean }>(
-				'/api/projects/unpublish', 
+				`${environment.API_URL}/api/projects/unpublish`, 
 				{ 
 					projectId: this.projectMetadata.projectId,
 				},

@@ -10,6 +10,7 @@ import { AudioCacheService } from "../services/audio-cache.service";
 import { DeepPartial, ObjectStateNode, objectStateNode, propStateNode, StateNode } from "./state.factory";
 import { ObjectScaffold, Scaffold, STATE_SCAFFOLD } from "./state.scaffolds";
 import { UserService } from "@src/app/services/user.service";
+import { environment } from "@src/environments/environment.development";
 
 
 @Injectable()
@@ -95,7 +96,7 @@ export class StateService { // SINGLETON
 			console.log('Got JWT token:', token ? 'Token received' : 'No token');
 
 			const res = await axios.post<{state: ProjectState}>(
-				'/api/projects/get_studio', 
+				`${environment.API_URL}/api/projects/get_studio`, 
 				{ 
 					projectId: projectId, 
 				},
@@ -122,7 +123,7 @@ export class StateService { // SINGLETON
 			
 			if (this.isNew && token) {
 				const res = await axios.post<{ success: boolean }>(
-					'/api/projects/save_new', 
+					`${environment.API_URL}/api/projects/save_new`, 
 					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
 					{
 						headers: {
@@ -142,7 +143,7 @@ export class StateService { // SINGLETON
 				return res.data.success;
 			} else {
 				const res = await axios.post<{ success: boolean }>(
-					'/api/projects/save_overwrite', 
+					`${environment.API_URL}/api/projects/save_overwrite`, 
 					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
 					{
 						headers: {

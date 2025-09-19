@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { AudioFileData, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
+import { environment } from '@src/environments/environment.development';
 
 @Injectable()
 export class ProjectsService {
@@ -27,7 +28,7 @@ export class ProjectsService {
 			if (!user) return [];
 
 			const res = await axios.post<{ projects: ProjectMetadata[] }>(
-				'/api/projects/get_mine', 
+				`${environment.API_URL}/api/projects/get_mine`, 
 				{ userId: user.sub },
 				{ headers: {Authorization: `Bearer ${token}`}, signal}
 			);
@@ -57,7 +58,7 @@ export class ProjectsService {
 			if (!user) return [];
 
 			const res = await axios.post<{ exportFileData: AudioFileData }>(
-				'/api/projects/get_export', 
+				`${environment.API_URL}/api/projects/get_export`, 
 				{ projectId: projectId },
 				{ headers: {Authorization: `Bearer ${token}`}, signal}
 			);
@@ -135,7 +136,7 @@ export class ProjectsService {
 			if (!token) { console.error('No valid token'); return; }
 
 			const res = await axios.post<{ success: boolean }>(
-				'/api/projects/delete_studio', 
+				`${environment.API_URL}/api/projects/delete_studio`, 
 				{ projectId: project.projectId },
 				{ headers: {Authorization: `Bearer ${token}`}}
 			);
@@ -176,7 +177,7 @@ export class ProjectsService {
 			}
 
 			const res = await axios.post<{ success: boolean }>(
-				'/api/projects/rename', 
+				`${environment.API_URL}/api/projects/rename`, 
 				{ projectId: project.projectId, newName: newName },
 				{ headers: {Authorization: `Bearer ${token}`}}
 			);
