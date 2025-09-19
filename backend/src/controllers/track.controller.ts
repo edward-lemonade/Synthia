@@ -196,6 +196,7 @@ const MAX_AMOUNT = 40;
 export async function newest(req: Request, res: Response) {
     try {
         const { amount, lastReleaseDate, lastProjectId } = req.body;
+		console.log("load newest", amount, lastReleaseDate, lastProjectId);
 
         let query: any = {};
         if (lastReleaseDate && lastProjectId) {
@@ -241,6 +242,7 @@ export async function newest(req: Request, res: Response) {
 export async function hottest(req: Request, res: Response) {
     try {
         const { amount, lastHotness, lastProjectId } = req.body;
+		console.log("load hottest", amount, lastHotness, lastProjectId);
 
 		// Use "aggregation pipeline" since hotness isn't actually stored
 
