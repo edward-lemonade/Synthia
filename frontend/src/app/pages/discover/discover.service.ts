@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import axios from 'axios';
 import { UserService } from '@src/app/services/user.service';
 import { ProjectReleased, RelevantProjectOrUser, User } from '@shared/types';
+import { environment } from '@src/environments/environment.development';
 
 export enum ListMode { New, Hot, Search }
 
@@ -45,6 +46,7 @@ export class DiscoverService {
 	async getMoreItems(reset: boolean, signal: AbortSignal) {
 		try {
 			const headers = await this.auth.getAuthHeaders();
+			console.log(`${environment.API_URL}/api/tracks/search`);
 			
 			if (reset) { this.projectsAndUsers.set([]); }
 			
@@ -57,7 +59,7 @@ export class DiscoverService {
 					lastUserId: string,
 					reachedEnd: boolean,
 				}>(
-					`/api/tracks/search`, 
+					`${environment.API_URL}/api/tracks/search`, 
 					{
 						amount: this.BATCH_SIZE,
 						lastScore: this.lastScore,
