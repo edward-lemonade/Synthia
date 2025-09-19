@@ -7,6 +7,7 @@ import { ProjectMetadata } from '@shared/types';
 
 @Component({
 	selector: 'app-projects',
+	standalone: true,
 	imports: [RouterModule, ProjectsLayoutComponent, ProjectsListItemComponent],
 	providers: [ProjectsService],
 	template: `

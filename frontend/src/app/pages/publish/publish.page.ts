@@ -13,6 +13,7 @@ import { PublishAudioComponent } from "./audio/audio.component";
 
 @Component({
 	selector: 'app-publish',
+	standalone: true,
 	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, FormsModule, PublishAudioComponent],
 	providers: [PublishService],
 	template: `

@@ -19,6 +19,7 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 
 @Component({
 	selector: 'app-discover',
+	standalone: true,
 	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, TrackItem, UserItem, LoadingSpinnerComponent],
 	providers: [DiscoverService],
 	template: `

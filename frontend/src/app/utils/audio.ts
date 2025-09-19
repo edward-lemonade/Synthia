@@ -1,4 +1,5 @@
-import { AudioFileData, generateAudioWaveform, WaveformData } from "@shared/types";
+import { AudioFileData, WaveformData } from "@shared/types";
+import { generateAudioWaveformF } from "@shared/audio-processing/waveform/waveform.frontend"
 import { Base64 } from "js-base64";
 
 export function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
@@ -38,7 +39,7 @@ export async function makeCacheAudioFile(audioFileData: AudioFileData) {
 
 	const audioContext = new AudioContext();
 	const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice());
-	const waveformData = audioFileData.waveformData ?? await generateAudioWaveform(arrayBuffer);
+	const waveformData = audioFileData.waveformData ?? await generateAudioWaveformF(arrayBuffer);
 
 	const cachedFile: CachedAudioFile = {
 		fileId: audioFileData.fileId,

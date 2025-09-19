@@ -13,12 +13,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "audio-buffer": "^5.0.0",
     "isomorphic-web-audio-api": "^1.0.2",
-    "mongoose": "^8.17.2",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
-    "web-audio-api": "^0.2.2"
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@types/node": "^24.3.0"

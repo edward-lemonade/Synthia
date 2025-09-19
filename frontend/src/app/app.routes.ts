@@ -3,28 +3,68 @@ import { Routes } from '@angular/router';
 import { UnAuthGuard } from './core/guards/un-auth.guard';
 import { AuthGuard } from './core/guards/auth.guard';
 
-import { AppbarLayoutComponent } from './components/appbar-layout/appbar-layout.component';
-import { HomePage } from './pages/home/home.page';
-import { ProjectsPage } from './pages/projects/projects.page';
-import { StudioPage } from './pages/studio/studio.page';
-import { PublishPage } from './pages/publish/publish.page';
-import { TrackPage } from './pages/track/track.page';
-import { SettingsPage } from './pages/settings/settings.page';
-import { RegistrationPage } from './pages/registration/registration.page';
-import { ProfilePage } from './pages/profile/profile.page';
-import { DiscoverPage } from './pages/discover/discover.page';
-
 export const routes: Routes = [
-	{path: '', component: HomePage, canActivate: [UnAuthGuard]},
-	{path: '', component: AppbarLayoutComponent, children: [
-		{path: 'projects', component: ProjectsPage, canActivate: [AuthGuard]},
-		{path: 'settings', component: SettingsPage, canActivate: [AuthGuard]},
-		{path: 'discover', component: DiscoverPage},
-		{path: 'publish/:projectId', component: PublishPage, canActivate: [AuthGuard]},
-		{path: 'track/:trackId', component: TrackPage},
-		{path: 'profile/:displayName', component: ProfilePage},
-	]},
-	{path: 'registration', component: RegistrationPage, canActivate: [AuthGuard]},
-	{path: 'studio/:projectId', component: StudioPage, canActivate: [AuthGuard]},
-	{path: '**', redirectTo: ''},
+	{
+		path: '',
+		loadComponent: () =>
+			import('./pages/home/home.page').then(m => m.HomePage),
+		canActivate: [UnAuthGuard],
+	},
+	{
+		path: '',
+		loadComponent: () =>
+			import('./components/appbar-layout/appbar-layout.component').then(
+				m => m.AppbarLayoutComponent
+			),
+		children: [
+			{
+				path: 'projects',
+				loadComponent: () =>
+					import('./pages/projects/projects.page').then(m => m.ProjectsPage),
+				canActivate: [AuthGuard],
+			},
+			{
+				path: 'settings',
+				loadComponent: () =>
+					import('./pages/settings/settings.page').then(m => m.SettingsPage),
+				canActivate: [AuthGuard],
+			},
+			{
+				path: 'discover',
+				loadComponent: () =>
+					import('./pages/discover/discover.page').then(m => m.DiscoverPage),
+			},
+			{
+				path: 'publish/:projectId',
+				loadComponent: () =>
+					import('./pages/publish/publish.page').then(m => m.PublishPage),
+				canActivate: [AuthGuard],
+			},
+			{
+				path: 'track/:trackId',
+				loadComponent: () =>
+					import('./pages/track/track.page').then(m => m.TrackPage),
+			},
+			{
+				path: 'profile/:displayName',
+				loadComponent: () =>
+					import('./pages/profile/profile.page').then(m => m.ProfilePage),
+			},
+		],
+	},
+	{
+		path: 'registration',
+		loadComponent: () =>
+			import('./pages/registration/registration.page').then(
+				m => m.RegistrationPage
+			),
+		canActivate: [AuthGuard],
+	},
+	{
+		path: 'studio/:projectId',
+		loadComponent: () =>
+			import('./pages/studio/studio.page').then(m => m.StudioPage),
+		canActivate: [AuthGuard],
+	},
+	{ path: '**', redirectTo: '' },
 ];
