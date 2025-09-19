@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import axios from 'axios';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { User, ProjectReleased } from '@shared/types';
+import { environment } from '@src/environments/environment.development';
 
 @Injectable()
 export class ProfileService {
@@ -16,7 +17,7 @@ export class ProfileService {
 			const headers = await this.auth.getAuthHeaders();
 
 			const res = await axios.get<{ user: User, projects: ProjectReleased[] }>(
-				`/api/profile/${displayName}`,
+				`${environment.API_URL}/api/profile/${displayName}`,
 				{ headers, signal }
 			);
 			

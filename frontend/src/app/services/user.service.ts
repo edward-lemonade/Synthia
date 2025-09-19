@@ -6,6 +6,7 @@ import { AppAuthService } from './app-auth.service';
 import { AuthService, User as UserAuth } from '@auth0/auth0-angular';
 import { Router } from '@angular/router';
 import axios from 'axios';
+import { environment } from '@src/environments/environment.development';
 
 
 @Injectable({ providedIn: 'root' })
@@ -67,7 +68,7 @@ export class UserService {
 			const token = await this.appAuthService.getAccessToken();
 
 			const res = await axios.get<{user: User | null, isNew: boolean}>(
-				`/api/me`, 
+				`${environment.API_URL}/api/me`, 
 				{ headers: { Authorization: `Bearer ${token}` }}
 			);
 
@@ -87,7 +88,7 @@ export class UserService {
 			const token = await this.appAuthService.getAccessToken();
 
 			const profileRes = await axios.put<{user: User}>(
-				`/api/me/create`,
+				`${environment.API_URL}/api/me/create`,
 				{
 					displayName: userData.displayName,
 					bio: userData.bio
@@ -103,7 +104,7 @@ export class UserService {
 				formData.append('profilePicture', userData.profilePicture);
 
 				const pictureRes = await axios.put<{success: boolean, profilePictureURL: string}>(
-					`/api/user/profile_picture`,
+					`${environment.API_URL}/api/user/profile_picture`,
 					formData,
 					{ 
 						headers: { 
@@ -132,7 +133,7 @@ export class UserService {
 			const token = await this.appAuthService.getAccessToken();
 
 			const res = await axios.put<{user: User}>(
-				`/api/user/profile`,
+				`${environment.API_URL}/api/user/profile`,
 				profileData,
 				{ headers: { Authorization: `Bearer ${token}` }}
 			);
@@ -158,7 +159,7 @@ export class UserService {
 			formData.append('profilePicture', file);
 
 			const res = await axios.put<{success: boolean, profilePictureURL: string}>(
-				`/api/user/profile_picture`,
+				`${environment.API_URL}/api/user/profile_picture`,
 				formData,
 				{ 
 					headers: { 

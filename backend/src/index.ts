@@ -1,4 +1,4 @@
-import { PORT } from "./env";
+import { PORT, FRONTEND_URL } from "./env";
 
 // Initialize isomorphic-web-audio-api for Node.js
 import 'isomorphic-web-audio-api';
@@ -14,7 +14,17 @@ enablePatches()
 
 const app = express();
 
-app.use(cors())
+app.use(cors(
+	{
+		origin: `${FRONTEND_URL}`,
+		allowedHeaders: [
+			'Content-Type',
+			'Authorization', 
+		],
+		credentials: true,
+		optionsSuccessStatus: 200,
+	}
+))
 app.use(express.json())
 app.use(routes);
 

@@ -113,14 +113,12 @@ export class AudioRecordingService {
 
 	private async convertToMp3(audioBlob: Blob): Promise<Blob> { // gotta convert recordings to mp3 because backend can't handle webp
 		try {
-			// Get raw binary data (works for any format)
 			const arrayBuffer = await audioBlob.arrayBuffer();
 			
-			// Create audio context to decode the audio (format-agnostic)
+			// Decoding should work for any format
 			const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
 			const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0)); // slice() creates a copy
 			
-			// Extract audio channel data
 			const left = audioBuffer.getChannelData(0);
 			const right = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : left;
 			
@@ -141,7 +139,7 @@ export class AudioRecordingService {
 			const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, bitRate);
 			const mp3Data: BlobPart[] = [];
 			
-			// Encode in chunks
+			// Encode
 			const sampleBlockSize = 1152; // MP3 frame size
 			
 			for (let i = 0; i < leftInt16.length; i += sampleBlockSize) {
@@ -157,13 +155,13 @@ export class AudioRecordingService {
 				}
 			}
 			
-			// Flush the encoder
+			// Flush encoder
 			const mp3buf = mp3encoder.flush();
 			if (mp3buf.length > 0) {
 				mp3Data.push(mp3buf);
 			}
 			
-			// Create MP3 blob
+			// Create blob
 			return new Blob(mp3Data, { type: 'audio/mp3' });
 			
 		} catch (error) {
@@ -188,14 +186,11 @@ export class AudioRecordingService {
 				mimeType: 'audio/mp3'
 			};
 
-			// Update signal with the new recording
 			this.lastRecording.set(recordingData);
 
-			// Convert to file and add to cache
 			const recordingFile = this.recordingToFile(recordingData);
 			await AudioCacheService.instance.addAudioFile(recordingFile);
 
-			// Resolve the recording promise
 			if (this.recordingResolve) {
 				this.recordingResolve(recordingData);
 				this.recordingResolve = null;
@@ -241,7 +236,6 @@ export class AudioRecordingService {
 		return mimeMap[baseMimeType] || 'webm';
 	}
 
-	// Release media stream resources
 	private releaseMediaStream(): void {
 		if (this.stream) {
 			this.stream.getTracks().forEach(track => track.stop());
@@ -259,7 +253,6 @@ export class AudioRecordingService {
 		});
 	}
 
-	// Check if browser supports audio recording
 	isSupported(): boolean {
 		return !!(navigator.mediaDevices && window.MediaRecorder);
 	}
