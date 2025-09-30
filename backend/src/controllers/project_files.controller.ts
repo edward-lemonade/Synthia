@@ -5,7 +5,7 @@ import { assertProjectAccess } from "@src/utils/authorization";
 
 export async function saveAudioFiles(req: Request, res: Response) {
 	try {
-		const projectId = req.body.projectId;
+		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
 		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -42,7 +42,7 @@ export async function saveAudioFiles(req: Request, res: Response) {
 
 export async function loadAudioFiles(req: Request, res: Response) {
 	try {
-		const projectId = req.body.projectId;
+		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
 		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });

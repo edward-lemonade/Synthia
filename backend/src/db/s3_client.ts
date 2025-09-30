@@ -1,12 +1,11 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { AudioFileData, WaveformData } from "@shared/types";
-import { generateAudioWaveformB } from "@shared/audio-processing/waveform/waveform.backend";
+import { generateAudioWaveformB } from "@src/utils/audio";
 import { Readable } from "stream";
 import * as redis_client from './redis_client';
 import { redis } from './redis_client';
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Base64 } from "js-base64";
-import { AudioContext } from "isomorphic-web-audio-api";
 
 const s3Config = { region: 'us-west-1' } as any;
 if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
@@ -54,7 +53,6 @@ export async function getAudioFile(projectId: string, fileId: string) : Promise<
 		Bucket: "app-synthia",
 		Key: key,
 	});
-
 	const response = await s3.send(command);
 
 	const stream = response.Body as Readable;
@@ -69,19 +67,19 @@ export async function getAudioFile(projectId: string, fileId: string) : Promise<
 		fileId: fileId,
 		buffer64: buffer.toString('base64'),
 		mimeType: response.ContentType!,
-	}
+	};
 
-	await redis_client.setCachedAudioFileData(cacheKey, projectFile, redis_client.CACHE_CONFIG.audioFile.ttl);
-
+	(async () => {
+		await redis_client.setCachedAudioFileData(
+			cacheKey, 
+			projectFile, 
+			redis_client.CACHE_CONFIG.audioFile.ttl
+		);
+	})();
 	return projectFile;
 }
 
-export async function putExportFile(projectId: string, file: Blob): Promise<void> {
-
-	// Convert Blob to ArrayBuffer for consistent handling
-	const arrayBuffer = await file.arrayBuffer();
-	const buffer = Buffer.from(arrayBuffer);
-	
+export async function putExportFile(projectId: string, buffer: Buffer): Promise<void> {
 	const key = 'project/' + projectId + '/export';
 	const command = new PutObjectCommand({
 		Bucket: 'app-synthia',
@@ -103,12 +101,11 @@ export async function putExportFile(projectId: string, file: Blob): Promise<void
 }
 export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	// Query Redis
-	
+
 	const cacheKey = redis_client.getExportFileKey(projectId);
 	const cachedData = await redis_client.getCachedAudioFileData(cacheKey);
-	if (cachedData) {
-		return cachedData;
-	}
+	if (cachedData) { return cachedData; }
+
 	
 	// Query AWS
 
@@ -119,17 +116,13 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	});
 
 	const response = await s3.send(command);
-
 	if (!response.Body) {
 		throw new Error("No body in S3 response");
 	}
 
-	// Handle the stream consistently with getAudioFile
 	const stream = response.Body as Readable;
 	const chunks: Uint8Array[] = [];
-	for await (const chunk of stream) {
-		chunks.push(chunk as Uint8Array);
-	}
+	for await (const chunk of stream) { chunks.push(chunk as Uint8Array);}
 	const buffer = Buffer.concat(chunks);
 
 	const audioFileData: AudioFileData = {
@@ -137,8 +130,8 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 		buffer64: buffer.toString('base64'),
 		mimeType: response.ContentType || 'audio/wav',
 	};
-
-	(async () => {
+	(async () => { // put cache async
+		const cacheKey = redis_client.getExportFileKey(projectId);
 		await redis_client.setCachedAudioFileData(
 			cacheKey,
 			audioFileData,
@@ -147,6 +140,111 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	})();
 	return audioFileData;
 }
+export async function getExportBuffer(projectId: string): Promise<Buffer> {
+	// Query Redis
+
+	const cacheKey = redis_client.getExportBufferKey(projectId);
+	const cachedData = await redis_client.getCachedBuffer(cacheKey);
+	if (cachedData) { return cachedData; }
+
+	
+	// Query AWS
+
+	const key = 'project/' + projectId + '/export';
+	const command = new GetObjectCommand({
+		Bucket: "app-synthia",
+		Key: key,
+	});
+
+	const response = await s3.send(command);
+	if (!response.Body) {
+		throw new Error("No body in S3 response");
+	}
+
+	const stream = response.Body as Readable;
+	const chunks: Uint8Array[] = [];
+	for await (const chunk of stream) { chunks.push(chunk as Uint8Array);}
+	const buffer = Buffer.concat(chunks);
+
+	(async () => { // put cache async
+		const cacheKey = redis_client.getExportBufferKey(projectId);
+		await redis_client.setCachedBuffer(
+			cacheKey,
+			buffer,
+			redis_client.CACHE_CONFIG.exportFile.ttl
+		);
+	})();
+	return buffer;
+}
+
+export async function putWaveformData(projectId: string, waveformData: WaveformData): Promise<void> {
+	const key = 'project/' + projectId + '/waveform';
+	const waveformJson = JSON.stringify(waveformData);
+
+	const command = new PutObjectCommand({
+		Bucket: 'app-synthia',
+		Key: key,
+		Body: waveformJson,
+	});
+
+	try {
+		await s3.send(command);
+		console.log(`Uploaded waveform`);
+
+		const cacheKey = redis_client.getWaveformFileKey(projectId);
+		redis.del(cacheKey);
+	} catch (error) {
+		console.error("Upload waveform:", error);
+		throw error;	
+	}
+}
+export async function getWaveformData(projectId: string): Promise<WaveformData | undefined> {
+	// Query Redis
+
+	const cacheKey = redis_client.getWaveformFileKey(projectId);
+	const cachedData = await redis_client.getCachedWaveformData(cacheKey);
+	if (cachedData) {
+		return cachedData;
+	}
+
+	// Query AWS
+	try {
+		const key = 'project/' + projectId + '/waveform';
+		const command = new GetObjectCommand({
+			Bucket: "app-synthia",
+			Key: key,
+		});
+
+		const response = await s3.send(command);
+
+		if (!response.Body) {
+			throw new Error("No body in S3 response");
+		}
+
+		const bodyString = await response.Body.transformToString();
+		const waveformData = JSON.parse(bodyString) as WaveformData;
+
+		(async () => {
+			await redis_client.setCachedWaveformData(
+				cacheKey,
+				waveformData,
+				redis_client.CACHE_CONFIG.exportFile.ttl
+			);
+		})();
+		return waveformData;
+	} catch (error: any) {
+		if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+			(async () => {
+				const audioFileData = await getExportFile(projectId) as AudioFileData;
+				const arrayBuffer = Base64.toUint8Array(audioFileData.buffer64).buffer as ArrayBuffer;
+				const waveformData = await generateAudioWaveformB(arrayBuffer);
+				await putWaveformData(projectId, waveformData);
+			})();
+			return undefined;
+		}
+	}
+}
+	
 
 export async function putProfilePicture(userId: string, file: Express.Multer.File): Promise<void> {
 	const key = `user/${userId}/pfp`;
@@ -242,6 +340,3 @@ export async function getProfilePictureUrl(userId: string, options?: {
 		throw new Error(`Failed to retrieve profile picture URL: ${error.message}`);
 	}
 }
-
-// ========================================================================================
-// Helpers

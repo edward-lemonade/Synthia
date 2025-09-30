@@ -1,5 +1,4 @@
 import { AudioFileData, WaveformData } from "@shared/types";
-import { generateAudioWaveformF } from "@shared/audio-processing/waveform/waveform.frontend"
 import { Base64 } from "js-base64";
 
 export function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
@@ -39,6 +38,7 @@ export async function makeCacheAudioFile(audioFileData: AudioFileData) {
 
 	const audioContext = new AudioContext();
 	const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice());
+	console.log(audioFileData.waveformData ? 'waveform data found' : 'no waveform data, generating...');
 	const waveformData = audioFileData.waveformData ?? await generateAudioWaveformF(arrayBuffer);
 
 	const cachedFile: CachedAudioFile = {
@@ -54,3 +54,36 @@ export async function makeCacheAudioFile(audioFileData: AudioFileData) {
 	return cachedFile;
 }
 
+export async function generateAudioWaveformF(arrayBuffer: ArrayBuffer): Promise<WaveformData> {
+	const audioContext = new AudioContext();
+	const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
+	
+	// Generate peaks at high resolution (we'll downsample for display)
+	const peaks = extractPeaks(decodedBuffer, 8192); // High resolution base
+	
+	const waveformData: WaveformData = {
+		peaks,
+		sampleRate: decodedBuffer.sampleRate,
+		duration: decodedBuffer.duration,
+		channels: decodedBuffer.numberOfChannels
+	};
+	return waveformData;
+}
+function extractPeaks(audioBuffer: AudioBuffer, targetLength: number): Float32Array {
+	const channelData = audioBuffer.getChannelData(0); // Use first channel
+	const blockSize = Math.floor(channelData.length / targetLength);
+	const peaks = new Float32Array(targetLength);
+
+	for (let i = 0; i < targetLength; i++) {
+		const start = i * blockSize;
+		const end = Math.min(start + blockSize, channelData.length);
+		let max = 0;
+
+		for (let j = start; j < end; j++) {
+			max = Math.max(max, Math.abs(channelData[j]));
+		}
+		peaks[i] = max;
+	}
+
+	return peaks;
+}

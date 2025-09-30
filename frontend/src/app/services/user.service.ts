@@ -1,12 +1,10 @@
 import { computed, Injectable, signal, inject } from '@angular/core';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { Author, User } from '@shared/types';
 import { HttpClient } from '@angular/common/http';
 import { AppAuthService } from './app-auth.service';
 import { AuthService, User as UserAuth } from '@auth0/auth0-angular';
 import { Router } from '@angular/router';
-import axios from 'axios';
-import { environment } from '@src/environments/environment.development';
+import { ApiService } from './api.service';
 
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +17,8 @@ export class UserService {
 	constructor(
 		private http: HttpClient,
 		private auth: AuthService,
-		private appAuthService: AppAuthService
+		private appAuthService: AppAuthService,
+		private apiService: ApiService,
 	) {
 		UserService._instance = this;
 		this.initializeUser();
@@ -65,12 +64,7 @@ export class UserService {
 
 	async getUser(): Promise<User|null> {		
 		try {
-			const token = await this.appAuthService.getAccessToken();
-
-			const res = await axios.get<{user: User | null, isNew: boolean}>(
-				`${environment.API_URL}/api/me`, 
-				{ headers: { Authorization: `Bearer ${token}` }}
-			);
+			const res = await ApiService.instance.routes.getMe();
 
 			this.user.set(res.data.user);
 			this.isNewUser.set(res.data.isNew);
@@ -78,43 +72,39 @@ export class UserService {
 			return res.data.user;
 
 		} catch (err) {
-			console.log('Unable to get user, either user does not exist or user is a guest.');
+			console.log('Unable to get user, either user does not exist or user is a guest.', err);
 			return null;
 		}
 	}
 
 	async createUser(userData: { displayName: string; bio?: string; profilePicture?: File }): Promise<User> {
 		try {
-			const token = await this.appAuthService.getAccessToken();
-
-			const profileRes = await axios.put<{user: User}>(
-				`${environment.API_URL}/api/me/create`,
-				{
+			const profileRes = await ApiService.instance.routes.createMe({
+				data: {
 					displayName: userData.displayName,
 					bio: userData.bio
-				},
-				{ headers: { Authorization: `Bearer ${token}` }}
-			);
+				}
+			});
 
 			let user = profileRes.data.user;
+			if (!user) { throw new Error('User creation failed'); }
+			UserService.instance.user.set(user);
 
-			// If profile picture was provided, upload it
-			if (userData.profilePicture) {
-				const formData = new FormData();
-				formData.append('profilePicture', userData.profilePicture);
+			try {
+				// If profile picture was provided, upload it
+				if (userData.profilePicture) {
+					const formData = new FormData();
+					formData.append('profilePicture', userData.profilePicture);
 
-				const pictureRes = await axios.put<{success: boolean, profilePictureURL: string}>(
-					`${environment.API_URL}/api/user/profile_picture`,
-					formData,
-					{ 
-						headers: { 
-							Authorization: `Bearer ${token}`,
-							'Content-Type': 'multipart/form-data'
-						}
-					}
-				);
+					const pictureRes = await ApiService.instance.routes.updateProfilePicture({
+						data: formData,
+						headers: { 'Content-Type': 'multipart/form-data' }
+					}, )
 
-				user = {...user, profilePictureURL: pictureRes.data.profilePictureURL};
+					user = {...user, profilePictureURL: pictureRes.data.profilePictureURL};
+				}
+			} catch (err) {
+				console.error('Error uploading profile picture during user creation:', err);
 			}
 
 			this.user.set(user);
@@ -130,13 +120,9 @@ export class UserService {
 
 	async updateProfile(profileData: { displayName?: string; bio?: string }): Promise<User> {
 		try {
-			const token = await this.appAuthService.getAccessToken();
-
-			const res = await axios.put<{user: User}>(
-				`${environment.API_URL}/api/user/profile`,
-				profileData,
-				{ headers: { Authorization: `Bearer ${token}` }}
-			);
+			const res = await ApiService.instance.routes.updateProfile({
+				data: profileData
+			})
 
 			const user = res.data.user;
 			this.user.set(user);
@@ -153,21 +139,13 @@ export class UserService {
 
 	async updateProfilePicture(file: File): Promise<User> {
 		try {
-			const token = await this.appAuthService.getAccessToken();
-
 			const formData = new FormData();
 			formData.append('profilePicture', file);
 
-			const res = await axios.put<{success: boolean, profilePictureURL: string}>(
-				`${environment.API_URL}/api/user/profile_picture`,
-				formData,
-				{ 
-					headers: { 
-						Authorization: `Bearer ${token}`,
-						'Content-Type': 'multipart/form-data'
-					}
-				}
-			);
+			const res = await ApiService.instance.routes.updateProfilePicture({
+				data: formData,
+				headers: { 'Content-Type': 'multipart/form-data' }
+			}, )
 
 			const newUser = {...this.user()!, profilePictureURL: res.data.profilePictureURL};
 			this.user.set(newUser);

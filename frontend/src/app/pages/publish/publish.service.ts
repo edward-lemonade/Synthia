@@ -6,6 +6,7 @@ import axios from 'axios';
 import { AudioFileData, ProjectFront, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
 import { environment } from '@src/environments/environment.development';
+import { ApiService } from '@src/app/services/api.service';
 
 @Injectable()
 export class PublishService {
@@ -20,15 +21,7 @@ export class PublishService {
 
 	public async loadProject(projectId: string) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return null;
-
-			const res = await axios.post<{ project: ProjectMetadata }>(
-				`${environment.API_URL}/api/projects/get_project`, 
-				{ userId: user.sub, projectId: projectId},
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
+			const res = await ApiService.instance.routes.getMyProject({}, projectId);
 
 			if (res.data.project) {
 				this.projectMetadata = res.data.project;
@@ -43,15 +36,7 @@ export class PublishService {
 
 	public async loadExport(projectId: string) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return null;
-
-			const res = await axios.post<{ exportFileData: AudioFileData }>(
-				`${environment.API_URL}/api/projects/get_export`, 
-				{ projectId: projectId },
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
+			const res = await ApiService.instance.routes.getMyProjectExport({}, projectId);
 
 			const exportFileData = res.data.exportFileData;
 			if (exportFileData) {
@@ -86,18 +71,9 @@ export class PublishService {
 
 	public async loadFront() {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user || !this.projectMetadata?.projectId) return null;
-
-			const res = await axios.post<{ projectFront: any }>(
-				`${environment.API_URL}/api/projects/get_front`, 
-				{ projectId: this.projectMetadata.projectId },
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
+			const res = await ApiService.instance.routes.getMyProjectFront({}, this.projectMetadata!.projectId);
 
 			this.projectFront = res.data.projectFront;
-
 			return res.data.projectFront?.description || '';
 		} catch (err) {
 			console.error('Error loading project front:', err);
@@ -111,26 +87,11 @@ export class PublishService {
 
 	public async renameProject(project: ProjectMetadata, newName: string) {
 		try {
-			const token = await this.auth.getAccessToken();
-			if (!token) { 
-				console.error('No valid token');
-				this.projectMetadata = { ...project, title: project.title };
-				return false;
-			}
-			
 			let res = null;
 			if (project.isReleased) {
-				res = await axios.post<{ success: boolean }>(
-					`${environment.API_URL}/api/projects/rename_front`, 
-					{ projectId: project.projectId, newName: newName },
-					{ headers: {Authorization: `Bearer ${token}`}}
-				);
+				res = await ApiService.instance.routes.renameProjectFront({data: {newName}}, project.projectId);
 			} else {
-				 res = await axios.post<{ success: boolean }>(
-					`${environment.API_URL}/api/projects/rename`, 
-					{ projectId: project.projectId, newName: newName },
-					{ headers: {Authorization: `Bearer ${token}`}}
-				);
+				res = await ApiService.instance.routes.renameProject({data: {newName}}, project.projectId);
 			}
 
 			return res.data.success;
@@ -146,10 +107,6 @@ export class PublishService {
 
 	public async publishProject(description: string, title?: string) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return null;
-
 			if (title && title !== this.projectMetadata.title) {
 				const renameSuccess = await this.renameProject(this.projectMetadata, title);
 				if (!renameSuccess) {
@@ -159,16 +116,10 @@ export class PublishService {
 				this.projectMetadata = { ...this.projectMetadata, title: title };
 			}
 
-			const res = await axios.post<{ success: boolean }>(
-				`${environment.API_URL}/api/projects/publish`, 
-				{ 
-					userId: user.sub, 
-					title: title,
-					projectId: this.projectMetadata.projectId,
-					description: description,
-				},
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
+			const res = await ApiService.instance.routes.publishProject({data: {
+				title: title,
+				description: description,
+			}}, this.projectMetadata.projectId);
 
 			if (res.data.success) {
 				this.projectMetadata = { ...this.projectMetadata, isReleased: true };
@@ -187,13 +138,7 @@ export class PublishService {
 			const user = this.auth.getUserAuth();
 			if (!user) return null;
 
-			const res = await axios.post<{ success: boolean }>(
-				`${environment.API_URL}/api/projects/unpublish`, 
-				{ 
-					projectId: this.projectMetadata.projectId,
-				},
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
+			const res = await ApiService.instance.routes.unpublishProject({}, this.projectMetadata.projectId);
 
 			if (res.data.success) {
 				this.projectMetadata = { ...this.projectMetadata, isReleased: false };

@@ -121,14 +121,11 @@ export async function updateProfilePicture(req: Request, res: Response) {
 			return res.status(401).json({ error: 'No sub claim in token' });
 		}
 
-		// Check if file was uploaded
 		if (!req.file) {return res.status(400).json({ error: 'No file uploaded' });}
-		// Validate file type
 		if (!req.file.mimetype.startsWith('image/')) {return res.status(400).json({ error: 'File must be an image' });}
-		// Validate file size (max 5MB)
 		if (req.file.size > 5 * 1024 * 1024) {return res.status(400).json({ error: 'File size must be less than 5MB' });}
 
-		// Process the image (crop to square and resize)
+		// Crop to square and resize
 		const processedImage = await processProfilePicture(req.file.buffer, req.file.mimetype);
 		const processedFile: Express.Multer.File = {
 			...req.file,
