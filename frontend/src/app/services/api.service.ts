@@ -1,8 +1,8 @@
 import { computed, Injectable, signal, inject } from '@angular/core';
-import { AudioFileData, Author, Comment, CommentDTO, InteractionState, ProjectFront, ProjectMetadata, ProjectReleased, ProjectState, RelevantProjectOrUser, User } from '@shared/types';
+import { AudioFileData, Author, Comment, CommentDTO, InteractionState, ProjectFront, ProjectMetadata, ProjectReleased, ProjectState, RelevantProjectOrUser, User, WaveformData } from '@shared/types';
 import { AppAuthService } from './app-auth.service';
 import axios, { AxiosResponse } from 'axios';
-import { environment } from '@src/environments/environment.development';
+import { environment } from '@src/environments/environment.dev';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -62,16 +62,23 @@ export class ApiService {
 		loadProjectFiles:
 			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean, audioFileDatas: AudioFileData[]}>(`/projects/${projectId}/files/get_all`, 'post', params, true)},
 
-		streamTrack: // ???
+		streamTrack: 
 			(params: any = {}, projectId: string) => {return this.callApi<{bytes: Buffer[]}>(`/track/${projectId}/stream`, 'get', params)},
+		downloadTrack: 
+			(params: any = {}, projectId: string) => {return this.callApi<Blob>(`/track/${projectId}/download`, 'get', params)},
 		getTrack:
 			(params: any = {}, projectId: string) => {return this.callApi<{
 				success: boolean, 
 				metadata: ProjectMetadata, 
 				front: ProjectFront,
 				comments: CommentDTO[],
-				interactionState: InteractionState
+				interactionState: InteractionState,
 			}>(`/track/${projectId}/data`, 'get', params)},
+		getTrackWaveform:
+			(params: any = {}, projectId: string) => {return this.callApi<{
+				success: boolean, 
+				waveformData: WaveformData,
+			}>(`/track/${projectId}/waveform`, 'get', params)},
 		getTrackAudio:
 			(params: any = {}, projectId: string) => {return this.callApi<{
 				success: boolean, 
@@ -111,12 +118,15 @@ export class ApiService {
 		apiEndpoint: string, 
 		method: 'get'|'post'|'put'|'patch'|'delete', 
 		params: {
+			responseType?: "blob"|"arraybuffer"|"document"|"json"|"text"|"stream",
 			headers?: {[key: string]: string},
 			data?: any, 
 			signal?: AbortSignal
 		},
 		needAuth: boolean = true
 	): Promise<AxiosResponse<ResType>> {
+		console.log(apiEndpoint);
+		
 		const headers = await this.auth.getAuthHeaders();
 		if (needAuth && !headers) {
 			throw new Error('Not logged in!');

@@ -23,14 +23,14 @@ import { take } from 'rxjs';
 	standalone: true,
 	template: `
 		<!-- Loading Screen -->
-		<div class="loading-container" *ngIf="!tracksService.isDataLoaded">
+		<div class="loading-container" *ngIf="!trackService.isDataLoaded">
 			<div class="loading-content">
 				<app-loading-spinner/>
 			</div>
 		</div>
 
 		<!-- Main Content -->
-		<div class="container" *ngIf="tracksService.isDataLoaded">
+		<div class="container" *ngIf="trackService.isDataLoaded">
 			<div class="track-container">
 				<app-track-audio/>
 				<app-track-comment/>
@@ -42,16 +42,12 @@ import { take } from 'rxjs';
 export class TrackPage implements OnInit, OnDestroy {
 	private abortController = new AbortController();
 	projectId: string | null = null;
-	
-	// Direct property access since we know data is loaded
-	get projectMetadata() { return this.tracksService.projectMetadata! };
-	get projectFront() { return this.tracksService.projectFront! };
-	get cachedAudioFile() { return this.tracksService.cachedAudioFile! };
-	get interactionState() { return this.tracksService.interactionState; }
+
+	requestedData = false;
 
 	constructor(
 		private route: ActivatedRoute,
-		public tracksService: TrackService,
+		public trackService: TrackService,
 	) {}
 
 	async ngOnInit() {
@@ -59,10 +55,11 @@ export class TrackPage implements OnInit, OnDestroy {
 			.pipe(take(1))
 			.subscribe(async (params) => {
 			const trackId = params.get('trackId');
-				if (trackId) {
-					this.projectId = trackId;
-					await this.tracksService.loadTrack(this.projectId, this.abortController.signal);
-					await this.tracksService.loadAudio(this.projectId, this.abortController.signal);
+				if (trackId && !this.requestedData) {
+					this.trackService.projectId = trackId;
+					this.requestedData = true;
+					await this.trackService.loadTrack(trackId, this.abortController.signal);
+					await this.trackService.loadWaveform(trackId, this.abortController.signal);
 				}
 			});
 	}

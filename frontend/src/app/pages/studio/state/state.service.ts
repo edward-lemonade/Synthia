@@ -10,7 +10,7 @@ import { AudioCacheService } from "../services/audio-cache.service";
 import { DeepPartial, ObjectStateNode, objectStateNode, propStateNode, StateNode } from "./state.factory";
 import { ObjectScaffold, Scaffold, STATE_SCAFFOLD } from "./state.scaffolds";
 import { UserService } from "@src/app/services/user.service";
-import { environment } from "@src/environments/environment.development";
+import { environment } from "@src/environments/environment.dev";
 import { ApiService } from "@src/app/services/api.service";
 
 

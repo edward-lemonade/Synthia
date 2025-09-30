@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { AudioFileData, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
-import { environment } from '@src/environments/environment.development';
+import { environment } from '@src/environments/environment.dev';
 import { ApiService } from '@src/app/services/api.service';
 
 @Injectable()

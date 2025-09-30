@@ -28,14 +28,16 @@ router.patch('/api/projects/:projectId/rename', requireAuth, ProjectController.r
 router.patch('/api/projects/:projectId/rename_front', requireAuth, ProjectController.renameFront);
 router.get('/api/projects/:projectId/export', requireAuth, ProjectController.getExport);
 router.get('/api/projects/:projectId/front', requireAuth, ProjectController.getFront);
-router.post('/api/projects/:projectId/publish', requireAuth, ProjectController.publish);
-router.delete('/api/projects/:projectId/unpublish', requireAuth, ProjectController.unpublish);
+router.post('/api/projects/:projectId/front', requireAuth, ProjectController.publish);
+router.delete('/api/projects/:projectId/front', requireAuth, ProjectController.unpublish);
 
 router.post('/api/projects/:projectId/files/save', requireAuth, upload.any(), ProjectFilesController.saveAudioFiles);
 router.post('/api/projects/:projectId/files/get_all', requireAuth, ProjectFilesController.loadAudioFiles);
 
 router.get('/api/track/:projectId/stream', optionalAuth, TrackController.stream);
+router.get('/api/track/:projectId/download', optionalAuth, TrackController.download);
 router.get('/api/track/:projectId/data', optionalAuth, TrackController.data);
+router.get('/api/track/:projectId/waveform', optionalAuth, TrackController.waveform);
 router.get('/api/track/:projectId/audio', optionalAuth, TrackController.audio);
 router.post('/api/track/:projectId/comment', requireAuth, TrackController.leaveComment);
 router.post('/api/track/:projectId/toggle_like', requireAuth, TrackController.toggleLike);

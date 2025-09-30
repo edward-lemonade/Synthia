@@ -1,15 +1,27 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
 	selector: 'app-loading-spinner',
 	standalone: true,
+	imports: [CommonModule],
 	template: `
 		<div class="loading-container">
 			{{ text }}
-			<div class="loading-spinner"></div>
+			<div 
+				class="loading-spinner"
+				[ngStyle]="{
+					width: diameter + 'px',
+					height: diameter + 'px',
+					borderWidth: '4px',
+					borderStyle: 'solid',
+					borderColor: color2,
+					borderTopColor: color
+				}"
+			></div>
 		</div>
 	`,
-	styles: `
+	styles: [`
 		.loading-container {
 			display: flex;
 			flex-direction: row;
@@ -24,10 +36,6 @@ import { Component, Input } from '@angular/core';
 		}
 
 		.loading-spinner {
-			width: 40px;
-			height: 40px;
-			border: 4px solid #ffffff4f;
-			border-top: 4px solid #ffffffff;
 			border-radius: 50%;
 			animation: spin 1s linear infinite;
 		}
@@ -36,8 +44,12 @@ import { Component, Input } from '@angular/core';
 			0% { transform: rotate(0deg); }
 			100% { transform: rotate(360deg); }
 		}
-	`
+	`]
 })
 export class LoadingSpinnerComponent {
 	@Input() text: string = 'Loading...';
+	@Input() diameter: number = 40; //px
+	@Input() color: string = '#ffffff';
+	@Input() color2: string = this.color + '4f'
+
 }

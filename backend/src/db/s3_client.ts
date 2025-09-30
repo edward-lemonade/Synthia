@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectsCommand, ListObjectsV2Command, ListObjectsV2CommandOutput, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { AudioFileData, WaveformData } from "@shared/types";
 import { generateAudioWaveformB } from "@src/utils/audio";
 import { Readable } from "stream";
@@ -106,7 +106,6 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	const cachedData = await redis_client.getCachedAudioFileData(cacheKey);
 	if (cachedData) { return cachedData; }
 
-	
 	// Query AWS
 
 	const key = 'project/' + projectId + '/export';
@@ -140,41 +139,47 @@ export async function getExportFile(projectId: string): Promise<AudioFileData> {
 	})();
 	return audioFileData;
 }
-export async function getExportBuffer(projectId: string): Promise<Buffer> {
-	// Query Redis
 
-	const cacheKey = redis_client.getExportBufferKey(projectId);
-	const cachedData = await redis_client.getCachedBuffer(cacheKey);
-	if (cachedData) { return cachedData; }
-
-	
-	// Query AWS
-
+export async function getExportSize(projectId: string): Promise<number> {
 	const key = 'project/' + projectId + '/export';
-	const command = new GetObjectCommand({
+	const command = new HeadObjectCommand({
 		Bucket: "app-synthia",
 		Key: key,
 	});
 
 	const response = await s3.send(command);
+	if (!response.ContentLength) {
+		throw new Error("No ContentLength in S3 response");
+	}
+
+	return response.ContentLength;
+}
+export async function streamExportRange(
+	projectId: string, 
+	startByte?: number, 
+	endByte?: number
+): Promise<Readable> {
+	// Redis might work as a future optimization but it didn't work well when I tested it and AWS is surprisingly fast enough
+
+	// Query AWS
+	const key = 'project/' + projectId + '/export';
+
+	let commandParams: any = {
+		Bucket: "app-synthia",
+		Key: key,
+	};
+	if (startByte !== undefined && endByte !== undefined) {
+		commandParams.Range = `bytes=${startByte}-${endByte}`;
+	}
+
+	const command = new GetObjectCommand(commandParams);
+	const response = await s3.send(command);
+
 	if (!response.Body) {
 		throw new Error("No body in S3 response");
 	}
 
-	const stream = response.Body as Readable;
-	const chunks: Uint8Array[] = [];
-	for await (const chunk of stream) { chunks.push(chunk as Uint8Array);}
-	const buffer = Buffer.concat(chunks);
-
-	(async () => { // put cache async
-		const cacheKey = redis_client.getExportBufferKey(projectId);
-		await redis_client.setCachedBuffer(
-			cacheKey,
-			buffer,
-			redis_client.CACHE_CONFIG.exportFile.ttl
-		);
-	})();
-	return buffer;
+	return response.Body as Readable;
 }
 
 export async function putWaveformData(projectId: string, waveformData: WaveformData): Promise<void> {
@@ -339,4 +344,21 @@ export async function getProfilePictureUrl(userId: string, options?: {
 		console.error(`Failed to get profile picture URL for user ${userId}:`, error);
 		throw new Error(`Failed to retrieve profile picture URL: ${error.message}`);
 	}
+}
+
+export async function deleteProjectData(projectId: string): Promise<any[] | undefined> {
+	const folderKey = 'project/' + projectId;
+	const listedObjects = await s3.send(new ListObjectsV2Command({
+		Bucket: "app-synthia",
+		Prefix: folderKey,
+	})) as ListObjectsV2CommandOutput;
+
+	const res = await s3.send(new DeleteObjectsCommand({
+		Bucket: "app-synthia",
+		Delete: {
+			Objects: listedObjects.Contents?.map(({ Key }) => ({ Key: Key! })) || [],
+		},
+	}));
+
+	return res.Deleted;
 }

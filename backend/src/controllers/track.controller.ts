@@ -1,4 +1,4 @@
-import { AudioFileData, Comment, InteractionState, ProjectReleased, User, RelevantProjectOrUser } from "@shared/types";
+import { AudioFileData, Comment, InteractionState, ProjectReleased, User, RelevantProjectOrUser, WaveformData } from "@shared/types";
 import * as db from "@src/db/mongo_client";
 import * as s3 from "@src/db/s3_client";
 import { ProjectFrontModel } from "@src/models";
@@ -36,13 +36,31 @@ export async function data(req: Request, res: Response) {
 			metadata: metadata,
 			front: front,
 			comments: commentsWithPfps,
-			interactionState: interactionState
+			interactionState: interactionState,
 		});
 	} catch (error) {
 		console.error('Error fetching track data:', error);
 		res.status(500).json({ 
 			success: false, 
 			error: 'Error fetching track data' 
+		});
+	}
+}
+
+export async function waveform(req: Request, res: Response) {
+	const { projectId } = req.params;
+
+	try {
+		const waveformData = await s3.getWaveformData(projectId);
+		if (!waveformData) {
+			res.json({ success: false, waveformData: null });
+		}
+		res.json({ success: true, waveformData: waveformData });
+	} catch (error) {
+		console.error('Error getting track audio:', error);
+		res.status(500).json({ 
+			success: false, 
+			error: 'Failed to get track audio' 
 		});
 	}
 }
@@ -179,19 +197,17 @@ export async function recordPlay(req: Request, res: Response) {
 
 export async function stream(req: Request, res: Response) {
 	const { projectId } = req.params;
-    const userId = req.auth.sub;
 	const range = req.headers.range; // "bytes=0-1000"
 
 	try {
-		if (!projectId || !userId) {
+		if (!projectId) {
 			return res.status(400).json({ 
 				success: false, 
 				error: 'Missing required fields' 
 			});
 		}
 
-		const buffer = await s3.getExportBuffer(projectId) as Buffer;
-		const fileSize = buffer.length;
+		const fileSize = await s3.getExportSize(projectId);
 
 		if (range) {
 			const parts = range.replace(/bytes=/, '').split('-');
@@ -201,27 +217,27 @@ export async function stream(req: Request, res: Response) {
 			if (startByte >= fileSize || endByte >= fileSize || startByte > endByte) {
 				return res.status(416).json({
 					success: false,
-					error: 'Range not satisfiable'
+					error: 'Bad range'
 				});
 			}
 
 			const chunkSize = (endByte - startByte) + 1;
-			const chunk = buffer.slice(startByte, endByte + 1);
-
+			const stream = await s3.streamExportRange(projectId, startByte, endByte);
 			res.writeHead(206, {
 				'Content-Range': `bytes ${startByte}-${endByte}/${fileSize}`,
 				'Accept-Ranges': 'bytes',
 				'Content-Length': chunkSize,
 				'Content-Type': 'audio/wav',
 			});
-			return res.end(chunk);
+			stream.pipe(res);
 		} else {
+			const stream = await s3.streamExportRange(projectId);
 			res.writeHead(200, {
 				'Content-Length': fileSize,
 				'Content-Type': 'audio/wav',
 				'Accept-Ranges': 'bytes',
 			});
-			res.end(buffer);
+			stream.pipe(res);
 		}
 	} catch (error) {
 		console.error('Error getting audio stream:', error);
@@ -229,6 +245,28 @@ export async function stream(req: Request, res: Response) {
 			success: false, 
 			error: 'Error getting audio stream' 
 		});
+	}
+}
+export async function download(req: Request, res: Response) {
+	const { projectId } = req.params;
+	try {
+		if (!projectId) {
+			return res.status(400).json({ success: false, error: 'Missing projectId' });
+		}
+
+		const fileSize = await s3.getExportSize(projectId);
+		const stream = await s3.streamExportRange(projectId);
+
+		res.writeHead(200, {
+			'Content-Length': fileSize,
+			'Content-Type': 'audio/wav',
+			'Content-Disposition': `attachment; filename="project-${projectId}.wav"`,
+		});
+
+		stream.pipe(res);
+	} catch (error) {
+		console.error('Download error:', error);
+		res.status(500).json({ success: false, error: 'Error downloading audio file' });
 	}
 }
 
@@ -266,8 +304,8 @@ export async function newest(req: Request, res: Response) {
 			})
 		);
 
-
 		const reachedEnd = projects.length < boundedAmount;
+
         res.json({
             success: true,
             projects: projects,
@@ -331,7 +369,8 @@ export async function hottest(req: Request, res: Response) {
         );
 
         const reachedEnd = projects.length < boundedAmount;
-        res.json({
+		
+		res.json({
             success: true,
             projects: projects,
 			lastHotness: newLastHotness,
