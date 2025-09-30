@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { AuthService as Auth0Service, User as UserAuth } from '@auth0/auth0-angular';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { environment } from '@src/environments/environment.development';
+import { environment } from '@src/environments/environment.dev';
 
 
 @Injectable({ providedIn: 'root' })
@@ -17,6 +17,7 @@ export class AppAuthService {
 
 	private userAuth: UserAuth | null = null;
 	private userAuthSubject = new BehaviorSubject<UserAuth | null>(null);
+	private userLoadedSubject = new BehaviorSubject<boolean>(false);
 	getUserAuth(): UserAuth | null { return this.userAuth; }
 	getUserAuth$() { return this.userAuthSubject.asObservable(); }
 
@@ -26,7 +27,14 @@ export class AppAuthService {
 		).subscribe(user => {
 			this.userAuth = user;
 			this.userAuthSubject.next(this.userAuth);
+			this.userLoadedSubject.next(true);
 		});
+	}
+
+	private async waitForUserInit(): Promise<void> {
+		await firstValueFrom(
+			this.userLoadedSubject.pipe(filter(loaded => loaded))
+		);
 	}
 
 	async getAccessToken(): Promise<string> {
@@ -42,10 +50,12 @@ export class AppAuthService {
 
 	async getAuthHeaders(): Promise<{ [key: string]: string }> {
 		try {
+			await this.waitForUserInit();
+
 			const token = await this.getAccessToken();
 			const user = this.getUserAuth();
-			
-			if (user && token) {
+
+			if (!!user && !!token) {
 				return { Authorization: `Bearer ${token}` };
 			}
 		} catch (error) {

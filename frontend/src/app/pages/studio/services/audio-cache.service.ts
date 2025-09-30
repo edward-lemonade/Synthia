@@ -7,7 +7,7 @@ import { Base64 } from 'js-base64'
 import axios from 'axios';
 import { arrayBufferToBase64, base64ToArrayBuffer, CachedAudioFile, fileToArrayBuffer, makeCacheAudioFile } from '@src/app/utils/audio';
 import { WaveformData } from '@shared/types';
-import { environment } from '@src/environments/environment.development';
+import { environment } from '@src/environments/environment.dev';
 import { ApiService } from '@src/app/services/api.service';
 
 @Injectable()

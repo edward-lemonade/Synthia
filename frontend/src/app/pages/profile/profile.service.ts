@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import axios from 'axios';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { User, ProjectReleased } from '@shared/types';
-import { environment } from '@src/environments/environment.development';
+import { environment } from '@src/environments/environment.dev';
 import { ApiService } from '@src/app/services/api.service';
 
 @Injectable()

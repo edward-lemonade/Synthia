@@ -3,9 +3,8 @@ import { Injectable, Signal, WritableSignal, computed, signal } from '@angular/c
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { Router } from '@angular/router';
 import axios from 'axios';
-import { UserService } from '@src/app/services/user.service';
 import { ProjectReleased, RelevantProjectOrUser, User } from '@shared/types';
-import { environment } from '@src/environments/environment.development';
+import { environment } from '@src/environments/environment.dev';
 import { ApiService } from '@src/app/services/api.service';
 
 export enum ListMode { New, Hot, Search }
@@ -14,7 +13,6 @@ export enum ListMode { New, Hot, Search }
 export class DiscoverService {
 	constructor(
 		private auth: AppAuthService,
-		private userService: UserService,
 		private router: Router,
 	) {}
 

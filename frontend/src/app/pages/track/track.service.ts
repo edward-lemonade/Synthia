@@ -1,15 +1,12 @@
-// projects.service.ts (enhanced with secure user interactions)
-import { Injectable, Signal, WritableSignal, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { Router } from '@angular/router';
 import axios from 'axios';
-import { AudioFileData, Comment, CommentDTO, fillDates, InteractionState, ProjectFront, ProjectFrontDTO, ProjectMetadata } from '@shared/types';
-import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
+import { AudioFileData, Comment, CommentDTO, fillDates, InteractionState, ProjectFront, ProjectFrontDTO, ProjectMetadata, WaveformData } from '@shared/types';
 import { UserService } from '@src/app/services/user.service';
 import { AuthService } from '@auth0/auth0-angular';
-import { environment } from '@src/environments/environment.development';
 import { ApiService } from '@src/app/services/api.service';
-
+import { environment } from '@src/environments/environment.dev';
 
 @Injectable()
 export class TrackService {
@@ -22,13 +19,16 @@ export class TrackService {
 		this.auth.isAuthenticated$.subscribe(isAuth => {this.isGuestUser = !isAuth;});
 	}
 
+	projectId: string|null = null;
 	projectMetadata = signal<ProjectMetadata|null>(null);
 	projectFront = signal<ProjectFront|null>(null);
-	cachedAudioFile = signal<CachedAudioFile|null>(null);
 	isDataLoaded = signal(false);
-	isAudioLoaded = signal(false);
 
-	comments = signal<Comment[]>([])
+	waveformData = signal<WaveformData|null>(null);
+	audioDuration = signal<number>(0);
+	isWaveformLoaded = signal(false);
+
+	comments = signal<Comment[]>([]);
 
 	declare interactionState: InteractionState;
 	hasLiked = signal(false);
@@ -39,7 +39,7 @@ export class TrackService {
 	public async loadTrack(projectId: string, signal: AbortSignal) {
 		try {
 			const res = await ApiService.instance.routes.getTrack({signal}, projectId);
-
+			
 			if (res.data.metadata && res.data.front) {
 				this.projectMetadata.set(res.data.metadata);
 				this.projectFront.set({...res.data.front, dateReleased: new Date(res.data.front.dateReleased)});
@@ -61,40 +61,24 @@ export class TrackService {
 		}
 	}
 
-	public async loadAudio(projectId: string, signal: AbortSignal) {
+	public async loadWaveform(projectId: string, signal: AbortSignal) {
 		try {
-			const res = await ApiService.instance.routes.getTrackAudio({signal}, projectId);
+			const res = await ApiService.instance.routes.getTrackWaveform({signal}, projectId);
 
-			const audioFileData = res.data.audioFileData;
-			if (audioFileData) {
-				const cachedExportData = await makeCacheAudioFile(audioFileData);
-				this.cachedAudioFile.set(cachedExportData);
-				this.isAudioLoaded.set(true);
-				return cachedExportData;
+			if (res.data.waveformData) {
+				this.waveformData.set(res.data.waveformData);
+				this.isWaveformLoaded.set(true);
 			}
-			
-			return null;
+			return res.data.waveformData;
 		} catch (err: any) {
 			if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {return null;}
-			console.error('Error during export loading:', err);
+			console.error('Error during waveform loading:', err);
 			return null;
 		}
 	}
 
-	public async getAudio(timeoutMs: number = 30000) {
-		const startTime = Date.now();
-		
-		while (Date.now() - startTime < timeoutMs) {
-			const exportData = this.cachedAudioFile;
-			if (exportData !== undefined) {
-				return exportData;
-			}
-			
-			await new Promise(resolve => setTimeout(resolve, 100));
-		}
-		
-		throw new Error(`Export for project not available after ${timeoutMs}ms timeout`);
-	}
+	public getStreamUrl(): string { return `${environment.API_URL}/api/track/${this.projectId!}/stream`; }
+	public getDownloadUrl(): string { return `${environment.API_URL}/api/track/${this.projectId!}/download`; }
 
 	// =============================================================
 	// User Interactions
@@ -108,7 +92,7 @@ export class TrackService {
 			const res = await ApiService.instance.routes.postComment({data: {
 				comment: comment.trim(),
 				timestamp: Date.now(),
-			}}, this.projectMetadata()!.projectId);
+			}}, this.projectId!);
 			
 			const newComment = {...fillDates(res.data.newComment), profilePictureURL: this.userService.user()?.profilePictureURL};
 			this.comments.update(curr => [newComment, ...curr])
@@ -124,7 +108,7 @@ export class TrackService {
 		if (this.isGuestUser) {return true};
 
 		try {
-			const res = await ApiService.instance.routes.toggleLike({}, this.projectMetadata()!.projectId);
+			const res = await ApiService.instance.routes.toggleLike({}, this.projectId!);
 
 			if (res.data.success) {
 				if (res.data.isLiked) {
@@ -148,7 +132,7 @@ export class TrackService {
 
 		try {
 			const now = Date.now();
-			const res = await ApiService.instance.routes.recordPlay({data: {timestamp: now}}, this.projectMetadata()!.projectId);
+			const res = await ApiService.instance.routes.recordPlay({data: {timestamp: now}}, this.projectId!);
 
 			if (res.data.success) {
 				return true;

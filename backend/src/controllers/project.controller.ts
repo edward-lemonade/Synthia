@@ -22,7 +22,8 @@ export async function getMine(req: Request, res: Response) {
 }
 
 export async function getProject(req: Request, res: Response) {
-	const metadataDoc = await db.findMetadataByProjectId(req.body.projectId);
+	const projectId = req.params.projectId;
+	const metadataDoc = await db.findMetadataByProjectId(projectId);
 	const metadata = metadataDoc ? ProjectMetadataTransformer.fromDoc(metadataDoc) : null;
 
 	res.json({ project: metadata })
@@ -142,14 +143,15 @@ export async function deleteStudio(req: Request, res: Response) {
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
-		const [resM, resS] = await Promise.all([
+		const [resM, resS, resF, resS3] = await Promise.all([
+			db.deleteStudioByProjectId(projectId),
 			db.deleteMetadataByProjectId(projectId),
-			db.deleteStudioByProjectId(projectId)
+			db.deleteFrontByProjectId(projectId),
+			s3.deleteProjectData(projectId),
 		]);
-
-		if ((resM.deletedCount+resS.deletedCount!=2)) { 
-			console.error("Failed to delete project."); 
-			return res.status(500).json({ success: false, message: "Failed to delete project" }); 
+		if (!resM || !resS || (!resF && metadataDoc?.isReleased) || !resS3) { 
+			console.error("Failed to delete project from MongoDB."); 
+			return res.status(500).json({ success: false, message: "Failed to delete project from MongoDB" }); 
 		}
 
 		res.json({ success: true });

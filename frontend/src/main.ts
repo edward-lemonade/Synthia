@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 
-import { environment } from './environments/environment.development';
+import { environment } from './environments/environment.dev';
 
 import { enablePatches } from "immer";
 import { AppComponent } from './app/app.component';

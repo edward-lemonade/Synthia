@@ -6,7 +6,7 @@ import { provideHttpClient } from '@angular/common/http';
 
 
 import { routes } from './app.routes';
-import { environment } from '../environments/environment.development';
+import { environment } from '../environments/environment.dev';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
