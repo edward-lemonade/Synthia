@@ -13,6 +13,7 @@ import { MatMenu, MatMenuModule } from "@angular/material/menu";
 import { MatIconModule } from '@angular/material/icon';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 import { LoadingSpinnerComponent } from "../loading-spinner/loading-spinner.component";
+import { ApiService } from '@src/app/services/api.service';
 
 @Component({
 	selector: 'app-appbar-layout',
@@ -111,6 +112,7 @@ import { LoadingSpinnerComponent } from "../loading-spinner/loading-spinner.comp
 })
 export class AppbarLayoutComponent {
 	private userService = inject(UserService);
+	private apiService = inject(ApiService);
 
 	constructor(
 		@Inject(DOCUMENT) public document: Document, 

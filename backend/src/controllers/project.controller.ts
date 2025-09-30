@@ -6,13 +6,15 @@ import * as db from "@src/db/mongo_client";
 import { AudioFileData, ProjectFront, ProjectState } from "@shared/types";
 import { ProjectMetadataTransformer, ProjectStudioTransformer } from "@src/transformers/project.transformer";
 import { ProjectFrontModel, ProjectMetadataModel, ProjectStudioModel } from "@src/models";
-import { getExportFile, putExportFile } from "@src/db/s3_client";
+import * as s3 from "@src/db/s3_client";
 import { Renderer } from "@src/audio-processing/Renderer";
 import { assertAuthorship, assertProjectAccess } from "@src/utils/authorization";
+import { generateAudioWaveformB } from "@src/utils/audio";
+import { Base64 } from "js-base64";
 
 
 export async function getMine(req: Request, res: Response) {
-	const userId = req.body.userId;
+	const userId = req.auth?.sub;
 	const metadataDocs = await db.findMetadatasByUser(userId);
 	const metadatas = metadataDocs.map((doc) => ProjectMetadataTransformer.fromDoc(doc));
 
@@ -26,55 +28,8 @@ export async function getProject(req: Request, res: Response) {
 	res.json({ project: metadata })
 }
 
-export async function saveExisting(req: Request, res: Response) {
-	try {
-		const projectId = req.body.projectId;
-		const userId = req.auth?.sub;
-		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
-		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
-		
-		const [{success, metadataDoc}, studioDoc] = await Promise.all([
-			await assertProjectAccess(projectId, userId),
-			db.findStudioByProjectId(projectId)
-		]);
-
-		if (!metadataDoc || !studioDoc) {
-			return res.status(404).json({ success: false, message: "Project not found" });
-		}
-
-		const patches = req.body.patches as Patch[];
-		const state = ProjectStudioTransformer.toState(metadataDoc, studioDoc)
-		const stateUpdated = applyPatches(state, patches);
-
-		Object.assign(studioDoc, stateUpdated.studio);
-		Object.assign(metadataDoc, stateUpdated.metadata);
-
-		const [savedMetadataDoc, savedStudioDoc] = await Promise.all([
-			metadataDoc.save(),
-			studioDoc.save(),
-		]);
-
-		if (!savedMetadataDoc) { 
-			console.error("Failed to save project metadata."); 
-			return res.status(500).json({ success: false, message: "Failed to save project metadata" }); 
-		}
-		if (!savedStudioDoc) { 
-			console.error("Failed to save project studio."); 
-			return res.status(500).json({ success: false, message: "Failed to save project studio" }); 
-		}
-
-		res.json({ success: true });
-	} catch (error: any) {
-		console.error('Error saving existing project:', error);
-		if (error.message.includes('Access denied')) {
-			return res.status(403).json({ success: false, message: error.message });
-		}
-		return res.status(500).json({ success: false, message: "Internal server error" });
-	}
-}
-
 export async function saveOverwrite(req: Request, res: Response) {
-	const projectId = req.body.projectId;
+	const projectId = req.params.projectId;
 	const userId = req.auth?.sub;
 	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -118,7 +73,7 @@ export async function saveOverwrite(req: Request, res: Response) {
 		return;
 	}
 
-	render(state);
+	renderAndStore(state);
 
 	res.json({ success: true });
 
@@ -146,14 +101,14 @@ export async function saveNew(req: Request, res: Response) {
 
 	if (!savedStudioDoc) { console.error("Failed to save new project studio."); res.json({ success: false }); return }
 
-	render(state);
+	renderAndStore(state);
 
 	res.json({ success: true })
 }
 
 export async function load(req: Request, res: Response) {
 	try {
-		const projectId = req.body.projectId;
+		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
 		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -181,7 +136,7 @@ export async function load(req: Request, res: Response) {
 
 export async function deleteStudio(req: Request, res: Response) {
 	try {
-		const projectId = req.body.projectId;
+		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
 		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -208,7 +163,7 @@ export async function deleteStudio(req: Request, res: Response) {
 }
 
 export async function rename(req: Request, res: Response) {	
-	const projectId = req.body.projectId;
+	const projectId = req.params.projectId;
 	const userId = req.auth?.sub;
 	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -226,7 +181,7 @@ export async function rename(req: Request, res: Response) {
 }
 
 export async function renameFront(req: Request, res: Response) {	
-	const projectId = req.body.projectId;
+	const projectId = req.params.projectId;
 	const userId = req.auth?.sub;
 	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -251,14 +206,18 @@ export async function renameFront(req: Request, res: Response) {
 
 export async function getExport(req: Request, res: Response) {
 	try {
-		const projectId = req.body.projectId;
+		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
 		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
-		const audioFileData: AudioFileData = await getExportFile(projectId);
-		res.json({ success: true, exportFileData: audioFileData });
+		const audioFileData: AudioFileData = await s3.getExportFile(projectId);
+		const audioFileDataWithWaveform: AudioFileData = {
+			...audioFileData,
+			waveformData: await s3.getWaveformData(projectId),
+		}
+		res.json({ success: true, exportFileData: audioFileDataWithWaveform });
 	} catch (error: any) {
 		console.error('Error getting export file:', error);
 		if (error.message.includes('Access denied')) {
@@ -269,7 +228,7 @@ export async function getExport(req: Request, res: Response) {
 }
 
 export async function getFront(req: Request, res: Response) {
-	const { projectId } = req.body;
+	const projectId = req.params.projectId;
 
 	try {
 		const frontDoc = await db.findFrontByProjectId(projectId);
@@ -297,7 +256,7 @@ export async function getFront(req: Request, res: Response) {
 
 export async function publish(req: Request, res: Response) {
     try {
-		const projectId = req.body.projectId;
+		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
 		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -348,7 +307,7 @@ export async function publish(req: Request, res: Response) {
 
 export async function unpublish(req: Request, res: Response) {
 	try {
-		const projectId = req.body.projectId;
+		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
 		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
@@ -389,8 +348,17 @@ export async function unpublish(req: Request, res: Response) {
 // =======================================================================
 // Common pipelines
 
-export async function render(state: ProjectState) {
+export async function renderAndStore(state: ProjectState) {
 	const renderer = await new Renderer(state);
 	const blob = await renderer.exportProjectAsWAV();
-	await putExportFile(state.metadata.projectId, blob);
+
+	const arrayBuffer = await blob.arrayBuffer();
+	const buffer = Buffer.from(arrayBuffer);
+
+	await s3.putExportFile(state.metadata.projectId, buffer);
+
+	(async () => {
+		const waveformData = await generateAudioWaveformB(arrayBuffer);
+		await s3.putWaveformData(state.metadata.projectId, waveformData);
+	})();
 }

@@ -8,6 +8,7 @@ import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/a
 import { UserService } from '@src/app/services/user.service';
 import { AuthService } from '@auth0/auth0-angular';
 import { environment } from '@src/environments/environment.development';
+import { ApiService } from '@src/app/services/api.service';
 
 
 @Injectable()
@@ -37,12 +38,7 @@ export class TrackService {
 
 	public async loadTrack(projectId: string, signal: AbortSignal) {
 		try {
-			const headers = await this.appAuthService.getAuthHeaders();
-
-			const res = await axios.get<{ metadata: ProjectMetadata, front: ProjectFrontDTO, comments: CommentDTO[], interactionState: InteractionState }>(
-				`${environment.API_URL}/api/track/${projectId}/data`, 
-				{ headers, signal }
-			);
+			const res = await ApiService.instance.routes.getTrack({signal}, projectId);
 
 			if (res.data.metadata && res.data.front) {
 				this.projectMetadata.set(res.data.metadata);
@@ -67,12 +63,7 @@ export class TrackService {
 
 	public async loadAudio(projectId: string, signal: AbortSignal) {
 		try {
-			const headers = await this.appAuthService.getAuthHeaders();
-			
-			const res = await axios.get<{ audioFileData: AudioFileData }>(
-				`${environment.API_URL}/api/track/${projectId}/audio`, 
-				{ headers, signal }
-			);
+			const res = await ApiService.instance.routes.getTrackAudio({signal}, projectId);
 
 			const audioFileData = res.data.audioFileData;
 			if (audioFileData) {
@@ -113,19 +104,11 @@ export class TrackService {
 
 		try {
 			if (!comment || comment.trim().length === 0) {return null;}
-		
-			const token = await this.appAuthService.getAccessToken();
-			const user = this.appAuthService.getUserAuth();
-			if (!user) return null;
 
-			const res = await axios.post<{ success: boolean, newComment: CommentDTO }>(
-				`${environment.API_URL}/api/track/${this.projectMetadata()!.projectId}/comment`, 
-				{
-					comment: comment.trim(),
-					timestamp: Date.now()
-				},
-				{ headers: { Authorization: `Bearer ${token}` }}
-			);
+			const res = await ApiService.instance.routes.postComment({data: {
+				comment: comment.trim(),
+				timestamp: Date.now(),
+			}}, this.projectMetadata()!.projectId);
 			
 			const newComment = {...fillDates(res.data.newComment), profilePictureURL: this.userService.user()?.profilePictureURL};
 			this.comments.update(curr => [newComment, ...curr])
@@ -141,15 +124,7 @@ export class TrackService {
 		if (this.isGuestUser) {return true};
 
 		try {
-			const token = await this.appAuthService.getAccessToken();
-			const user = this.appAuthService.getUserAuth();
-			if (!user) return false;
-
-			const res = await axios.post<{ success: boolean, isLiked: boolean }>(
-				`${environment.API_URL}/api/track/${this.projectMetadata()!.projectId}/toggle_like`, 
-				{},
-				{ headers: { Authorization: `Bearer ${token}` }}
-			);
+			const res = await ApiService.instance.routes.toggleLike({}, this.projectMetadata()!.projectId);
 
 			if (res.data.success) {
 				if (res.data.isLiked) {
@@ -172,19 +147,8 @@ export class TrackService {
 		if (this.isGuestUser) {return false};
 
 		try {
-			const token = await this.appAuthService.getAccessToken();
-			const user = this.appAuthService.getUserAuth();
-			if (!user) return false;
-
 			const now = Date.now();
-
-			const res = await axios.post<{ success: boolean }>(
-				`${environment.API_URL}/api/track/${this.projectMetadata()!.projectId}/record_play`, 
-				{ 
-					timestamp: now
-				},
-				{ headers: { Authorization: `Bearer ${token}` }}
-			);
+			const res = await ApiService.instance.routes.recordPlay({data: {timestamp: now}}, this.projectMetadata()!.projectId);
 
 			if (res.data.success) {
 				return true;

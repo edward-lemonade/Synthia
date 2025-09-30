@@ -9,7 +9,6 @@ import { LikeModel } from "@src/models/Like.model";
 
 export async function connectMongo() {
 	try {
-		console.log("Attempting connect to Mongo", MONGO_STRING);
 		mongoose.connect(MONGO_STRING as string);
 		console.log('MongoDB connected');
 	} catch (err) {

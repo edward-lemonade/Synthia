@@ -8,6 +8,7 @@ import axios from 'axios';
 import { arrayBufferToBase64, base64ToArrayBuffer, CachedAudioFile, fileToArrayBuffer, makeCacheAudioFile } from '@src/app/utils/audio';
 import { WaveformData } from '@shared/types';
 import { environment } from '@src/environments/environment.development';
+import { ApiService } from '@src/app/services/api.service';
 
 @Injectable()
 export class AudioCacheService {
@@ -36,24 +37,8 @@ export class AudioCacheService {
 		this.cache.clear();
 
 		try {
-			const token = await this.auth.getAccessToken();
-			console.log('Got JWT token:', token ? 'Token received' : 'No token');
-
-			const projectId = StateService.instance.projectId;
 			const fileRefs = this.audioFileRefs();
-
-			const res = await axios.post<{ success: boolean, audioFileDatas: AudioFileData[] }>(
-				`${environment.API_URL}/api/project_files/load`, 
-				{
-					projectId: projectId, 
-					fileRefs: fileRefs,
-				},
-				{
-					headers: {
-						Authorization: `Bearer ${token}`
-					}
-				}
-			);
+			const res = await ApiService.instance.routes.loadProjectFiles({data: {fileRefs}}, StateService.instance.projectId!);
 
 			if (res.data.success) {				
 				const uncachedFiles: AudioFileData[] = res.data.audioFileDatas;
@@ -119,21 +104,13 @@ export class AudioCacheService {
 			const projectId = StateService.instance.projectId!;
 			formData.append("projectId", projectId);
 
-			const res = await axios.post<{ success: boolean, audioFileDatas: AudioFileData[] }>(
-				`${environment.API_URL}/api/project_files/save`, 
-				formData,
-				{
-					headers: {
-						"Content-Type": "multipart/form-data",
-						Authorization: `Bearer ${token}`
-					}
-				}
-			);
+			const res = await ApiService.instance.routes.saveProjectFiles({
+				headers: {"Content-Type": "multipart/form-data"},
+				data: formData
+			}, projectId)
 
 			if (res.data.success) {
-				 // only leave persistent reference if everything succeeds
 				this.audioFileRefs.update(files => [...files, ...audioFileRefs]);
-
 				return cachedAudioFiles;
 			} else {
 				throw Error("Error saving audio file to backend");

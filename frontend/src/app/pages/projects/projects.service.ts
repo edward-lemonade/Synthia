@@ -7,6 +7,7 @@ import axios from 'axios';
 import { AudioFileData, ProjectMetadata } from '@shared/types';
 import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
 import { environment } from '@src/environments/environment.development';
+import { ApiService } from '@src/app/services/api.service';
 
 @Injectable()
 export class ProjectsService {
@@ -23,15 +24,7 @@ export class ProjectsService {
 
 	public async loadProjects(signal: AbortSignal) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return [];
-
-			const res = await axios.post<{ projects: ProjectMetadata[] }>(
-				`${environment.API_URL}/api/projects/get_mine`, 
-				{ userId: user.sub },
-				{ headers: {Authorization: `Bearer ${token}`}, signal}
-			);
+			const res = await ApiService.instance.routes.getMyProjects({signal});
 
 			if (res.data.projects) {
 				const sortedProjects = res.data.projects.sort((a, b) => 
@@ -53,15 +46,7 @@ export class ProjectsService {
 
 	public async loadExport(projectId: string, signal: AbortSignal) {
 		try {
-			const token = await this.auth.getAccessToken();
-			const user = this.auth.getUserAuth();
-			if (!user) return [];
-
-			const res = await axios.post<{ exportFileData: AudioFileData }>(
-				`${environment.API_URL}/api/projects/get_export`, 
-				{ projectId: projectId },
-				{ headers: {Authorization: `Bearer ${token}`}, signal}
-			);
+			const res = await ApiService.instance.routes.getMyProjectExport({signal}, projectId);
 
 			const exportFileData = res.data.exportFileData;
 			if (exportFileData) {
@@ -132,15 +117,7 @@ export class ProjectsService {
 	public async deleteProject(index: number, project: ProjectMetadata) {
 		this.projectsList.update(projectsList => projectsList.filter((_,i) => i !== index));
 		try {
-			const token = await this.auth.getAccessToken();
-			if (!token) { console.error('No valid token'); return; }
-
-			const res = await axios.post<{ success: boolean }>(
-				`${environment.API_URL}/api/projects/delete_studio`, 
-				{ projectId: project.projectId },
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
-
+			const res = await ApiService.instance.routes.deleteStudio({}, project.projectId);
 			return res.data.success;
 		} catch (err) {
 			console.error('Error during project deletion:', err);
@@ -165,22 +142,9 @@ export class ProjectsService {
 		this.renamingProjectId.set(null);
 		
 		try {
-			const token = await this.auth.getAccessToken();
-			if (!token) { 
-				console.error('No valid token');
-				// Revert optimistic update on error
-				this.projectsList.update(projectsList => {
-					projectsList[index] = { ...projectsList[index], title: project.title };
-					return [...projectsList];
-				});
-				return false;
-			}
-
-			const res = await axios.post<{ success: boolean }>(
-				`${environment.API_URL}/api/projects/rename`, 
-				{ projectId: project.projectId, newName: newName },
-				{ headers: {Authorization: `Bearer ${token}`}}
-			);
+			const res = await ApiService.instance.routes.renameProject({
+				data: { newName: newName }
+			}, project.projectId);
 
 			if (!res.data.success) {
 				// Revert optimistic update on server error

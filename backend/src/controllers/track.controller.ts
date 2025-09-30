@@ -6,6 +6,7 @@ import { UserModel } from "@src/models/User.model";
 import { ProjectFrontTransformer, ProjectMetadataTransformer } from "@src/transformers/project.transformer";
 import { assertProjectAccess } from "@src/utils/authorization";
 import { Request, Response } from "express";
+import { Base64 } from "js-base64";
 
 // Getters
 
@@ -51,7 +52,11 @@ export async function audio(req: Request, res: Response) {
 
 	try {
 		const audioFileData: AudioFileData = await s3.getExportFile(projectId);
-		res.json({ success: true, audioFileData: audioFileData });
+		const audioFileDataWithWaveform: AudioFileData = {
+			...audioFileData,
+			waveformData: await s3.getWaveformData(projectId),
+		}
+		res.json({ success: true, audioFileData: audioFileDataWithWaveform });
 	} catch (error) {
 		console.error('Error getting track audio:', error);
 		res.status(500).json({ 
@@ -72,7 +77,6 @@ export async function leaveComment(req: Request, res: Response) {
 		if (!projectId || !userId || !comment || !timestamp) {
 			return res.status(400).json({ 
 				success: false, 
-				error: 'Missing required fields' 
 			});
 		}
 
@@ -81,31 +85,26 @@ export async function leaveComment(req: Request, res: Response) {
 		if (!sanitizedComment || sanitizedComment.length < 1) {
 			return res.status(400).json({ 
 				success: false, 
-				error: 'Comment is too short' 
 			});
 		}
 
 		if (sanitizedComment.length > 500) {
 			return res.status(400).json({ 
 				success: false, 
-				error: 'Comment is too long (max 500 characters)' 
 			});
 		}
 
-		// Create the comment
-		const commentObj = (await db.createUserComment(projectId, userId, sanitizedComment, timestamp)).toObject();
 
+		const commentObj = (await db.createUserComment(projectId, userId, sanitizedComment, timestamp)).toObject();
 		res.json({ 
 			success: true,
 			newComment: commentObj,
-			message: 'Comment posted successfully'
 		});
 		
 	} catch (error) {
 		console.error('Error leaving comment:', error);
 		res.status(500).json({ 
 			success: false, 
-			error: 'Failed to post comment' 
 		});
 	}
 }
@@ -156,10 +155,7 @@ export async function recordPlay(req: Request, res: Response) {
 
 	try {
 		if (!projectId || !userId || !timestamp) {
-			return res.status(400).json({ 
-				success: false, 
-				error: 'Missing required fields' 
-			});
+			return res.status(400).json({ success: false });
 		}
 
 		const now = Date.now();
@@ -168,22 +164,70 @@ export async function recordPlay(req: Request, res: Response) {
 		if (timeDiff > 300000) { // 5 minutes tolerance
 			return res.status(400).json({ 
 				success: false, 
-				error: 'Invalid timestamp' 
 			});
 		}
 
 		await db.doUserPlay(projectId, userId, timestamp);
 
-		res.json({ 
-			success: true,
-			message: 'Play recorded successfully'
-		});
+		res.json({ success: true });
 		
 	} catch (error) {
 		console.error('Error recording play:', error);
+		res.status(500).json({ success: false });
+	}
+}
+
+export async function stream(req: Request, res: Response) {
+	const { projectId } = req.params;
+    const userId = req.auth.sub;
+	const range = req.headers.range; // "bytes=0-1000"
+
+	try {
+		if (!projectId || !userId) {
+			return res.status(400).json({ 
+				success: false, 
+				error: 'Missing required fields' 
+			});
+		}
+
+		const buffer = await s3.getExportBuffer(projectId) as Buffer;
+		const fileSize = buffer.length;
+
+		if (range) {
+			const parts = range.replace(/bytes=/, '').split('-');
+			const startByte = parseInt(parts[0], 10);
+			const endByte = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+			if (startByte >= fileSize || endByte >= fileSize || startByte > endByte) {
+				return res.status(416).json({
+					success: false,
+					error: 'Range not satisfiable'
+				});
+			}
+
+			const chunkSize = (endByte - startByte) + 1;
+			const chunk = buffer.slice(startByte, endByte + 1);
+
+			res.writeHead(206, {
+				'Content-Range': `bytes ${startByte}-${endByte}/${fileSize}`,
+				'Accept-Ranges': 'bytes',
+				'Content-Length': chunkSize,
+				'Content-Type': 'audio/wav',
+			});
+			return res.end(chunk);
+		} else {
+			res.writeHead(200, {
+				'Content-Length': fileSize,
+				'Content-Type': 'audio/wav',
+				'Accept-Ranges': 'bytes',
+			});
+			res.end(buffer);
+		}
+	} catch (error) {
+		console.error('Error getting audio stream:', error);
 		res.status(500).json({ 
 			success: false, 
-			error: 'Failed to record play' 
+			error: 'Error getting audio stream' 
 		});
 	}
 }
@@ -385,9 +429,8 @@ export async function search(req: Request, res: Response) {
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({
+        res.json({
             success: false,
-            error: "Failed to search"
         });
     }
 }

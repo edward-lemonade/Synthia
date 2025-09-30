@@ -11,6 +11,7 @@ import { DeepPartial, ObjectStateNode, objectStateNode, propStateNode, StateNode
 import { ObjectScaffold, Scaffold, STATE_SCAFFOLD } from "./state.scaffolds";
 import { UserService } from "@src/app/services/user.service";
 import { environment } from "@src/environments/environment.development";
+import { ApiService } from "@src/app/services/api.service";
 
 
 @Injectable()
@@ -92,23 +93,8 @@ export class StateService { // SINGLETON
 
 	async loadState(projectId: string) {
 		try {
-			const token = await this.auth.getAccessToken();
-			console.log('Got JWT token:', token ? 'Token received' : 'No token');
-
-			const res = await axios.post<{state: ProjectState}>(
-				`${environment.API_URL}/api/projects/get_studio`, 
-				{ 
-					projectId: projectId, 
-				},
-				{
-					headers: {
-						Authorization: `Bearer ${token}`
-					}
-				}
-			);
-
+			const res = await ApiService.instance.routes.getStudio({}, projectId);
 			return res.data.state;
-
 		} catch (err) {
 			throw err;
 		}
@@ -118,19 +104,13 @@ export class StateService { // SINGLETON
 		const pendingCommands = this.historyService.getPendingCommandsAndClear();
 
 		try {
-			const token = await this.auth.getAccessToken();
-			console.log('Got JWT token:', token ? 'Token received' : 'No token');
-			
-			if (this.isNew && token) {
-				const res = await axios.post<{ success: boolean }>(
-					`${environment.API_URL}/api/projects/save_new`, 
-					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
-					{
-						headers: {
-							Authorization: `Bearer ${token}`
-						}
-					}
-				);
+			if (this.isNew) {
+				const res = await ApiService.instance.routes.saveStudioNew({ 
+					data: { 
+						projectId: this.projectId, 
+						state: this.state.snapshot() as ProjectState 
+					} 
+				});
 
 				if (res.data.success) {
 					this.isNew = false;
@@ -142,15 +122,12 @@ export class StateService { // SINGLETON
 				}
 				return res.data.success;
 			} else {
-				const res = await axios.post<{ success: boolean }>(
-					`${environment.API_URL}/api/projects/save_overwrite`, 
-					{projectId: this.projectId, state: this.state.snapshot() as ProjectState},
-					{
-						headers: {
-							Authorization: `Bearer ${token}`
-						}
+				const res = await ApiService.instance.routes.saveStudioOverwrite({ 
+					data: { 
+						projectId: this.projectId, 
+						state: this.state.snapshot() as ProjectState 
 					}
-				);
+				}, this.projectId!);
 				return res.data.success;
 			}
 		} catch (err) {

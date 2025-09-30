@@ -6,6 +6,7 @@ import axios from 'axios';
 import { UserService } from '@src/app/services/user.service';
 import { ProjectReleased, RelevantProjectOrUser, User } from '@shared/types';
 import { environment } from '@src/environments/environment.development';
+import { ApiService } from '@src/app/services/api.service';
 
 export enum ListMode { New, Hot, Search }
 
@@ -45,29 +46,20 @@ export class DiscoverService {
 
 	async getMoreItems(reset: boolean, signal: AbortSignal) {
 		try {
-			const headers = await this.auth.getAuthHeaders();
-			
 			if (reset) { this.projectsAndUsers.set([]); }
 			
 			if (this.listMode() == ListMode.Search) {
-				const res = await axios.post<{ 
-					success: boolean, 
-					results: RelevantProjectOrUser[], 
-					lastScore: number,
-					lastProjectId: string,
-					lastUserId: string,
-					reachedEnd: boolean,
-				}>(
-					`${environment.API_URL}/api/tracks/search`, 
-					{
+				const res = await ApiService.instance.routes.search({
+					data: {
 						amount: this.BATCH_SIZE,
 						lastScore: this.lastScore,
 						lastProjectId: this.lastProjectId,
 						lastUserId: this.lastUserId, 
 						searchTerm: this.searchTerm(),
 					},
-					{ headers, signal},
-				);
+					signal
+				});
+
 				this.lastScore = res.data.lastScore;
 				this.lastProjectId = res.data.lastProjectId;
 				this.lastUserId = res.data.lastUserId;
@@ -85,25 +77,23 @@ export class DiscoverService {
 				let res = null;
 
 				if (this.listMode() == ListMode.New) {
-					res = await axios.post<{ success: boolean, projects: ProjectReleased[], reachedEnd: boolean }>(
-						`${environment.API_URL}/api/tracks/newest`, 
-						{
+					res = await ApiService.instance.routes.getNewestTracks({
+						data: {
 							amount: this.BATCH_SIZE,
 							lastReleaseDate: (this.getLast() as ProjectReleased)?.front.dateReleased,
 							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
 						},
-						{ headers, signal },
-					);
+						signal
+					});
 				} else if (this.listMode() == ListMode.Hot) {
-					res = await axios.post<{ success: boolean, projects: ProjectReleased[], lastHotness: number, reachedEnd: boolean }>(
-						`${environment.API_URL}/api/tracks/hottest`, 
-						{
+					res = await ApiService.instance.routes.getHottestTracks({
+						data: {
 							amount: this.BATCH_SIZE,
 							lastHotness: this.lastHotness,
 							lastProjectId: (this.getLast() as ProjectReleased)?.metadata.projectId,
 						},
-						{ headers, signal },
-					);
+						signal,
+					});
 					this.lastHotness = res.data.lastHotness;
 				}
 				const data = res!.data;

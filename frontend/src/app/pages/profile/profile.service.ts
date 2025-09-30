@@ -3,6 +3,7 @@ import axios from 'axios';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { User, ProjectReleased } from '@shared/types';
 import { environment } from '@src/environments/environment.development';
+import { ApiService } from '@src/app/services/api.service';
 
 @Injectable()
 export class ProfileService {
@@ -14,12 +15,7 @@ export class ProfileService {
 
 	async loadProfile(displayName: string, signal: AbortSignal) {
 		try {
-			const headers = await this.auth.getAuthHeaders();
-
-			const res = await axios.get<{ user: User, projects: ProjectReleased[] }>(
-				`${environment.API_URL}/api/profile/${displayName}`,
-				{ headers, signal }
-			);
+			const res = await ApiService.instance.routes.getProfile({signal}, displayName);
 			
 			this.user.set(res.data.user);
 			this.projects.set(res.data.projects.map(r => ({ 
