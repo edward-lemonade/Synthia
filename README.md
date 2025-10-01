@@ -51,14 +51,7 @@ Would love to migrate everything in the future, especially moving backend to Ver
 
 ## Limitations and future plans
 #### High priority
-* DO NOT IMPORT LARGE AUDIO FILES 
-	* Backend cannot safely transfer resulting project .WAV export to the frontend
-    * I will look into streaming or pagination to handle this
-    * High priority
-* Will implement streaming rather than sending entire array buffer to frontend to decode
-    * Should drastically decrease project loading time since decoding on the browser is the biggest bottleneck
-* Will refactor code to route all API requests through an ApiService (clean and centralized)
-* Cleanup /shared folder (waveform generation is currently not done on backend so can be moved to frontend)
+* UI overhaul (remove all Angular Material, use custom components)
 #### Future DAW features
 * keybinds
 * duplicating multiple regions at a time
