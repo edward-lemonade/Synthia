@@ -51,8 +51,6 @@ export class ProjectsService {
 				ApiService.instance.routes.getMyProjectWaveform({signal}, projectId)
 			]);
 
-			console.log(bufferRes);
-
 			if (bufferRes && waveformRes) {
 				const cachedExportData = await makeCacheAudioFileFromPieces(bufferRes.data, waveformRes.data.waveformData);
 				this.projectExports[projectId] = cachedExportData;

@@ -2,8 +2,8 @@
 
 :host {
 	background: linear-gradient(135deg,
-		rgb(57, 40, 69) 0%,
-		rgb(37, 42, 53) 100%
+		$night-purple 0%,
+		$night-blue 100%
 	);
 
 	transition: all 0.3s ease;
