@@ -20,12 +20,13 @@ import { TrackService } from '../track.service';
 import { AuthService } from '@auth0/auth0-angular';
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 import { ApiService } from '@src/app/services/api.service';
+import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset.component";
 
 @Component({
 	selector: 'app-track-audio',
-	imports: [CommonModule, MatIconModule, LoadingSpinnerComponent],
+	imports: [CommonModule, MatIconModule, LoadingSpinnerComponent, CardSunsetComponent],
 	template: `
-		<div class="audio-player">
+		<app-card-sunset class="audio-player">
 			<div class="shine"></div>
 			<div class="project-metadata">
 				<div class="project-name">{{ projectFront?.title }}</div>
@@ -129,7 +130,7 @@ import { ApiService } from '@src/app/services/api.service';
 				(error)="onAudioError($event)"
 				style="display: none;">
 			</audio>
-		</div>
+		</app-card-sunset>
 	`,
 	styleUrls: ['./audio-section.component.scss', '../track.page.scss']
 })

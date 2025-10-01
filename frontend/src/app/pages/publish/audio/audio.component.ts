@@ -6,12 +6,13 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
+import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset.component";
 
 @Component({
 	selector: 'app-publish-audio',
-	imports: [CommonModule, RouterModule, MatIconModule, FormsModule],
+	imports: [CommonModule, RouterModule, MatIconModule, FormsModule, CardSunsetComponent],
 	template: `
-		<div class="audio-player">
+		<app-card-sunset class="audio-player">
 			<div class="audio-controls">
 				<button 
 					class="play-button"
@@ -36,7 +37,7 @@ import { createWaveformViewport } from '@src/app/utils/render-waveform';
 					</div>
 				</div>
 			</div>
-		</div>
+		</app-card-sunset>
 	`,
 	styleUrls: ['./audio.component.scss']
 })

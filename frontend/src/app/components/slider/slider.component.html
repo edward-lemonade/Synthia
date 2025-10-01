@@ -1,0 +1,35 @@
+<div class="slider-container" 
+    [ngStyle]="containerStyle">
+	
+	<div #sliderTrack 
+	     class="slider-track"
+	     [class.disabled]="disabled"
+	     (mousedown)="onMouseDown($event)"
+	     (touchstart)="onTouchStart($event)">
+		
+		<!-- Background track -->
+		<div class="slider-track-bg"></div>
+		
+		<!-- Progress track -->
+		<div class="slider-track-progress" 
+		     [style.width.%]="progressWidth"
+		     [style.background-color]="color"></div>
+		
+		<!-- Thumb -->
+		<div class="slider-thumb" 
+		     [style.left.%]="thumbPosition"
+		     [style.width.px]="thumbRadius * 2"
+		     [style.height.px]="thumbRadius * 2"
+		     [style.background-color]="disabled ? '#ccc' : color">
+			<div class="slider-thumb-inner"></div>
+		</div>
+	</div>
+	
+	<!-- Value display popup - only shows when dragging -->
+	<div class="value-popup" 
+	     *ngIf="showValue && isDragging"
+	     [class.visible]="isDragging"
+	     [style.left.%]="thumbPosition">
+		{{ displayValue }}
+	</div>
+</div>

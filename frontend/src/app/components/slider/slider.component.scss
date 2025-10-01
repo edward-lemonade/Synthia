@@ -1,0 +1,109 @@
+@use "theme" as *;
+
+.slider-container {
+	position: relative;
+	display: inline-block;
+	user-select: none;
+
+	flex: auto;
+	justify-content: center;
+	align-items: center;
+}
+
+.slider-track {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	
+	&.disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	.slider-track-bg {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		height: 4px;
+		background: #616161ff;
+		border-radius: 2px;
+	}
+
+	.slider-track-progress {
+		position: absolute;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		height: 4px;
+		border-radius: 2px;
+		pointer-events: none;
+		
+	}
+
+	.slider-thumb {
+		position: absolute;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		border-radius: 50%;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+		pointer-events: none;
+		transition: transform 0.1s ease-out;
+		
+		&:hover {
+			transform: translate(-50%, -50%) scale(1.1);
+		}
+
+		.slider-thumb-inner {
+			width: 100%;
+			height: 100%;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.3);
+			transform: scale(0.5);
+		}
+	}
+
+	.slider-track:hover .slider-thumb {
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+	}
+}
+
+.value-popup {
+	position: absolute;
+	top: -30px;
+	transform: translateX(-50%);
+	background: $app-bg-l;
+	color: white;
+	padding: 3px 6px;
+	border-radius: 3px;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	font-size: 10px;
+	font-weight: 500;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.15s ease-in-out;
+	white-space: nowrap;
+	z-index: 2000;
+	min-width: 20px;
+	text-align: center;
+
+	&.visible {
+		opacity: 1;
+	}
+
+	&::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 3px solid transparent;
+		border-top-color: $app-bg-l;
+	}
+}
+
+

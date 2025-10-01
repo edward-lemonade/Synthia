@@ -1,24 +1,12 @@
 @use "theme" as *;
 
 .audio-player {
-	background: linear-gradient(90deg, 
-		$accent-purple-l, 
-		$accent-pink 40%,
-		$accent-orange 70%,
-		$accent-yellow 100%
-	);
 	border-radius: 20px;
+
 	padding: 24px;
 	display: flex;
 	flex-direction: column;
 	gap: 24px;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-	transition: all 0.3s ease;
-
-	&:hover {
-		box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
-		transform: translateY(-2px);
-	}
 
 	.audio-controls {
 		display: flex;
@@ -81,7 +69,6 @@
 			border-radius: 12px;
 			overflow: hidden;
 			background: rgba(255, 255, 255, 0.1);
-			backdrop-filter: blur(10px);
 			
 			.waveform-canvas {
 				position: relative;

@@ -6,11 +6,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { ProfileService } from './profile.service';
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 import { take } from 'rxjs';
+import { CardNightComponent } from "@src/app/components/card-night/card-night.component";
+import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset.component";
 
 @Component({
 	selector: 'app-profile',
 	standalone: true,
-	imports: [CommonModule, RouterModule, AvatarComponent, MatIconModule, LoadingSpinnerComponent],
+	imports: [CommonModule, RouterModule, AvatarComponent, MatIconModule, LoadingSpinnerComponent, CardNightComponent, CardSunsetComponent],
 	providers: [ProfileService],
 	template: `
 		<div class="loading-container" *ngIf="!profileService.isDataLoaded">
@@ -21,7 +23,7 @@ import { take } from 'rxjs';
 
 		<div class="container" *ngIf="profileService.isDataLoaded && profileService.user()">
 			<div class="profile-container">
-				<div class="profile-card">
+				<app-card-sunset class="profile-card">
 					<div class="shine"></div>
 					<div class="profile-header">
 						<app-avatar [width]="60" [profilePictureURL]="profileService.user()!.profilePictureURL" [altText]="profileService.user()!.displayName + ' avatar'"></app-avatar>
@@ -30,9 +32,9 @@ import { take } from 'rxjs';
 						</div>
 					</div>
 					<p class="bio-block" *ngIf="profileService.user()!.bio">{{ profileService.user()!.bio }}</p>
-				</div>
+				</app-card-sunset>
 
-				<div class="released-card">
+				<app-card-night class="released-card">
 					<div class="released-section">
 						<p>Released Songs</p>
 
@@ -66,7 +68,7 @@ import { take } from 'rxjs';
 							<p class="no-released">No releases yet.</p>
 						</ng-template>
 					</div>
-				</div>
+				</app-card-night>
 			</div>
 	`,
 	styleUrls: ['./profile.page.scss']

@@ -1,6 +1,8 @@
 @use "theme" as *;
 
 .project-item {
+	border-radius: 16px;
+
 	height: 100px;
 	position: relative;
 
@@ -10,27 +12,10 @@
 	padding-bottom: 8px;
 	margin: 0;
 
-	transition: all 0.2s;
 	display: flex;
 	flex-direction: row;
 
-	background-color: $accent-purple-l;
 	border: 1px solid $app-bg;
-	border-radius: 16px;
-
-	background: linear-gradient(90deg, 
-		$accent-purple-l, 
-		$accent-pink 40%,
-		$accent-orange 70%,
-		$accent-yellow 100%,
-	);
-
-	&:hover {
-		background-color: var(--mat-hover-color, rgba(0, 0, 0, 0.04));
-		box-shadow: 0 0 30px rgba(255, 255, 255, 0.2	);
-		border: 1px solid white;
-		transform: translateY(-2px);
-	}
 	
 	&:last-child {
 		margin-bottom: 0;

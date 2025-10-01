@@ -7,11 +7,12 @@ import { Router } from '@angular/router';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 import { AuthService } from '@auth0/auth0-angular';
 import { MatIconModule } from '@angular/material/icon';
+import { CardNightComponent } from "@src/app/components/card-night/card-night.component";
 
 @Component({
 	selector: 'app-registration',
 	standalone: true,
-	imports: [CommonModule, FormsModule, AvatarComponent, MatIconModule],
+	imports: [CommonModule, FormsModule, AvatarComponent, MatIconModule, CardNightComponent],
 	template: `
 		<div class="registration-container">
 			<div class="registration-header">
@@ -31,7 +32,7 @@ import { MatIconModule } from '@angular/material/icon';
 				</div>
 			</div>
 
-			<div class="registration-content">
+			<app-card-night class="registration-content">
 				<form (ngSubmit)="completeRegistration()" #registrationForm="ngForm">
 					<!-- Profile Picture Section -->
 					<div class="registration-section">
@@ -115,7 +116,7 @@ import { MatIconModule } from '@angular/material/icon';
 						</button>
 					</div>
 				</form>
-			</div>
+			</app-card-night>
 		</div>
 	`,
 	styleUrls: ['./registration.page.scss']
