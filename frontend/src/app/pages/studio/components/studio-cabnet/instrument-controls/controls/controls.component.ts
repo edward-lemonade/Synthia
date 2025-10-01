@@ -1,9 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectionStrategy, Component, computed, effect, Injector, signal } from "@angular/core";
-
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
+import { ChangeDetectionStrategy, Component, computed, effect, signal } from "@angular/core";
 
 import { ViewportService } from "../../../../services/viewport.service";
 import { CabnetService } from "../../../../services/cabnet.service";
@@ -17,7 +13,7 @@ import { MatSliderModule } from "@angular/material/slider";
 
 @Component({
 	selector: 'controls',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, RotaryKnobComponent, FormsModule, MatCardModule, MatSliderModule],
+	imports: [CommonModule, RotaryKnobComponent, FormsModule, MatSliderModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 			<div class="controls" [style.--highlight-color]="color()">

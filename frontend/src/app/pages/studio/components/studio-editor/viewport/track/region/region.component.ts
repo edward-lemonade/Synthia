@@ -1,6 +1,18 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, signal, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    effect,
+    ElementRef,
+    Input,
+    OnDestroy,
+    OnInit,
+    signal,
+    ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AudioRegion, MidiNote, MidiRegion, MidiTrackType, Region, RegionType, Track } from '@shared/types';
+import { AudioRegion, MidiRegion, Region, RegionType, Track } from '@shared/types';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 

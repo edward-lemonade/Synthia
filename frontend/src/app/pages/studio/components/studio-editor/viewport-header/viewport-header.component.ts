@@ -1,9 +1,17 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    Component,
+    effect,
+    ElementRef,
+    Injector,
+    runInInjectionContext,
+    ViewChild,
+} from '@angular/core';
 import { ViewportService } from '../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { PlaybackMarkerComponent } from '../viewport-overlay/playback-marker/playback-marker.component';
 import { TimelinePlaybackService } from '../../../services/timeline-playback.service';
 
 @Component({

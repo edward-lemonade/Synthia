@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectionStrategy, Component, Injector } from "@angular/core";
+import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { EditingMode, MidiEditorService } from "@src/app/pages/studio/services/midi-editor/midi-editor.service";
 import { MatButtonToggleModule } from "@angular/material/button-toggle";
@@ -24,8 +24,6 @@ import { MatButtonToggleModule } from "@angular/material/button-toggle";
 				<mat-icon>highlight_alt</mat-icon>
 			</button>
 			
-
-
 			<button 
 				class="btn"
 				(click)="midiService.editingMode.set(EditingMode.Erase)"

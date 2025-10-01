@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, Input, OnInit, signal, ViewChild, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, Input, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
 import { RegionType, Track } from '@shared/types';
@@ -10,7 +10,7 @@ import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { RegionDragService } from '@src/app/pages/studio/services/region-drag.service';
 import { TracksService } from '@src/app/pages/studio/services/tracks.service';
-import { ObjectStateNode, StateNode } from '@src/app/pages/studio/state/state.factory';
+import { ObjectStateNode } from '@src/app/pages/studio/state/state.factory';
 import { StateService } from '@src/app/pages/studio/state/state.service';
 import { RegionService } from '@src/app/pages/studio/services/region.service';
 import { AudioRecordingService } from '@src/app/pages/studio/services/audio-recording.service';

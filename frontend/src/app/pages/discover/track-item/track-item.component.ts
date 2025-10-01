@@ -1,20 +1,15 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal, HostListener, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
-import { DiscoverService, ListMode } from '../discover.service';
+import { DiscoverService } from '../discover.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
-import { Author, ProjectReleased, RelevantProjectOrUser } from '@shared/types';
+import { Author, RelevantProjectOrUser } from '@shared/types';
 
 @Component({
 	selector: 'app-discover-track-item',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule],
+	imports: [CommonModule, RouterModule, MatIconModule, FormsModule],
 	template: `
 		<div 
 			class="item" 

@@ -1,21 +1,15 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal, HostListener, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
-import { DiscoverService, ListMode } from '../discover.service';
+import { DiscoverService } from '../discover.service';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
-import { Author, ProjectReleased, RelevantProjectOrUser, User } from '@shared/types';
+import { RelevantProjectOrUser } from '@shared/types';
 import { AvatarComponent } from "@src/app/components/avatar/avatar.component";
 
 @Component({
 	selector: 'app-discover-user-item',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, AvatarComponent],
+	imports: [CommonModule, RouterModule, FormsModule, AvatarComponent],
 	template: `
 		<div 
 			class="item" 

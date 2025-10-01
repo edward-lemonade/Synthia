@@ -1,23 +1,21 @@
-import { AfterViewInit, Component, computed, inject, Inject, OnInit } from '@angular/core';
+import { Component, computed, inject, Inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule, MatIconButton } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { AuthService } from '@auth0/auth0-angular';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { AppAuthService } from '@src/app/services/app-auth.service';
 import { UserService } from '@src/app/services/user.service';
-import { MatMenu, MatMenuModule } from "@angular/material/menu";
+import { MatMenuModule } from "@angular/material/menu";
 import { MatIconModule } from '@angular/material/icon';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
-import { LoadingSpinnerComponent } from "../loading-spinner/loading-spinner.component";
 import { ApiService } from '@src/app/services/api.service';
 
 @Component({
 	selector: 'app-appbar-layout',
-	imports: [CommonModule, MatButtonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, MatIconButton, AvatarComponent],
+	imports: [CommonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, AvatarComponent],
 	template: `
 		<div class="page-container">
 			<ng-container *ngIf="(auth.isAuthenticated$ | async)">	

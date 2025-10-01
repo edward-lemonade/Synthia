@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProfileService } from './profile.service';
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 import { take } from 'rxjs';
@@ -11,7 +10,7 @@ import { take } from 'rxjs';
 @Component({
 	selector: 'app-profile',
 	standalone: true,
-	imports: [CommonModule, RouterModule, AvatarComponent, MatIconModule, MatProgressSpinnerModule, LoadingSpinnerComponent],
+	imports: [CommonModule, RouterModule, AvatarComponent, MatIconModule, LoadingSpinnerComponent],
 	providers: [ProfileService],
 	template: `
 		<div class="loading-container" *ngIf="!profileService.isDataLoaded">

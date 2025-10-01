@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { Router } from '@angular/router';
@@ -7,7 +6,7 @@ import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-toolbar-top-menu-btn',
-	imports: [MatIcon, MatMenuModule, MatDividerModule],
+	imports: [MatIcon, MatMenuModule],
 	template: `
 		<button [matMenuTriggerFor]="optionsMenu" class="options-btn">
 			<mat-icon>menu</mat-icon>

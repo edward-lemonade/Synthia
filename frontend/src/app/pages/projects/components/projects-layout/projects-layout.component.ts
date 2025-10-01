@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { ProjectsService } from '../../projects.service';
@@ -10,7 +9,7 @@ import { ProjectsService } from '../../projects.service';
 @Component({
 	selector: 'app-projects-layout',
 	standalone: true,
-	imports: [RouterModule, MatSidenavModule, MatListModule, MatButtonModule, MatIconModule],
+	imports: [RouterModule, MatSidenavModule, MatListModule, MatIconModule],
 	template: `
 		<mat-sidenav-container class="sidenav-container">
 			<mat-sidenav #sidenav mode="side" opened class="sidebar"
@@ -40,7 +39,7 @@ export class ProjectsLayoutComponent {
 	async newProjectOnClick() {
 		this.projectsService.newProject();
 	}
-} 
+}
 
 /*
 <button mat-button class="sidebar-btn" routerLink="/projects/all-projects" routerLinkActive="sidebar-btn-active">

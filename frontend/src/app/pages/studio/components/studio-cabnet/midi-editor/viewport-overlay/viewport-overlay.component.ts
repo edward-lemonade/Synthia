@@ -1,13 +1,21 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    Component,
+    effect,
+    ElementRef,
+    Injector,
+    runInInjectionContext,
+    ViewChild,
+} from '@angular/core';
 import { ViewportService } from '../../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { PlaybackMarkerComponent } from "../../../studio-editor/viewport-overlay/playback-marker/playback-marker.component";
 import { ModeSelectComponent } from "./mode-select/mode-select.component";
 
 @Component({
 	selector: 'midi-editor-viewport-overlay',
-	imports: [CommonModule, MatIconModule, PlaybackMarkerComponent, ModeSelectComponent],
+	imports: [CommonModule, PlaybackMarkerComponent, ModeSelectComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #scrollContainer class="scroll-container">

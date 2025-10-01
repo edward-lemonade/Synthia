@@ -1,8 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectionStrategy, Component, Injector } from "@angular/core";
+import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { MidiEditorService } from "../../../services/midi-editor/midi-editor.service";
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ViewportService } from "../../../services/viewport.service";
 import { ViewportComponent } from "./viewport/viewport.component";
 import { ViewportOverlayComponent } from "./viewport-overlay/viewport-overlay.component";
@@ -16,7 +14,7 @@ import { AudioTrackType, MidiTrackType, TrackType } from "@shared/types";
 
 @Component({
 	selector: 'midi-editor',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiEditorKeyboardComponent],
+	imports: [CommonModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiEditorKeyboardComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [ViewportService, MidiEditorService, MidiSelectService, MidiDragService],
 	template: `

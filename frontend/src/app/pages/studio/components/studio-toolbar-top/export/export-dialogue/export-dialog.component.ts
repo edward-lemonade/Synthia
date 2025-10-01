@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
 
 @Component({
 	selector: 'app-export-dialog',
 	standalone: true,
-	imports: [MatButtonModule],
+	imports: [],
 	template: `
 		<div class="export-dialog">
 			<button class="btn" color="primary" (click)="close('mp3')">

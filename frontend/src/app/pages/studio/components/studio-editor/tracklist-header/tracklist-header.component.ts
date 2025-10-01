@@ -2,17 +2,15 @@ import { ChangeDetectionStrategy, Component, ViewChild, ElementRef } from '@angu
 
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { AudioCacheService } from '../../../services/audio-cache.service';
 import { StateService } from '../../../state/state.service';
 import { TracksService } from '../../../services/tracks.service';
-import { TrackType, AudioTrackType, MidiTrackType, Track, Region, AudioRegion } from '@shared/types';
+import { TrackType, AudioTrackType, MidiTrackType } from '@shared/types';
 import { ViewportService } from '../../../services/viewport.service';
 
 @Component({
 	selector: 'studio-editor-tracklist-header',
-	imports: [MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
+	imports: [MatIcon, MatMenuModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<button [matMenuTriggerFor]="addTrackMenu" class="add-track-btn">

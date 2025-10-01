@@ -1,8 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectionStrategy, Component, Injector } from "@angular/core";
+import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { MidiEditorService } from "../../../services/midi-editor/midi-editor.service";
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ViewportService } from "../../../services/viewport.service";
 import { MidiSelectService } from "../../../services/midi-editor/midi-select.service";
 import { MidiDragService } from "../../../services/midi-editor/midi-drag.service";
@@ -16,7 +14,7 @@ import { MidiDrumEditorKeyboardComponent } from "./keyboard/drum-keyboard.compon
 
 @Component({
 	selector: 'midi-drum-editor',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiDrumEditorKeyboardComponent],
+	imports: [CommonModule, ViewportComponent, ViewportOverlayComponent, ViewportHeaderComponent, MidiDrumEditorKeyboardComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [ViewportService, MidiEditorService, MidiSelectService, MidiDragService],
 	template: `

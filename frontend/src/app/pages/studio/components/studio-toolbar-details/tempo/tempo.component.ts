@@ -1,19 +1,18 @@
-import { ChangeDetectionStrategy, Component, WritableSignal, signal, effect } from '@angular/core';
-import { CommonModule, Time } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
 
-import { TimeSignature, TimeSigOptionsN, TimeSigOptionsD } from '@shared_types/studio/';
+import { TimeSigOptionsN, TimeSigOptionsD } from '@shared_types/studio/';
 import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-toolbar-details-tempo',
-	imports: [CommonModule, FormsModule, MatButtonModule, MatButtonToggleModule, MatIcon, MatDivider, MatMenuModule],
+	imports: [CommonModule, FormsModule, MatButtonToggleModule, MatIcon, MatDivider, MatMenuModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-button-toggle-group class='btn-group'>

@@ -1,25 +1,29 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal, computed, effect } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import {
+    Component,
+    OnDestroy,
+    ViewChild,
+    ElementRef,
+    AfterViewInit,
+    ChangeDetectorRef,
+    ViewChildren,
+    QueryList,
+    signal,
+    computed,
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { FormsModule } from '@angular/forms';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
 import * as TimeUtils from '@src/app/utils/time';
 import { TrackService } from '../track.service';
-import { UserService } from '@src/app/services/user.service';
 import { AuthService } from '@auth0/auth0-angular';
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 import { ApiService } from '@src/app/services/api.service';
 
 @Component({
 	selector: 'app-track-audio',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, LoadingSpinnerComponent],
+	imports: [CommonModule, MatIconModule, LoadingSpinnerComponent],
 	template: `
 		<div class="audio-player">
 			<div class="shine"></div>

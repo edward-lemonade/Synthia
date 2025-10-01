@@ -1,26 +1,20 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef, ViewChildren, QueryList, signal, HostListener } from '@angular/core';
+import { Component, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { DiscoverService, ListMode } from './discover.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
-import { Author } from '@shared/types';
 import { TrackItem } from "./track-item/track-item.component";
 
-import { RelevantProjectOrUser } from '@shared/types';
 import { UserItem } from "./user-item/user-item.component";
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
 
 @Component({
 	selector: 'app-discover',
 	standalone: true,
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatTooltipModule, MatProgressSpinnerModule, FormsModule, TrackItem, UserItem, LoadingSpinnerComponent],
+	imports: [CommonModule, RouterModule, MatIconModule, MatTooltipModule, FormsModule, TrackItem, UserItem, LoadingSpinnerComponent],
 	providers: [DiscoverService],
 	template: `
 		<div class="container" #scrollContainer>

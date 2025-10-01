@@ -1,18 +1,15 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { Component, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 import { PublishService } from '../publish.service';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
 
 @Component({
 	selector: 'app-publish-audio',
-	imports: [CommonModule, RouterModule, MatIconModule, MatFormFieldModule, MatInputModule, MatButtonModule, FormsModule],
+	imports: [CommonModule, RouterModule, MatIconModule, FormsModule],
 	template: `
 		<div class="audio-player">
 			<div class="audio-controls">

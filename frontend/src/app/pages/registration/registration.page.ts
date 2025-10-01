@@ -1,19 +1,17 @@
-import { Component, OnInit, OnDestroy, inject, Inject, effect } from '@angular/core';
+import { Component, OnDestroy, Inject, effect } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import { User } from '@shared/types';
+import { Subject } from 'rxjs';
 import { UserService } from '@src/app/services/user.service';
 import { Router } from '@angular/router';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 import { AuthService } from '@auth0/auth0-angular';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
 	selector: 'app-registration',
 	standalone: true,
-	imports: [CommonModule, FormsModule, AvatarComponent, MatButtonModule, MatIconModule],
+	imports: [CommonModule, FormsModule, AvatarComponent, MatIconModule],
 	template: `
 		<div class="registration-container">
 			<div class="registration-header">
