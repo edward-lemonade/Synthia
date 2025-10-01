@@ -1,12 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed} from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { Key, KeyListAligned, KEY_INFO } from '@shared_types/studio'
 import { StateService } from '../../../state/state.service';
@@ -14,7 +12,7 @@ import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-toolbar-details-key',
-	imports: [CommonModule, FormsModule, MatIcon, MatMenuModule, MatButtonModule, MatButtonToggleModule],
+	imports: [CommonModule, FormsModule, MatIcon, MatMenuModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<button [matMenuTriggerFor]="keyMenu" class="key-menu-btn">

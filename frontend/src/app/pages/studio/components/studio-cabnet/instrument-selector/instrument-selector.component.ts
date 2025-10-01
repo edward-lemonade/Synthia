@@ -1,9 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectionStrategy, Component, computed, effect, Injector, signal } from "@angular/core";
-
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
+import { ChangeDetectionStrategy, Component, computed } from "@angular/core";
 
 import { ViewportService } from "../../../services/viewport.service";
 import { CabnetService } from "../../../services/cabnet.service";
@@ -11,13 +7,12 @@ import { CabnetService } from "../../../services/cabnet.service";
 import { SYNTHS } from "@shared/audio-processing/synthesis/presets/instruments";
 import { TimelinePlaybackService } from "../../../services/timeline-playback.service";
 import { FormsModule } from "@angular/forms";
-import { MatSliderModule } from "@angular/material/slider";
 import { ControlsComponent } from "../instrument-controls/controls/controls.component";
 
 
 @Component({
 	selector: 'instrument-selector',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, FormsModule, MatCardModule, MatSliderModule, ControlsComponent],
+	imports: [CommonModule, FormsModule, ControlsComponent],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="container" [style.--highlight-color]="color()">

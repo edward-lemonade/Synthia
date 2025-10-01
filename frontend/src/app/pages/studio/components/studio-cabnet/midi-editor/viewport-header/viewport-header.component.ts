@@ -1,8 +1,14 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    Component,
+    ElementRef,
+    Injector,
+    ViewChild,
+} from '@angular/core';
 
 import { CommonModule } from '@angular/common';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
+import { MatIconModule } from '@angular/material/icon';
 import { TimelinePlaybackService } from '@src/app/pages/studio/services/timeline-playback.service';
 import { ViewportService } from '@src/app/pages/studio/services/viewport.service';
 

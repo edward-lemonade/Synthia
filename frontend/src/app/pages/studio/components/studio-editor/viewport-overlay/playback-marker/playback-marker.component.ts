@@ -1,13 +1,21 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, effect, ElementRef, Injector, Input, OnInit, runInInjectionContext, signal, ViewChild } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    effect,
+    ElementRef,
+    Injector,
+    Input,
+    runInInjectionContext,
+    ViewChild,
+} from '@angular/core';
 import { ViewportService } from '../../../../services/viewport.service';
 import { CommonModule } from '@angular/common';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { TimelinePlaybackService } from '../../../../services/timeline-playback.service';
 import { RegionSelectService } from '@src/app/pages/studio/services/region-select.service';
 
 @Component({
 	selector: 'studio-editor-playback-marker',
-	imports: [CommonModule, MatIconModule],
+	imports: [CommonModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #marker class="marker">

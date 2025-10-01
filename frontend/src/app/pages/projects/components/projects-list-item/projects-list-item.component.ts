@@ -1,8 +1,6 @@
 import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { ProjectMetadata } from '@shared/types';
 import { ProjectsService } from '../../projects.service';
@@ -13,7 +11,7 @@ import { Router } from '@angular/router';
 
 @Component({
 	selector: 'app-projects-list-item',
-	imports: [MatIconModule, MatMenuModule, MatFormFieldModule, FormsModule, MatInputModule, DatePipe],
+	imports: [MatIconModule, MatMenuModule, FormsModule, DatePipe],
 	template: `
 		<div class="project-item">		
 			@if (projectsService.isRenaming(project.projectId)) {

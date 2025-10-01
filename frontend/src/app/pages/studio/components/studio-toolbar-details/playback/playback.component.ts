@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, signal, computed, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDivider } from '@angular/material/divider';
 import { MatIcon } from '@angular/material/icon';
@@ -16,7 +15,7 @@ import { ViewportService } from '../../../services/viewport.service';
 
 @Component({
 	selector: 'studio-toolbar-details-playback',
-	imports: [CommonModule, MatButtonModule, MatButtonToggleModule, MatDivider, MatIcon, MatTooltipModule],
+	imports: [CommonModule, MatButtonToggleModule, MatDivider, MatIcon, MatTooltipModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<mat-button-toggle-group class='btn-group'>
