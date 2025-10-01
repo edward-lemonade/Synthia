@@ -3,17 +3,19 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatFormFieldControl, MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import * as TimeUtils from '@src/app/utils/time';
 import { TrackService } from '../track.service';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
+import { MatInput, MatInputModule } from '@angular/material/input';
+import { CardNightComponent } from "@src/app/components/card-night/card-night.component";
 
 @Component({
 	selector: 'app-track-comment',
-	imports: [CommonModule, MatIconModule, MatFormFieldModule, FormsModule, AvatarComponent],
+	imports: [CommonModule, MatIconModule, MatFormFieldModule, MatInputModule, FormsModule, AvatarComponent, CardNightComponent],
 	template: `
-		<div class="comments-section">
+		<app-card-night class="comments-section">
 			<div class="comments-header">
 				<h3>Comments</h3>
 				<span class="comment-count">{{ trackService.comments().length }}</span>
@@ -71,7 +73,7 @@ import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 				<mat-icon>chat_bubble_outline</mat-icon>
 				<p>No comments yet. Be the first to share your thoughts!</p>
 			</div>
-		</div>
+		</app-card-night>
 	`,
 	styleUrls: ['./comment-section.component.scss', '../track.page.scss']
 })

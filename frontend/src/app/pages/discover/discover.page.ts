@@ -10,15 +10,17 @@ import { TrackItem } from "./track-item/track-item.component";
 
 import { UserItem } from "./user-item/user-item.component";
 import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loading-spinner.component";
+import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset.component";
+import { CardNightComponent } from "@src/app/components/card-night/card-night.component";
 
 @Component({
 	selector: 'app-discover',
 	standalone: true,
-	imports: [CommonModule, RouterModule, MatIconModule, MatTooltipModule, FormsModule, TrackItem, UserItem, LoadingSpinnerComponent],
+	imports: [CommonModule, RouterModule, MatIconModule, MatTooltipModule, FormsModule, TrackItem, UserItem, LoadingSpinnerComponent, CardSunsetComponent, CardNightComponent],
 	providers: [DiscoverService],
 	template: `
 		<div class="container" #scrollContainer>
-			<div class="controls">
+			<app-card-sunset class="controls">
 				<button 
 					class="control-btn"
 					[class.selected]="discoverService.listMode() == ListMode.New"
@@ -50,9 +52,9 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 						<span class="control-label">Search</span>
 					</button>
 				</div>
-			</div>
+			</app-card-sunset>
 
-			<div class="list">		
+			<app-card-night class="list">		
 				<div *ngFor="let item of discoverService.projectsAndUsers()" class="item">
 					<app-discover-track-item class="item" *ngIf="!item._itemType || item._itemType == 'track'"
 						[item]="item"
@@ -73,7 +75,7 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 				<div class="loading-more" *ngIf="isLoadingMore()">
 					<app-loading-spinner/>
 				</div>
-			</div>
+			</app-card-night>
 		</div>
 	`,
 	styleUrls: ['./discover.page.scss']

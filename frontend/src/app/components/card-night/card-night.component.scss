@@ -1,0 +1,17 @@
+@use "theme" as *;
+
+:host {
+	background: linear-gradient(135deg,
+		rgb(57, 40, 69) 0%,
+		rgb(37, 42, 53) 100%
+	);
+
+	transition: all 0.3s ease;
+	
+	&:hover {
+		box-shadow: 
+			inset 0 0 100px 100px rgba(255, 255, 255, 0.03),
+			0 0 20px  rgba(255, 255, 255, 0.07);
+		transform: translateY(-2px);
+	}
+}

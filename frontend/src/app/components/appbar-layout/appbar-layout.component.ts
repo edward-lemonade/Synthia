@@ -12,10 +12,11 @@ import { MatMenuModule } from "@angular/material/menu";
 import { MatIconModule } from '@angular/material/icon';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 import { ApiService } from '@src/app/services/api.service';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
 	selector: 'app-appbar-layout',
-	imports: [CommonModule, MatToolbarModule, MatTabsModule, RouterModule, MatMenuModule, MatIconModule, AvatarComponent],
+	imports: [CommonModule, RouterModule, MatToolbarModule, MatTabsModule, MatButtonModule, MatMenuModule, MatIconModule, AvatarComponent],
 	template: `
 		<div class="page-container">
 			<ng-container *ngIf="(auth.isAuthenticated$ | async)">	

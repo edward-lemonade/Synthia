@@ -10,82 +10,90 @@ import { TimelinePlaybackService } from "../../../../services/timeline-playback.
 import { FormsModule } from "@angular/forms";
 import { MatSliderModule } from "@angular/material/slider";
 
+/*
+<mat-slider class="slider" [style.--slider-color]="color()" min="0" max="100" step="1">
+	<input matSliderThumb 
+	[(ngModel)]="volumeInput" 
+	(change)="updateVolume()"
+	>
+</mat-slider>
+*/
 
 @Component({
 	selector: 'controls',
 	imports: [CommonModule, RotaryKnobComponent, FormsModule, MatSliderModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-			<div class="controls" [style.--highlight-color]="color()">
-				<div class="card">
-					<div class="title">Volume</div>
-					<div class="body">
-						<mat-slider class="slider" [style.--slider-color]="color()" min="0" max="100" step="1">
-							<input matSliderThumb 
-							[(ngModel)]="volumeInput" 
-							(change)="updateVolume()"
-							>
-						</mat-slider>
-					</div>
-					<div class="value">
-						<input
-							type="text"
-							maxlength="3"
-							[(ngModel)]="volumeDisplayValue"
-							(blur)="commitVolumeChange($event)"
-							(keydown.enter)="commitVolumeChange($event)"
-							placeholder="volume"
-							class="text-input" />
-					</div>
+		<div class="controls" [style.--highlight-color]="color()">
+			<div class="card">
+				<div class="title">Volume</div>
+				<div class="body">
+					<mat-slider class="slider" [style.--slider-color]="color()" min="0" max="100" step="1">
+						<input matSliderThumb 
+						[(ngModel)]="volumeInput" 
+						(change)="updateVolume()"
+						>
+					</mat-slider>
 				</div>
-
-				<div class="card">
-					<div class="title">Pan</div>
-					<div class="body">
-						<app-rotary-knob
-							[(ngModel)]="panInput"
-							(blur)="updatePan()"
-							[min]="-100"
-							[max]="100" 
-							[step]="1"
-							[precision]="1"
-							[size]="100"
-							[color]="color()"/>
-					</div>
-					<div class="value">
-						<input
-							type="text"
-							maxlength="4"
-							[(ngModel)]="panDisplayValue"
-							(blur)="commitPanChange($event)"
-							(keydown.enter)="commitPanChange($event)"
-							placeholder="pan"
-							class="text-input" />
-					</div>
-				</div>
-
-				<div class="card">
-					<div class="title">Reverb</div>
-					<div class="body">
-						<mat-slider class="slider" [style.--slider-color]="color()" min="0" max="100" step="1">
-							<input matSliderThumb 
-							[(ngModel)]="reverbInput" 
-							(change)="updateReverb()"
-							>
-						</mat-slider>
-					</div>
-					<div class="value">
-						<input
-							type="text"
-							maxlength="3"
-							[(ngModel)]="reverbDisplayValue"
-							(blur)="commitReverbChange($event)"
-							(keydown.enter)="commitReverbChange($event)"
-							placeholder="reverb"
-							class="text-input" />
-					</div>
+				<div class="value">
+					<input
+						type="text"
+						maxlength="3"
+						[(ngModel)]="volumeDisplayValue"
+						(blur)="commitVolumeChange($event)"
+						(keydown.enter)="commitVolumeChange($event)"
+						placeholder="volume"
+						class="text-input" />
 				</div>
 			</div>
+
+			<div class="card">
+				<div class="title">Pan</div>
+				<div class="body">
+					<app-rotary-knob
+						[(ngModel)]="panInput"
+						(blur)="updatePan()"
+						[min]="-100"
+						[max]="100" 
+						[step]="1"
+						[precision]="1"
+						[size]="100"
+						[color]="color()"/>
+				</div>
+				<div class="value">
+					<input
+						type="text"
+						maxlength="4"
+						[(ngModel)]="panDisplayValue"
+						(blur)="commitPanChange($event)"
+						(keydown.enter)="commitPanChange($event)"
+						placeholder="pan"
+						class="text-input" />
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="title">Reverb</div>
+				<div class="body">
+					<mat-slider class="slider" [style.--slider-color]="color()" min="0" max="100" step="1">
+						<input matSliderThumb 
+						[(ngModel)]="reverbInput" 
+						(change)="updateReverb()"
+						>
+					</mat-slider>
+				</div>
+				<div class="value">
+					<input
+						type="text"
+						maxlength="3"
+						[(ngModel)]="reverbDisplayValue"
+						(blur)="commitReverbChange($event)"
+						(keydown.enter)="commitReverbChange($event)"
+						placeholder="reverb"
+						class="text-input" />
+				</div>
+			</div>
+		</div>
 	`,
 	styleUrl: './controls.component.scss'
 })

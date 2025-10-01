@@ -17,37 +17,13 @@
 	gap: 32px;
 
 	.profile-card {
-		background: linear-gradient(135deg, 
-			$accent-purple-l 0%, 
-			$accent-pink 35%,
-			$accent-orange 70%,
-			$accent-yellow 100%
-		);
 		border-radius: 24px;
 		padding: 32px;
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-		transition: all 0.3s ease;
 		position: relative;
 		overflow: hidden;
-	
-		&::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: rgba(255, 255, 255, 0.05);
-			backdrop-filter: blur(10px);
-			pointer-events: none;
-		}
-		&:hover {
-			box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
-			transform: translateY(-4px);
-		}
 
 		.profile-header {
 			display: flex;
@@ -89,37 +65,14 @@
 }
 
 
-
 .released-card {
-	background: linear-gradient(135deg,
-		rgb(57, 40, 69) 0%,
-		rgb(37, 42, 53) 100%
-	);
 	border-radius: 24px;
 	padding: 28px;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-	transition: all 0.3s ease;
 	position: relative;
 	overflow: hidden;
-
-	&::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(255, 255, 255, 0.03);
-		backdrop-filter: blur(10px);
-		pointer-events: none;
-	}
-	&:hover {
-		box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
-		transform: translateY(-3px);
-	}
 
 	.released-section {
 		display: flex;

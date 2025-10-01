@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { User } from '@shared/types';
 import { UserService } from '@src/app/services/user.service';
+import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset.component";
 
 @Component({
 	selector: 'app-settings',
 	standalone: true,
-	imports: [CommonModule, FormsModule],
+	imports: [CommonModule, FormsModule, CardSunsetComponent],
 	template: `
 		<div class="settings-container">
 			<div class="settings-header">
@@ -18,7 +19,7 @@ import { UserService } from '@src/app/services/user.service';
 
 			<div class="settings-content">
 				<!-- Profile Information Section -->
-				<div class="settings-section">
+				<app-card-sunset class="settings-section">
 					<h2>Profile Information</h2>
 					
 					<div class="form-group">
@@ -61,7 +62,7 @@ import { UserService } from '@src/app/services/user.service';
 							{{ isSaving ? 'Saving...' : 'Save Profile' }}
 						</button>
 					</div>
-				</div>
+				</app-card-sunset>
 
 				<!-- Profile Picture Section -->
 				<div class="settings-section">

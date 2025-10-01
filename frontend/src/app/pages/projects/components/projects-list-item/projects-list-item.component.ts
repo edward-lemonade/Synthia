@@ -8,12 +8,14 @@ import { CachedAudioFile } from '@src/app/utils/audio';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { MatInputModule } from '@angular/material/input';
+import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset.component";
 
 @Component({
 	selector: 'app-projects-list-item',
-	imports: [MatIconModule, MatMenuModule, FormsModule, DatePipe],
+	imports: [MatIconModule, MatMenuModule, MatInputModule, FormsModule, DatePipe, CardSunsetComponent],
 	template: `
-		<div class="project-item">		
+		<app-card-sunset class="project-item">		
 			@if (projectsService.isRenaming(project.projectId)) {
 				<!-- Rename mode -->
 				<div class="center">
@@ -99,7 +101,7 @@ import { Router } from '@angular/router';
 
 				<p class="project-date">{{ project.updatedAt | date:'short' }}</p>
 			}
-		</div>
+		</app-card-sunset>
 	`,
 	styleUrl: './projects-list-item.component.scss'
 })
