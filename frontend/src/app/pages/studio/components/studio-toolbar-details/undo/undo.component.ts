@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 
@@ -8,10 +7,10 @@ import { HistoryService } from '../../../services/history.service';
 
 @Component({
 	selector: 'studio-toolbar-details-undo',
-	imports: [MatButtonToggleModule, MatIcon, MatDivider],
+	imports: [MatIcon, MatDivider],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<mat-button-toggle-group class='btn-group'>
+		<div class='btn-group'>
 			<button
 				class="btn"
 				(click)="historyService.undo()">
@@ -23,7 +22,7 @@ import { HistoryService } from '../../../services/history.service';
 				(click)="historyService.redo()">
 				<mat-icon>redo</mat-icon>
 			</button>
-		</mat-button-toggle-group>
+		</div>
 	`,
 	styleUrl: './undo.component.scss'
 })

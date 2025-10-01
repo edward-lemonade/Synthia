@@ -2,14 +2,13 @@ import { CommonModule } from "@angular/common";
 import { ChangeDetectionStrategy, Component } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 import { EditingMode, MidiEditorService } from "@src/app/pages/studio/services/midi-editor/midi-editor.service";
-import { MatButtonToggleModule } from "@angular/material/button-toggle";
 
 @Component({
 	selector: 'midi-editor-mode-select',
-	imports: [CommonModule, MatIconModule, MatButtonToggleModule],
+	imports: [CommonModule, MatIconModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<mat-button-toggle-group class='btn-group'>
+		<div class='btn-group'>
 			<button 
 				class="btn"
 				(click)="midiService.editingMode.set(EditingMode.Draw)"
@@ -30,7 +29,7 @@ import { MatButtonToggleModule } from "@angular/material/button-toggle";
 				[class.selected]="midiService.editingMode() === EditingMode.Erase">
 				<mat-icon>delete</mat-icon>
 			</button>
-		</mat-button-toggle-group>
+		</div>
 	`,
 	styleUrl: './mode-select.component.scss'
 })
