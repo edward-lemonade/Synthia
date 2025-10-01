@@ -40,9 +40,10 @@ export class AudioCacheService {
 			const fileRefs = this.audioFileRefs();
 			const res = await ApiService.instance.routes.loadProjectFiles({data: {fileRefs}}, StateService.instance.projectId!);
 
-			if (res.data.success) {				
-				const uncachedFiles: AudioFileData[] = res.data.audioFileDatas;
-
+			if (res.data) {				
+				const uncachedFiles: AudioFileData[] = res.data;
+				
+				console.log("Got files from backend: ", uncachedFiles.length, uncachedFiles)
 				await Promise.all(
 					uncachedFiles.map(file => this.cacheAudioFile(file))
 				);
@@ -51,7 +52,7 @@ export class AudioCacheService {
 			} else {
 				console.error("FAILED retrieving files from backend.")
 			}
-			return res.data.success;
+			return res.data;
 		} catch (err) {
 			throw err;
 		}

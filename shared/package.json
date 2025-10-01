@@ -13,7 +13,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "audio-decode": "^2.2.3",
     "isomorphic-web-audio-api": "^1.0.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"

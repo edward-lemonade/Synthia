@@ -208,11 +208,14 @@ export async function stream(req: Request, res: Response) {
 		}
 
 		const fileSize = await s3.getExportSize(projectId);
+		const MAX_CHUNK_SIZE = 4 * 1024 * 1024;
 
 		if (range) {
 			const parts = range.replace(/bytes=/, '').split('-');
 			const startByte = parseInt(parts[0], 10);
-			const endByte = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+			let endByte = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+			endByte = Math.min(endByte, fileSize - 1, startByte + MAX_CHUNK_SIZE - 1);
 
 			if (startByte >= fileSize || endByte >= fileSize || startByte > endByte) {
 				return res.status(416).json({
@@ -223,6 +226,7 @@ export async function stream(req: Request, res: Response) {
 
 			const chunkSize = (endByte - startByte) + 1;
 			const stream = await s3.streamExportRange(projectId, startByte, endByte);
+			console.log(`Streaming bytes ${startByte}-${endByte} of ${fileSize} for project ${projectId}: Chunk size ${chunkSize}`);
 			res.writeHead(206, {
 				'Content-Range': `bytes ${startByte}-${endByte}/${fileSize}`,
 				'Accept-Ranges': 'bytes',

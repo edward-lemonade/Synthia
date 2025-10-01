@@ -4,7 +4,7 @@ import { AppAuthService } from '@src/app/services/app-auth.service';
 import { Router } from '@angular/router';
 import axios from 'axios';
 import { AudioFileData, ProjectFront, ProjectMetadata } from '@shared/types';
-import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile } from '@src/app/utils/audio';
+import { base64ToArrayBuffer, CachedAudioFile, makeCacheAudioFile, makeCacheAudioFileFromPieces } from '@src/app/utils/audio';
 import { environment } from '@src/environments/environment.dev';
 import { ApiService } from '@src/app/services/api.service';
 
@@ -19,13 +19,13 @@ export class PublishService {
 	declare projectFront: ProjectFront;
 	declare cachedAudioFile: CachedAudioFile;
 
-	public async loadProject(projectId: string) {
+	public async loadProject(projectId: string, signal: AbortSignal) {
 		try {
-			const res = await ApiService.instance.routes.getMyProject({}, projectId);
+			const res = await ApiService.instance.routes.getMyProject({signal}, projectId);
 
 			if (res.data.project) {
 				this.projectMetadata = res.data.project;
-				this.loadExport(projectId);
+				this.loadExport(projectId, signal);
 			}
 			return res.data.project;
 		} catch (err) {
@@ -34,17 +34,18 @@ export class PublishService {
 		}
 	}
 
-	public async loadExport(projectId: string) {
+	public async loadExport(projectId: string, signal: AbortSignal) {
 		try {
-			const res = await ApiService.instance.routes.getMyProjectExport({}, projectId);
+			const [bufferRes, waveformRes] = await Promise.all([
+				ApiService.instance.routes.getMyProjectExport({responseType: "text", signal}, projectId),
+				ApiService.instance.routes.getMyProjectWaveform({signal}, projectId)
+			]);
 
-			const exportFileData = res.data.exportFileData;
-			if (exportFileData) {
-				const cachedExportData = await makeCacheAudioFile(exportFileData);
+			if (bufferRes && waveformRes) {
+				const cachedExportData = await makeCacheAudioFileFromPieces(bufferRes.data, waveformRes.data.waveformData);
 				this.cachedAudioFile = cachedExportData;
-				return cachedExportData;
 			}
-			return exportFileData;
+			return bufferRes.data;
 		} catch (err) {
 			console.error('Error during export loading:', err);
 			return null;

@@ -96,6 +96,8 @@ export class PublishPage implements OnInit {
 	@ViewChild('waveformWrapper') waveformWrapper!: ElementRef<HTMLDivElement>;
 	@ViewChild('canvas') canvas!: ElementRef<HTMLCanvasElement>;
 
+	private abortController = new AbortController();
+
 	projectId: string | null = null;
 	get projectMetadata() { return this.publishService.projectMetadata };
 	get projectFront() { return this.publishService.projectFront };
@@ -127,7 +129,7 @@ export class PublishPage implements OnInit {
 		this.isLoading = true;
 		
 		try {
-			const projectMetadata = await this.publishService.loadProject(this.projectId);
+			const projectMetadata = await this.publishService.loadProject(this.projectId, this.abortController.signal);
 			if (projectMetadata) {
 				this.projectTitle = projectMetadata.title || '';
 			}
