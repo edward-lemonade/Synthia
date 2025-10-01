@@ -14,7 +14,7 @@ https://synthia-f.vercel.app/
     * I would have hosted backend on Vercel too but I would have to refactor the code to use serverless functions and buy Redis integrations which is unideal. Will eventually migrate both frontend and backend to a different provider.
 * **MongoDB**: storing user, project data, social interactions 
     * Atlas Search used in Discover tab's search feature
-* **AWS**: large files (audio exports / profile pictures)
+* **AWS S3**: large files (audio exports / profile pictures)
 * **Redis**: audio file cache (dramatic improvement in audio loading, main bottleneck is just decoding on frontend)
 * **Auth0**: user authentication + JWT validation
 
