@@ -31,7 +31,7 @@ export class AppAuthService {
 		});
 	}
 
-	private async waitForUserInit(): Promise<void> {
+	async waitForUserInit(): Promise<void> {
 		await firstValueFrom(
 			this.userLoadedSubject.pipe(filter(loaded => loaded))
 		);
@@ -50,8 +50,6 @@ export class AppAuthService {
 
 	async getAuthHeaders(): Promise<{ [key: string]: string }> {
 		try {
-			await this.waitForUserInit();
-
 			const token = await this.getAccessToken();
 			const user = this.getUserAuth();
 

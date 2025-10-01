@@ -128,10 +128,11 @@ export class ApiService {
 			data?: any, 
 			signal?: AbortSignal
 		},
-		needAuth: boolean = true
+		needAuth: boolean = false
 	): Promise<AxiosResponse<ResType>> {
-		console.log(apiEndpoint);
-		
+		if (needAuth) {
+			await this.auth.waitForUserInit();
+		}
 		const headers = await this.auth.getAuthHeaders();
 		if (needAuth && !headers) {
 			throw new Error('Not logged in!');
