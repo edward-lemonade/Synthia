@@ -53,12 +53,45 @@ export async function loadAudioFiles(req: Request, res: Response) {
 		const audioDataPromises = fileRefs.map(async (fileRef) => await getAudioFile(projectId, fileRef.fileId));
 		const audioDatas: AudioFileData[] = await Promise.all(audioDataPromises);
 
-		res.json({ success: true, audioFileDatas: audioDatas });
+		res.setHeader('Content-Type', 'application/json');
+		res.setHeader('Transfer-Encoding', 'chunked');
+		
+
+		res.write('[');
+		for (let i = 0; i < audioDatas.length; i++) {
+			const audioData = audioDatas[i];
+
+			res.write('{"fileId":"' + audioData.fileId + '","mimeType":"' + audioData.mimeType + '","buffer64":"');
+
+			const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+			let offset = 0;
+			
+			while (offset < audioData.buffer64.length) {
+				const chunk = audioData.buffer64.slice(offset, offset + CHUNK_SIZE);
+				res.write(chunk);
+				offset += CHUNK_SIZE;
+				await new Promise(resolve => setImmediate(resolve));
+			}
+
+			res.write('"}');
+			
+			if (i < audioDatas.length - 1) {res.write(',');}
+		}
+		res.write(']');
+		res.end();
+		
 	} catch (error: any) {
 		console.error('Error loading audio files:', error);
 		if (error.message.includes('Access denied')) {
-			return res.status(403).json({ success: false, message: error.message });
+			return res.status(403).end();
 		}
-		return res.status(500).json({ success: false, message: "Internal server error" });
+		
+		// If headers haven't been sent yet, send error
+		if (!res.headersSent) {
+			return res.status(500).end();
+		}
+		
+		// If streaming already started, just end the response
+		res.end();
 	}
 }

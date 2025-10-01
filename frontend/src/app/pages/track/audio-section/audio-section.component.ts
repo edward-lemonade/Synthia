@@ -209,7 +209,7 @@ export class AudioSectionComponent implements AfterViewInit, OnDestroy {
 
 		const audio = this.audioPlayer.nativeElement;
 		audio.src = this.trackService.getStreamUrl();
-		audio.preload = 'auto';
+		audio.preload = 'metadata';
 		
 		this.isAudioInitialized = true;
 	}

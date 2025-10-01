@@ -27,6 +27,7 @@ router.delete('/api/projects/:projectId/studio', requireAuth, ProjectController.
 router.patch('/api/projects/:projectId/rename', requireAuth, ProjectController.rename);
 router.patch('/api/projects/:projectId/rename_front', requireAuth, ProjectController.renameFront);
 router.get('/api/projects/:projectId/export', requireAuth, ProjectController.getExport);
+router.get('/api/projects/:projectId/waveform', requireAuth, ProjectController.getWaveform);
 router.get('/api/projects/:projectId/front', requireAuth, ProjectController.getFront);
 router.post('/api/projects/:projectId/front', requireAuth, ProjectController.publish);
 router.delete('/api/projects/:projectId/front', requireAuth, ProjectController.unpublish);

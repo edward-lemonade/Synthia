@@ -1,5 +1,6 @@
 import { AudioFileData, WaveformData } from "@shared/types";
 import { Base64 } from "js-base64";
+import { v4 } from "uuid";
 
 export function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
 	return new Promise((resolve, reject) => {
@@ -53,11 +54,21 @@ export async function makeCacheAudioFile(audioFileData: AudioFileData) {
 
 	return cachedFile;
 }
+export async function makeCacheAudioFileFromPieces(buffer64: string, waveformData: WaveformData) {
+	const audioFileData: AudioFileData = {
+		fileId: v4(),
+		mimeType: 'audio/wav',
+		buffer64,
+		waveformData,
+	};
+
+	return await makeCacheAudioFile(audioFileData);
+}
 
 export async function generateAudioWaveformF(arrayBuffer: ArrayBuffer): Promise<WaveformData> {
 	const audioContext = new AudioContext();
 	const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
-	
+
 	// Generate peaks at high resolution (we'll downsample for display)
 	const peaks = extractPeaks(decodedBuffer, 8192); // High resolution base
 	

@@ -215,17 +215,51 @@ export async function getExport(req: Request, res: Response) {
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
 		const audioFileData: AudioFileData = await s3.getExportFile(projectId);
-		const audioFileDataWithWaveform: AudioFileData = {
-			...audioFileData,
-			waveformData: await s3.getWaveformData(projectId),
+		const buffer64 = audioFileData.buffer64;
+
+		res.setHeader('Content-Type', 'text/plain');
+		res.setHeader('Transfer-Encoding', 'chunked');
+		
+		const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+		let offset = 0;
+		
+		while (offset < buffer64.length) {
+			const chunk = buffer64.slice(offset, offset + CHUNK_SIZE);
+			res.write(chunk);
+			offset += CHUNK_SIZE;
+
+			await new Promise(resolve => setImmediate(resolve));
 		}
-		res.json({ success: true, exportFileData: audioFileDataWithWaveform });
+		res.end();
+
 	} catch (error: any) {
 		console.error('Error getting export file:', error);
 		if (error.message.includes('Access denied')) {
-			return res.status(403).json({ success: false, message: error.message });
+			return res.status(403).end();
 		}
-		return res.status(500).json({ success: false, message: "Internal server error" });
+		return res.status(500).end();
+	}
+}
+
+export async function getWaveform(req: Request, res: Response) {
+	const { projectId } = req.params;
+	const userId = req.auth?.sub;
+	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+	const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
+
+	try {
+		const waveformData = await s3.getWaveformData(projectId);
+		if (!waveformData) {
+			res.json({ success: false, waveformData: null });
+		}
+		res.json({ success: true, waveformData: waveformData });
+	} catch (error) {
+		console.error('Error getting project audio:', error);
+		res.status(500).json({ 
+			success: false, 
+			error: 'Failed to get project audio' 
+		});
 	}
 }
 

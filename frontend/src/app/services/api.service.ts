@@ -48,7 +48,12 @@ export class ApiService {
 		renameProjectFront:
 			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean}>(`/projects/${projectId}/rename_front`, 'patch', params, true)},
 		getMyProjectExport:
-			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean, exportFileData: AudioFileData}>(`/projects/${projectId}/export`, 'get', params, true)},
+			(params: any = {}, projectId: string) => {return this.callApi<string>(`/projects/${projectId}/export`, 'get', {...params, responseType: "text"}, true)},
+		getMyProjectWaveform:
+			(params: any = {}, projectId: string) => {return this.callApi<{
+				success: boolean, 
+				waveformData: WaveformData,
+			}>(`/projects/${projectId}/waveform`, 'get', params)},
 		getMyProjectFront:
 			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean, projectFront: ProjectFront}>(`/projects/${projectId}/front`, 'get', params, true)},
 		publishProject:
@@ -60,7 +65,7 @@ export class ApiService {
 		saveProjectFiles:
 			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean, count: number}>(`/projects/${projectId}/files/save`, 'post', params, true)},
 		loadProjectFiles:
-			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean, audioFileDatas: AudioFileData[]}>(`/projects/${projectId}/files/get_all`, 'post', params, true)},
+			(params: any = {}, projectId: string) => {return this.callApi<AudioFileData[]>(`/projects/${projectId}/files/get_all`, 'post', {...params, responseType: "json"}, true)},
 
 		streamTrack: 
 			(params: any = {}, projectId: string) => {return this.callApi<{bytes: Buffer[]}>(`/track/${projectId}/stream`, 'get', params)},
