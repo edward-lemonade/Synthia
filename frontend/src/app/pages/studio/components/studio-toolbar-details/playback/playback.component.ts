@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, OnDestroy } from '@angula
 import { CommonModule } from '@angular/common';
 
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDivider } from '@angular/material/divider';
 import { MatIcon } from '@angular/material/icon';
 import { TimelinePlaybackService } from '../../../services/timeline-playback.service';
@@ -15,10 +14,10 @@ import { ViewportService } from '../../../services/viewport.service';
 
 @Component({
 	selector: 'studio-toolbar-details-playback',
-	imports: [CommonModule, MatButtonToggleModule, MatDivider, MatIcon, MatTooltipModule],
+	imports: [CommonModule, MatDivider, MatIcon, MatTooltipModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<mat-button-toggle-group class='btn-group'>
+		<div class='btn-group'>
 			<button 
 				class="btn"
 				[disabled]="recordingService.isRecording()"
@@ -74,7 +73,7 @@ import { ViewportService } from '../../../services/viewport.service';
 					{{ recordIcon() }}
 				</mat-icon>
 			</button>
-		</mat-button-toggle-group>
+		</div>
 	`,
 	styleUrl: './playback.component.scss'
 })

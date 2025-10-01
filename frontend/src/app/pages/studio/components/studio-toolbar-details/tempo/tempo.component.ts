@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, signal, effect } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenuModule } from '@angular/material/menu';
@@ -12,10 +11,10 @@ import { StateService } from '../../../state/state.service';
 
 @Component({
 	selector: 'studio-toolbar-details-tempo',
-	imports: [CommonModule, FormsModule, MatButtonToggleModule, MatIcon, MatDivider, MatMenuModule],
+	imports: [CommonModule, FormsModule, MatIcon, MatDivider, MatMenuModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
-		<mat-button-toggle-group class='btn-group'>
+		<div class='btn-group'>
 			<button
 				class="btn metronome" 
 				[class.selected]="metronome"
@@ -46,7 +45,7 @@ import { StateService } from '../../../state/state.service';
 					<span class="time-sig-D">{{ timeSignature().D }}</span>
 				</div>	
 			</button>
-		</mat-button-toggle-group>
+		</div>
 
 		<mat-menu #timeSigMenu="matMenu" [class]="'time-sig-menu'">
 			<div class="time-sig-menu-content">

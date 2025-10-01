@@ -4,11 +4,10 @@ import { ChangeDetectionStrategy, Component, computed, Injector } from "@angular
 import { CabnetService } from "../../services/cabnet.service";
 
 import { MatDivider } from "@angular/material/divider";
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @Component({
 	selector: 'app-studio-cabnet',
-	imports: [CommonModule, MatDivider, MatButtonToggleModule],
+	imports: [CommonModule, MatDivider],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="cabnet-container" [style.height.px]="cabnetService.isOpen() ? openHeight : closedHeight">
@@ -18,7 +17,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 			</div>
 
 			<div class="tabs-row">
-				<mat-button-toggle-group class='btn-group'>
+				<div class='btn-group'>
 					<ng-container *ngFor="let tab of tabEntries(); let i = index">
 						<button 
 							class="btn"
@@ -33,7 +32,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 							[vertical]="true">
 						</mat-divider>
 					</ng-container>
-				</mat-button-toggle-group>
+				</div>
 			</div>
 
 		</div>

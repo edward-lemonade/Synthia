@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, Input, OnInit, signal, ViewChild } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    effect,
+    Input,
+    OnInit,
+    signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ViewportService } from '../../../../services/viewport.service';
 import { Track } from '@shared/types';
@@ -7,7 +15,6 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { FormsModule } from '@angular/forms';
 import { MatSliderModule } from '@angular/material/slider';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 import { RotaryKnobComponent } from '@src/app/components/rotary-knob/rotary-knob.component';
 import { MatDivider } from "@angular/material/divider";
@@ -23,7 +30,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Component({
 	selector: 'tracklist-track',
-	imports: [CommonModule, MatIconModule, MatSliderModule, FormsModule, RotaryKnobComponent, MatButtonToggleModule, MatDivider, MatMenuModule],
+	imports: [CommonModule, MatIconModule, MatSliderModule, FormsModule, RotaryKnobComponent, MatDivider, MatMenuModule],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class="track"
@@ -104,7 +111,7 @@ import { v4 as uuidv4 } from 'uuid';
 						[color]="color()"
 						/>
 					
-					<mat-button-toggle-group multiple class="ms-btn-group">
+					<div multiple class="ms-btn-group">
 						<button 	
 							class="ms-btn" 
 							[class.selected]="mute()" 
@@ -117,7 +124,7 @@ import { v4 as uuidv4 } from 'uuid';
 							[class.selected]="solo()" 
 							(click)="toggleSolo()">S
 						</button>
-					</mat-button-toggle-group>
+					</div>
 				</div>
 			</div>
 
