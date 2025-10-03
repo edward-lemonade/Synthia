@@ -20,7 +20,7 @@ export class ApiService {
 
 	routes = {
 		getMe: 					
-			(params: any = {}) => {return this.callApi<{user: User|null, isNew: boolean}>(`/me`, 'get', params)},
+			(params: any = {}) => {return this.callApi<{user: User|null, isNew: boolean}>(`/me`, 'get', params, true)},
 		createMe: 				
 			(params: any = {}) => {return this.callApi<{user: User|null, isNew: boolean}>(`/me`, 'post', params)},
 		updateProfile: 			
