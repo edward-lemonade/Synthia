@@ -71,6 +71,7 @@ import { DeviceSelectorDialog } from './device-selector-dialog/device-selector-d
 				[class.recording]="recordingService.isRecording()"
 				[disabled]="recordingService.isProcessing() || recordingDisabled()"
 				(click)="toggleRecording()"
+				(contextmenu)="$event.preventDefault(); showDeviceSelector()"
 				matTooltip="An audio/microphone track must be selected."
 				[matTooltipDisabled]="!recordingDisabled()"
  				matTooltipPosition="below">
@@ -139,7 +140,7 @@ export class PlaybackComponent implements OnDestroy {
 		}
 	}
 
-	private async showDeviceSelector(): Promise<boolean> {
+	async showDeviceSelector(): Promise<boolean> {
 		try {
 			const devices = await this.recordingService.loadAvailableDevices();
 			
