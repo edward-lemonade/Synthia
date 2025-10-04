@@ -11,10 +11,18 @@ import { RegionSelectService } from '../../../services/region-select.service';
 import { AudioCacheService } from '../../../services/audio-cache.service';
 import { AudioRegion, RegionType } from '@shared/types';
 import { ViewportService } from '../../../services/viewport.service';
+import { MatDialog } from '@angular/material/dialog';
+import { DeviceSelectorDialog } from './device-selector-dialog/device-selector-dialog.component';
 
 @Component({
 	selector: 'studio-toolbar-details-playback',
-	imports: [CommonModule, MatDivider, MatIcon, MatTooltipModule],
+	standalone: true,
+	imports: [
+		CommonModule, 
+		MatDivider, 
+		MatIcon, 
+		MatTooltipModule,
+	],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div class='btn-group'>
@@ -65,8 +73,7 @@ import { ViewportService } from '../../../services/viewport.service';
 				(click)="toggleRecording()"
 				matTooltip="An audio/microphone track must be selected."
 				[matTooltipDisabled]="!recordingDisabled()"
- 				matTooltipPosition="below"
-  				>
+ 				matTooltipPosition="below">
 				<mat-icon 
 					[style.color]="recordIconColor()"
 					[class.pulsing]="recordingService.isRecording()">
@@ -85,13 +92,14 @@ export class PlaybackComponent implements OnDestroy {
 	);
 
 	recordIconColor = computed(() => {
-		if (this.recordingService.isProcessing()) return 'rgb(255, 193, 7)'; // Yellow for processing
-		if (this.recordingService.isRecording()) return 'rgb(192, 56, 79)'; // Red for recording
+		if (this.recordingService.isProcessing()) return 'rgb(255, 193, 7)';
+		if (this.recordingService.isRecording()) return 'rgb(192, 56, 79)';
 		else return 'rgb(192, 56, 79)';
 	});
+
 	recordIcon = computed(() => {
 		if (this.recordingService.isProcessing()) return 'hourglass_empty';
-		if (this.recordingService.isRecording()) return 'square'; // Red for recording
+		if (this.recordingService.isRecording()) return 'square';
 		return 'circle';
 	});
 
@@ -102,6 +110,7 @@ export class PlaybackComponent implements OnDestroy {
 		public recordingService: AudioRecordingService,
 		public audioCacheService: AudioCacheService,
 		public viewportService: ViewportService,
+		private dialog: MatDialog
 	) {}
 
 	ngOnDestroy(): void {
@@ -111,6 +120,12 @@ export class PlaybackComponent implements OnDestroy {
 	async toggleRecording(): Promise<void> {
 		if (this.recordingDisabled()) {
 			return;
+		}
+
+		// Get device selector on first recording attempt
+		if (!this.recordingService.hasSelectedDevice()) {
+			const deviceSelected = await this.showDeviceSelector();
+			if (!deviceSelected) { return; }
 		}
 
 		try {
@@ -124,16 +139,49 @@ export class PlaybackComponent implements OnDestroy {
 		}
 	}
 
+	private async showDeviceSelector(): Promise<boolean> {
+		try {
+			const devices = await this.recordingService.loadAvailableDevices();
+			
+			if (devices.length === 0) {
+				alert('No microphones found. Please connect a microphone and try again.');
+				return false;
+			}
+
+			const dialogRef = this.dialog.open(DeviceSelectorDialog, {
+				width: '500px',
+				disableClose: true
+			});''
+			dialogRef.componentInstance.setDevices(devices);
+
+			const selectedDeviceId = await dialogRef.afterClosed().toPromise();
+
+			if (selectedDeviceId) {
+				this.recordingService.selectDevice(selectedDeviceId);
+				return true;
+			}
+
+			return false;
+		} catch (error) {
+			console.error('Error selecting device:', error);
+			alert('Error accessing microphone. Please check your permissions.');
+			return false;
+		}
+	}
+
 	private async handleRecordingComplete(recordingData: AudioRecording) {
 		console.log('Recording completed:', {
 			duration: recordingData.duration,
 			size: recordingData.blob.size,
 			type: recordingData.mimeType
 		});
-		const cachedAudioFile = await this.audioCacheService.addAudioFile(this.recordingService.recordingToFile(recordingData));
+		
+		const cachedAudioFile = await this.audioCacheService.addAudioFile(
+			this.recordingService.recordingToFile(recordingData)
+		);
 
 		const durationInMeasures = this.viewportService.timeToPos(cachedAudioFile.duration);
-		const regionProps : Partial<AudioRegion> = {
+		const regionProps: Partial<AudioRegion> = {
 			fileId: cachedAudioFile.fileId,
 			start: this.playbackService.playbackPos(),
 			duration: durationInMeasures,
@@ -144,5 +192,4 @@ export class PlaybackComponent implements OnDestroy {
 		}
 		this.regionService.addAudioRegion(this.recordingService.recordingTrack()!, regionProps);
 	}
-
 }

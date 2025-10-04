@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
-import { ExportDialogComponent } from './export-dialogue/export-dialog.component';
+import { ExportDialogComponent } from './export-dialog/export-dialog.component';
 import { TimelineExportService } from '../../../services/timeline-export.service';
 import { StateService } from '../../../state/state.service';
 

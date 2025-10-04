@@ -1,0 +1,64 @@
+@use "theme" as *;
+@use "../../../../studio-vars" as *;
+
+.device-dialog {
+	background: $appbar-bg;
+	border: $border-width solid $border-color !important;
+	border-radius: 0px !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	box-sizing: border-box;
+
+	gap: 10px;
+	padding: 20px;
+
+	color: $appbar-text;
+	font-weight: 500;
+	font-size: 20px;
+
+	.content {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 10px;
+		justify-content: center;
+
+		color: $appbar-text;
+		font-weight: 400;
+		font-size: 14px;
+	}
+
+	.actions {
+		display: flex;
+		flex: 1;
+		flex-direction: row;
+		gap: 20px;
+		
+
+		.btn {
+			height: 40px;
+			background-color: $accent-orange;
+
+			color: $appbar-bg;
+			font-weight: 500;
+			font-size: 14px;
+
+
+			border: 1px solid transparent;
+			border-radius: 60px;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			
+			&:hover {
+				background-color: $accent-orange-l;
+			}
+		}
+	}
+}
+
