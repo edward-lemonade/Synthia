@@ -5,6 +5,7 @@ import { MatDialogModule } from "@angular/material/dialog";
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { Component, signal } from "@angular/core";
+import { AudioRecordingService } from "@src/app/pages/studio/services/audio-recording.service";
 
 @Component({
 	selector: 'device-selector-dialog',
@@ -55,7 +56,9 @@ export class DeviceSelectorDialog {
 
 	setDevices(devices: MediaDeviceInfo[]): void {
 		this.devices.set(devices);
-		if (devices.length > 0) {
+		if (AudioRecordingService.instance.selectedDeviceId() != null) {
+			this.selectedDeviceId = AudioRecordingService.instance.selectedDeviceId();
+		} else if (devices.length > 0) {
 			this.selectedDeviceId = devices[0].deviceId;
 		}
 	}
