@@ -99,24 +99,24 @@ interface ViewportBounds {
 
 				<!-- Audio specific -->
 
-				<button class="region-menu-btn" mat-menu-item [matMenuTriggerFor]="audioFadeMenu" *ngIf="!isMidi()">
+				<button class="region-menu-btn" mat-menu-item [matMenuTriggerFor]="audioFadeMenu" *ngIf="false">
 					<mat-icon>piano</mat-icon>
 					<p>Fade</p>
 				</button>
-				<button class="region-menu-btn" mat-menu-item [matMenuTriggerFor]="audioPitchMenu" *ngIf="!isMidi()">
+				<button class="region-menu-btn" mat-menu-item [matMenuTriggerFor]="audioPitchMenu" *ngIf="false">
 					<mat-icon>piano</mat-icon>
 					<p>Pitch</p>
 				</button>
-				<button class="region-menu-btn" mat-menu-item *ngIf="!isMidi()">
+				<button class="region-menu-btn" mat-menu-item *ngIf="false">
 					<mat-icon>piano</mat-icon>
 					<p>Tempo</p>
 				</button>
-				<button class="region-menu-btn" mat-menu-item *ngIf="!isMidi()">
+				<button class="region-menu-btn" mat-menu-item *ngIf="false">
 					<mat-icon>piano</mat-icon>
 					<p>Stretch</p>
 				</button>
 				
-				<mat-divider/>
+				<mat-divider *ngIf="isMidi()"/>
 				
 				<!-- General -->
 				<button class="region-menu-btn" mat-menu-item (click)="duplicateRegion()">
@@ -601,6 +601,7 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	// Region Actions
 
 	// [MIDI]
+
 	openMidiEditor() {
 		if (this.isMidi()) {
 			this.selectionService.setSelectedRegion(this.region);
@@ -611,11 +612,14 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	// [Audio]
+
 	audioFadeIn() {}
 	audioFadeOut() {}
 
 	public pitchOptions = [-12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-	audioPitch(num: Number) {}
+	audioPitch(num: Number) {
+
+	}
 
 	// [General]
 
