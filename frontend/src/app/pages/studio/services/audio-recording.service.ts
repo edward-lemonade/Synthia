@@ -23,6 +23,11 @@ export class AudioRecordingService {
 	isProcessing = signal(false);
 	lastRecording = signal<AudioRecording | null>(null);
 	recordingTrack = signal<ObjectStateNode<Track> | null>(null);
+	
+	// Device selection
+	availableDevices = signal<MediaDeviceInfo[]>([]);
+	selectedDeviceId = signal<string | null>(null);
+	hasSelectedDevice = signal(false);
 
 	private mediaRecorder: MediaRecorder | null = null;
 	private audioChunks: Blob[] = [];
@@ -30,9 +35,48 @@ export class AudioRecordingService {
 	private stream: MediaStream | null = null;
 	private recordingPromise: Promise<AudioRecording> | null = null;
 	private recordingResolve: ((value: AudioRecording) => void) | null = null;
+	private recordingReject: ((reason?: any) => void) | null = null;
 
 	constructor() {
 		AudioRecordingService._instance = this;
+	}
+
+	async loadAvailableDevices(): Promise<MediaDeviceInfo[]> {
+		try {
+			// Request permission first to get device labels
+			const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			tempStream.getTracks().forEach(track => track.stop());
+
+			const devices = await navigator.mediaDevices.enumerateDevices();
+			const audioInputs = devices.filter(device => device.kind === 'audioinput');
+			
+			// Filter out system audio devices
+			const microphones = audioInputs.filter(device => {
+				const label = device.label.toLowerCase();
+				return !label.includes('stereo mix') &&
+					   !label.includes('wave out') &&
+					   !label.includes('loopback') &&
+					   !label.includes('system audio') &&
+					   !label.includes('monitor');
+			});
+
+			this.availableDevices.set(microphones);
+			
+			// Auto-select first device if none selected
+			if (!this.selectedDeviceId() && microphones.length > 0) {
+				this.selectedDeviceId.set(microphones[0].deviceId);
+			}
+
+			return microphones;
+		} catch (error) {
+			console.error('Error loading audio devices:', error);
+			throw error;
+		}
+	}
+
+	selectDevice(deviceId: string): void {
+		this.selectedDeviceId.set(deviceId);
+		this.hasSelectedDevice.set(true);
 	}
 
 	async startRecording(): Promise<void> {
@@ -40,27 +84,42 @@ export class AudioRecordingService {
 			throw new Error('Already recording');
 		}
 
+		const deviceId = this.selectedDeviceId();
+		if (!deviceId) {
+			throw new Error('No device selected');
+		}
+
 		this.recordingTrack.set(RegionSelectService.instance.selectedTrack());
 		try {
-			// Request microphone access
+			// Request microphone access with specific device
 			this.stream = await navigator.mediaDevices.getUserMedia({
 				audio: {
+					deviceId: { exact: deviceId },
 					echoCancellation: true,
 					noiseSuppression: true,
-					sampleRate: 44100
-				}
+					autoGainControl: true,
+					sampleRate: 44100,
+					channelCount: 1,
+				},
+				video: false
 			});
 
-			this.recordingPromise = new Promise<AudioRecording>((resolve) => {
+			// Verify what device we're using
+			const tracks = this.stream.getAudioTracks();
+			if (tracks.length > 0) {
+				console.log('Recording with:', tracks[0].label);
+				console.log('Track settings:', tracks[0].getSettings());
+			}
+
+			this.recordingPromise = new Promise<AudioRecording>((resolve, reject) => {
 				this.recordingResolve = resolve;
+				this.recordingReject = reject;
 			});
 
 			const mimeType = this.getSupportedMimeType();
 			this.mediaRecorder = new MediaRecorder(this.stream, {
 				mimeType: mimeType
 			});
-
-			console.log(mimeType);
 
 			this.audioChunks = [];
 			this.startTime = Date.now();
@@ -70,25 +129,34 @@ export class AudioRecordingService {
 					this.audioChunks.push(event.data);
 				}
 			};
+
 			this.mediaRecorder.onstop = async () => {
-				await this.processRecordedAudio();
-				this.releaseMediaStream();
-			};
-			this.mediaRecorder.onerror = (event) => {
-				console.error('MediaRecorder error:', event);
-				this.isRecording.set(false);
-				this.releaseMediaStream();
-				throw new Error('MediaRecorder error occurred');
+				try {
+					await this.processRecordedAudio();
+				} catch (error) {
+					console.error('Error processing recorded audio:', error);
+					this.recordingReject?.(error);
+				} finally {
+					this.releaseMediaStream();
+				}
 			};
 
-			// Start recording
-			this.mediaRecorder.start(100); // Collect data every 100ms
+			this.mediaRecorder.onerror = (event) => {
+				console.error('MediaRecorder error:', event);
+				const error = new Error('MediaRecorder error occurred');
+				this.isRecording.set(false);
+				this.releaseMediaStream();
+				this.recordingReject?.(error);
+			};
+
+			this.mediaRecorder.start(1000);
 			this.isRecording.set(true);
 
 		} catch (error) {
 			console.error('Error starting recording:', error);
 			this.releaseMediaStream();
 			this.isRecording.set(false);
+			this.recordingReject?.(error);
 			throw error;
 		}
 	}
@@ -103,7 +171,6 @@ export class AudioRecordingService {
 			this.isRecording.set(false);
 		}
 
-		// Wait for the recording promise to resolve
 		if (this.recordingPromise) {
 			return await this.recordingPromise;
 		}
@@ -111,18 +178,15 @@ export class AudioRecordingService {
 		throw new Error('Recording promise not found');
 	}
 
-	private async convertToMp3(audioBlob: Blob): Promise<Blob> { // gotta convert recordings to mp3 because backend can't handle webp
+	private async convertToMp3(audioBlob: Blob): Promise<Blob> {
 		try {
 			const arrayBuffer = await audioBlob.arrayBuffer();
-			
-			// Decoding should work for any format
 			const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-			const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0)); // slice() creates a copy
+			const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
 			
 			const left = audioBuffer.getChannelData(0);
 			const right = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : left;
 			
-			// Convert float32 samples to 16-bit PCM
 			const leftInt16 = new Int16Array(left.length);
 			const rightInt16 = new Int16Array(right.length);
 			
@@ -131,16 +195,13 @@ export class AudioRecordingService {
 				rightInt16[i] = Math.max(-32768, Math.min(32767, Math.round(right[i] * 32767)));
 			}
 			
-			// Initialize MP3 encoder
 			const channels = audioBuffer.numberOfChannels;
 			const sampleRate = audioBuffer.sampleRate;
-			const bitRate = 128; // 128 kbps
+			const bitRate = 128;
 			
 			const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, bitRate);
 			const mp3Data: BlobPart[] = [];
-			
-			// Encode
-			const sampleBlockSize = 1152; // MP3 frame size
+			const sampleBlockSize = 1152;
 			
 			for (let i = 0; i < leftInt16.length; i += sampleBlockSize) {
 				const leftChunk = leftInt16.subarray(i, i + sampleBlockSize);
@@ -155,13 +216,11 @@ export class AudioRecordingService {
 				}
 			}
 			
-			// Flush encoder
 			const mp3buf = mp3encoder.flush();
 			if (mp3buf.length > 0) {
 				mp3Data.push(mp3buf);
 			}
 			
-			// Create blob
 			return new Blob(mp3Data, { type: 'audio/mp3' });
 			
 		} catch (error) {
@@ -194,6 +253,7 @@ export class AudioRecordingService {
 			if (this.recordingResolve) {
 				this.recordingResolve(recordingData);
 				this.recordingResolve = null;
+				this.recordingReject = null;
 				this.recordingPromise = null;
 			}
 
@@ -220,7 +280,7 @@ export class AudioRecordingService {
 			}
 		}
 
-		return 'audio/webm'; // Fallback
+		return 'audio/webm';
 	}
 
 	private getFileExtension(mimeType: string): string {
@@ -231,7 +291,6 @@ export class AudioRecordingService {
 			'audio/mpeg': 'mp3',
 		};
 
-		// Extract base MIME type (remove codecs)
 		const baseMimeType = mimeType.split(';')[0];
 		return mimeMap[baseMimeType] || 'webm';
 	}

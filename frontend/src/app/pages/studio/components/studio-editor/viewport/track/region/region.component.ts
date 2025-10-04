@@ -31,6 +31,7 @@ import { CabnetService } from '@src/app/pages/studio/services/cabnet.service';
 import { hexToHsl, hslToCss } from '@src/app/utils/color';
 import { createMidiViewport } from '@src/app/utils/render-midi';
 import { createWaveformViewport } from '@src/app/utils/render-waveform';
+import { MatDivider } from "@angular/material/divider";
 
 type ResizeHandle = 'left' | 'right' | null;
 
@@ -43,7 +44,7 @@ interface ViewportBounds {
 
 @Component({
 	selector: 'viewport-track-region',
-	imports: [CommonModule, MatMenuModule, MatIconModule, DragGhostComponent, ResizeGhostComponent],
+	imports: [CommonModule, MatMenuModule, MatIconModule, DragGhostComponent, ResizeGhostComponent, MatDivider],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	template: `
 		<div #regionEl class="region"
@@ -90,17 +91,63 @@ interface ViewportBounds {
 		<!-- Context Menu -->
 		<mat-menu #regionMenu="matMenu" [class]="'region-menu'">
 			<div class="region-menu-content">
+				<!-- MIDI specific -->
 				<button class="region-menu-btn" mat-menu-item (click)="openMidiEditor()" *ngIf="isMidi()">
 					<mat-icon>piano</mat-icon>
-					<p>Open MIDI Editor</p>
+					<p>Open MIDI editor</p>
 				</button>
+
+				<!-- Audio specific -->
+
+				<button class="region-menu-btn" mat-menu-item [matMenuTriggerFor]="audioFadeMenu" *ngIf="!isMidi()">
+					<mat-icon>piano</mat-icon>
+					<p>Fade</p>
+				</button>
+				<button class="region-menu-btn" mat-menu-item [matMenuTriggerFor]="audioPitchMenu" *ngIf="!isMidi()">
+					<mat-icon>piano</mat-icon>
+					<p>Pitch</p>
+				</button>
+				<button class="region-menu-btn" mat-menu-item *ngIf="!isMidi()">
+					<mat-icon>piano</mat-icon>
+					<p>Tempo</p>
+				</button>
+				<button class="region-menu-btn" mat-menu-item *ngIf="!isMidi()">
+					<mat-icon>piano</mat-icon>
+					<p>Stretch</p>
+				</button>
+				
+				<mat-divider/>
+				
+				<!-- General -->
 				<button class="region-menu-btn" mat-menu-item (click)="duplicateRegion()">
 					<mat-icon>content_copy</mat-icon>
-					<p>Duplicate Region</p>
+					<p>Duplicate region</p>
 				</button>
 				<button class="region-menu-btn" mat-menu-item (click)="deleteRegion()">
 					<mat-icon>delete</mat-icon>
-					<p>Delete Region</p>
+					<p>Delete region</p>
+				</button>
+			</div>
+		</mat-menu>
+
+		<!-- Audio Menus -->
+		<mat-menu #audioFadeMenu="matMenu" [class]="'region-menu'">
+			<div class="region-menu-content">
+				<button class="region-menu-btn" mat-menu-item (click)="audioFadeIn()">
+					<mat-icon>north_east</mat-icon>
+					<p>Fade in</p>
+				</button>
+				<button class="region-menu-btn" mat-menu-item (click)="audioFadeOut()">
+					<mat-icon>south_east</mat-icon>
+					<p>Fade out</p>
+				</button>
+			</div>
+		</mat-menu>
+		<mat-menu #audioPitchMenu="matMenu" [class]="'region-menu'">
+			<div class="region-menu-content">				
+				<button *ngFor="let num of pitchOptions;"
+				class="region-menu-btn" mat-menu-item (click)="audioPitch(num)">
+					<p>{{num}}</p>
 				</button>
 			</div>
 		</mat-menu>
@@ -551,9 +598,9 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	// ====================================================================================================
-	
 	// Region Actions
 
+	// [MIDI]
 	openMidiEditor() {
 		if (this.isMidi()) {
 			this.selectionService.setSelectedRegion(this.region);
@@ -562,6 +609,15 @@ export class RegionComponent implements OnInit, AfterViewInit, OnDestroy {
 			this.cabnetService.openCabnet();
 		}
 	}
+
+	// [Audio]
+	audioFadeIn() {}
+	audioFadeOut() {}
+
+	public pitchOptions = [-12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+	audioPitch(num: Number) {}
+
+	// [General]
 
 	duplicateRegion() { this.regionService.duplicateRegion(this.region); }
 	deleteRegion() { this.regionService.deleteRegion(this.region); }
