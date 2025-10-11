@@ -13,8 +13,8 @@ export const routes: Routes = [
 	{
 		path: '',
 		loadComponent: () =>
-			import('./components/appbar-layout/appbar-layout.component').then(
-				m => m.AppbarLayoutComponent
+			import('./components/app-layout/app-layout.component').then(
+				m => m.AppLayoutComponent
 			),
 		children: [
 			{
