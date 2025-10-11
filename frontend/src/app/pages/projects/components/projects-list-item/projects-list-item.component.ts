@@ -13,9 +13,9 @@ import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset
 
 @Component({
 	selector: 'app-projects-list-item',
-	imports: [MatIconModule, MatMenuModule, MatInputModule, FormsModule, DatePipe, CardSunsetComponent],
+	imports: [MatIconModule, MatMenuModule, MatInputModule, FormsModule, DatePipe],
 	template: `
-		<app-card-sunset class="project-item">		
+		<div class="project-item">		
 			@if (projectsService.isRenaming(project.projectId)) {
 				<!-- Rename mode -->
 				<div class="center">
@@ -101,7 +101,7 @@ import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset
 
 				<p class="project-date">{{ project.updatedAt | date:'short' }}</p>
 			}
-		</app-card-sunset>
+		</div>
 	`,
 	styleUrl: './projects-list-item.component.scss'
 })

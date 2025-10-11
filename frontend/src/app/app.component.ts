@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 import { RouterOutlet } from '@angular/router';
-import { AppbarLayoutComponent } from './components/appbar-layout/appbar-layout.component';
+import { AppLayoutComponent } from './components/app-layout/app-layout.component';
 
 @Component({
 	selector: 'app-root',
