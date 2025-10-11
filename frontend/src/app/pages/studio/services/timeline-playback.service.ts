@@ -428,6 +428,10 @@ export class TimelinePlaybackService { // SINGLETON
 	}
 
 
+	public buildRenderPipeline() {
+		
+	}
+
 	// Currently, deleted tracks still retain their nodes. 
 	// May result in memory leak if user spams too many tracks and deletes them all but shouldn't cause a problem with playback.
 }

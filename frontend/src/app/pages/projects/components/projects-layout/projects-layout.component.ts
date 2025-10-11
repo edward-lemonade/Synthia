@@ -11,21 +11,21 @@ import { ProjectsService } from '../../projects.service';
 	standalone: true,
 	imports: [RouterModule, MatSidenavModule, MatListModule, MatIconModule],
 	template: `
-		<mat-sidenav-container class="sidenav-container">
-			<mat-sidenav #sidenav mode="side" opened class="sidebar"
-				[fixedInViewport]="true" 
-				[fixedTopGap]="64" [fixedBottomGap]="0">
-				<mat-nav-list >
-					<div mat class="sidebar-btn" (click)="newProjectOnClick()">
+		<div class="projects-layout">
+			<aside class="sidebar">
+				<div class="sidebar-content">
+					<div class="sidebar-btn" (click)="newProjectOnClick()">
 						<mat-icon>add</mat-icon>	
 						New Project
 					</div>
-				</mat-nav-list>
-			</mat-sidenav>
-			<mat-sidenav-content class="projects-content">
-				<ng-content></ng-content>
-			</mat-sidenav-content>
-		</mat-sidenav-container>
+				</div>
+			</aside>
+			<main class="projects-content">
+				<div class="projects-grid">
+					<ng-content></ng-content>
+				</div>
+			</main>
+		</div>
 	`,
 	styleUrls: ['./projects-layout.component.scss']
 })
