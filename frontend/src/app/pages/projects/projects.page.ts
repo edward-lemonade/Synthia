@@ -11,31 +11,16 @@ import { ProjectMetadata } from '@shared/types';
 	imports: [RouterModule, ProjectsLayoutComponent, ProjectsListItemComponent],
 	providers: [ProjectsService],
 	template: `
-		<app-projects-layout>
-			<div class="projects-grid">
-				@for (project of getProjectsList(); track project.projectId; let i = $index) {
-					<app-projects-list-item
-						[project]="project"
-						[index]="i">
-					</app-projects-list-item>
-				}
-			</div>
+		<app-projects-layout>		
+			@for (project of getProjectsList(); track project.projectId; let i = $index) {
+				<app-projects-list-item
+					[project]="project"
+					[index]="i">
+				</app-projects-list-item>
+			}
 		</app-projects-layout>
 	`,
-	styles: [`
-		.projects-grid {
-			width: auto;
-			height: auto;
-			overflow-y: auto;
-			display: grid;
-			grid-template-columns: 1fr;
-			grid-auto-rows: min-content;
-			gap: 16px;
-			align-content: start;
-
-			padding: 20px;
-		}
-	`]
+	styles: [``]
 })
 export class ProjectsPage implements OnInit {
 	private abortController = new AbortController();

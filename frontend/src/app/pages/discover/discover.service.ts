@@ -19,7 +19,7 @@ export class DiscoverService {
 	listMode = signal<ListMode>(0);
 	isLoadingMore = signal<boolean>(false);
 
-	BATCH_SIZE = 7;
+	BATCH_SIZE = 6;
 	reachedEnd = false;
 
 	projectsAndUsers = signal<RelevantProjectOrUser[]>([])
