@@ -11,19 +11,20 @@ https://synthia-f.vercel.app/
 * **Angular 20**: frontend framework
 * **Vercel**: frontend hosting
 * **Google Cloud**: backend
-    * I would have hosted backend on Vercel too but I would have to refactor the code to use serverless functions and buy Redis integrations which is unideal. Will eventually migrate both frontend and backend to a different provider.
+    * I would have hosted backend on Vercel too but I don't get fine control over the runner and also building doesn't work
 * **MongoDB**: storing user, project data, social interactions 
     * Atlas Search used in Discover tab's search feature
 * **AWS S3**: large files (audio exports / profile pictures)
 * **Redis**: audio file cache (dramatic improvement in audio loading, main bottleneck is just decoding on frontend)
 * **Auth0**: user authentication + JWT validation
+* **GitHub Actions**: continuous deployment, dockerizes and pushes to Google Cloud
 
 Would love to migrate everything in the future, especially moving backend to Vercel or AWS, and maybe try Mongo's GridFS for images and audio?
 
 &nbsp;
 
 ## Current features
-#### DAW (Digital Audio Workstation)
+#### DAW (Digital Audio Workstation) (requires account)
 * Audio file imports
 * MIDI editor
 * Premade instrument and drum synths
@@ -35,6 +36,7 @@ Would love to migrate everything in the future, especially moving backend to Ver
 * Box select
 
 ![image](/imgs/studio_page.png)
+![image](/imgs/projects_page.png)
 
 #### Community features
 * Customizable profile
@@ -50,12 +52,10 @@ Would love to migrate everything in the future, especially moving backend to Ver
 &nbsp;
 
 ## Limitations and future plans
-#### High priority
-* UI overhaul (remove all Angular Material, use custom components)
 #### Future DAW features
+* no-account access to DAW (IMPORTANT)
 * keybinds
 * duplicating multiple regions at a time
-* fix microphone recording (hard to test at the moment because my laptop's mic is buggy)
 * more synths
 * weird resonance and clashing between midi notes
 * automations and effects (far future)
