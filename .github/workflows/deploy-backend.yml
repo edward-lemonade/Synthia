@@ -11,7 +11,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   SERVICE_NAME: synthia-us  # Change to your service name
   REGION: us-central1  # Change to your preferred region
-  IMAGE_NAME: synthia
+  IMAGE_NAME: docker
 
 jobs:
   deploy:
