@@ -68,7 +68,7 @@ export class ApiService {
 			(params: any = {}, projectId: string) => {return this.callApi<AudioFileData[]>(`/projects/${projectId}/files/get_all`, 'post', {...params, responseType: "json"}, true)},
 
 		streamTrack: 
-			(params: any = {}, projectId: string) => {return this.callApi<{bytes: Buffer[]}>(`/track/${projectId}/stream`, 'get', params)},
+			(params: any = {}, projectId: string) => {return this.callApi<{bytes: Uint8Array[]}>(`/track/${projectId}/stream`, 'get', params)},
 		downloadTrack: 
 			(params: any = {}, projectId: string) => {return this.callApi<Blob>(`/track/${projectId}/download`, 'get', params)},
 		getTrack:
