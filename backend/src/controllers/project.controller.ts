@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { applyPatches, Patch } from "immer";
+import mongoose from "mongoose";
 
 import * as db from "@src/db/mongo_client";
 
@@ -30,81 +31,126 @@ export async function getProject(req: Request, res: Response) {
 }
 
 export async function saveOverwrite(req: Request, res: Response) {
-	const projectId = req.params.projectId;
-	const userId = req.auth?.sub;
-	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
-	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	const [{success, metadataDoc}, studioDoc] = await Promise.all([
-		await assertProjectAccess(projectId, userId),
-		db.findStudioByProjectId(projectId)
-	]);
+	try {
+		const projectId = req.params.projectId;
+		const userId = req.auth?.sub;
+		if (!userId) {
+			await session.abortTransaction();
+			return res.status(401).json({ success: false, message: "Authentication required" });
+		}
+		if (!projectId) {
+			await session.abortTransaction();
+			return res.status(400).json({ success: false, message: "Project ID is required" });
+		}
 
-	const state = req.body.state as ProjectState;
-	state.metadata.updatedAt = new Date();
+		const [{success, metadataDoc}, studioDoc] = await Promise.all([
+			await assertProjectAccess(projectId, userId),
+			db.findStudioByProjectId(projectId)
+		]);
 
-	if (!metadataDoc || !studioDoc) {
-		console.error("Project not found for overwrite.");
-		res.json({ success: false });
-		return;
+		const state = req.body.state as ProjectState;
+		state.metadata.updatedAt = new Date();
+
+		if (!metadataDoc || !studioDoc) {
+			console.error("Project not found for overwrite.");
+			await session.abortTransaction();
+			res.json({ success: false });
+			return;
+		}
+
+		const metadataSchema = ProjectMetadataTransformer.toDoc(state.metadata);
+		const studioSchema = ProjectStudioTransformer.toDoc(
+			metadataDoc,
+			state.studio
+		);
+
+		Object.assign(metadataDoc, metadataSchema);
+		Object.assign(studioDoc, studioSchema);
+
+		const [savedMetadataDoc, savedStudioDoc] = await Promise.all([
+			metadataDoc.save({ session }),
+			studioDoc.save({ session })
+		]);
+
+		if (!savedMetadataDoc || !savedStudioDoc) {
+			console.error("Failed to overwrite project.");
+			await session.abortTransaction();
+			res.json({ success: false });
+			return;
+		}
+
+		await session.commitTransaction();
+
+		// Render and store happens after transaction commits (async, non-critical)
+		renderAndStore(state);
+
+		res.json({ success: true });
+	} catch (error) {
+		await session.abortTransaction();
+		console.error('Error in saveOverwrite:', error);
+		res.status(500).json({ success: false, message: "Internal server error" });
+	} finally {
+		session.endSession();
 	}
-
-	const metadataSchema = ProjectMetadataTransformer.toDoc(state.metadata);
-	const studioSchema = ProjectStudioTransformer.toDoc(
-		metadataDoc,
-		state.studio
-	);
-
-	Object.assign(metadataDoc, metadataSchema);
-	Object.assign(studioDoc, studioSchema);
-
-	const [savedMetadataDoc, savedStudioDoc] = await Promise.all([
-		metadataDoc.save(),
-		studioDoc.save()
-	]);
-
-	if (!savedMetadataDoc) {
-		console.error("Failed to overwrite project metadata.");
-		res.json({ success: false });
-		return;
-	}
-	if (!savedStudioDoc) {
-		console.error("Failed to overwrite project studio.");
-		res.json({ success: false });
-		return;
-	}
-
-	renderAndStore(state);
-
-	res.json({ success: true });
-
 }
 
 export async function saveNew(req: Request, res: Response) {
-	const userId = req.auth?.sub;
-	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	const state = req.body.state as ProjectState;
-	if (!assertAuthorship(state.metadata, userId)) {
-		console.error("Attempted to save project under different user."); res.json({ success: false }); 
-		return;
+	try {
+		const userId = req.auth?.sub;
+		if (!userId) {
+			await session.abortTransaction();
+			return res.status(401).json({ success: false, message: "Authentication required" });
+		}
+
+		const state = req.body.state as ProjectState;
+		if (!assertAuthorship(state.metadata, userId)) {
+			console.error("Attempted to save project under different user.");
+			await session.abortTransaction();
+			res.json({ success: false });
+			return;
+		}
+
+		const metadataSchema = ProjectMetadataTransformer.toDoc(state.metadata);
+		const metadataDoc = new ProjectMetadataModel(metadataSchema);
+		const savedMetadataDoc = await metadataDoc.save({ session });
+
+		if (!savedMetadataDoc) {
+			console.error("Failed to save new project metadata.");
+			await session.abortTransaction();
+			res.json({ success: false });
+			return;
+		}
+
+		const studioSchema = ProjectStudioTransformer.toDoc(savedMetadataDoc, state.studio);
+		const studioDoc = new ProjectStudioModel(studioSchema);
+		const savedStudioDoc = await studioDoc.save({ session });
+
+		if (!savedStudioDoc) {
+			console.error("Failed to save new project studio.");
+			await session.abortTransaction();
+			res.json({ success: false });
+			return;
+		}
+
+		await session.commitTransaction();
+
+		// Render and store happens after transaction commits (async, non-critical)
+		renderAndStore(state);
+
+		res.json({ success: true });
+	} catch (error) {
+		await session.abortTransaction();
+		console.error('Error in saveNew:', error);
+		res.status(500).json({ success: false, message: "Internal server error" });
+	} finally {
+		session.endSession();
 	}
-
-	const metadataSchema = ProjectMetadataTransformer.toDoc(state.metadata);
-	const metadataDoc = new ProjectMetadataModel(metadataSchema)
-	const savedMetadataDoc = await metadataDoc.save();
-
-	if (!savedMetadataDoc) { console.error("Failed to save new project metadata."); res.json({ success: false }); return }
-
-	const studioSchema = ProjectStudioTransformer.toDoc(savedMetadataDoc, state.studio);
-	const studioDoc = new ProjectStudioModel(studioSchema)
-	const savedStudioDoc = await studioDoc.save();
-
-	if (!savedStudioDoc) { console.error("Failed to save new project studio."); res.json({ success: false }); return }
-
-	renderAndStore(state);
-
-	res.json({ success: true })
 }
 
 export async function load(req: Request, res: Response) {
@@ -136,31 +182,54 @@ export async function load(req: Request, res: Response) {
 }
 
 export async function deleteStudio(req: Request, res: Response) {
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
 	try {
 		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
-		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
-		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+		if (!userId) {
+			await session.abortTransaction();
+			return res.status(401).json({ success: false, message: "Authentication required" });
+		}
+		if (!projectId) {
+			await session.abortTransaction();
+			return res.status(400).json({ success: false, message: "Project ID is required" });
+		}
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
-		const [resM, resS, resF, resS3] = await Promise.all([
-			db.deleteStudioByProjectId(projectId),
-			db.deleteMetadataByProjectId(projectId),
-			db.deleteFrontByProjectId(projectId),
-			s3.deleteProjectData(projectId),
+		const [resM, resS, resF] = await Promise.all([
+			db.deleteMetadataByProjectId(projectId, session),
+			db.deleteStudioByProjectId(projectId, session),
+			db.deleteFrontByProjectId(projectId, session),
 		]);
-		if (!resM || !resS || (!resF && metadataDoc?.isReleased) || !resS3) { 
+
+		if (!resM || !resS || (!resF && metadataDoc?.isReleased)) { 
 			console.error("Failed to delete project from MongoDB."); 
+			await session.abortTransaction();
 			return res.status(500).json({ success: false, message: "Failed to delete project from MongoDB" }); 
+		}
+
+		await session.commitTransaction();
+
+		// Delete from S3 after transaction commits (async, can be retried if fails)
+		try {
+			await s3.deleteProjectData(projectId);
+		} catch (s3Error) {
+			console.error('Failed to delete S3 data (but DB transaction committed):', s3Error);
+			// Consider adding to a cleanup queue here
 		}
 
 		res.json({ success: true });
 	} catch (error: any) {
+		await session.abortTransaction();
 		console.error('Error deleting project:', error);
 		if (error.message.includes('Access denied')) {
 			return res.status(403).json({ success: false, message: error.message });
 		}
 		return res.status(500).json({ success: false, message: "Internal server error" });
+	} finally {
+		session.endSession();
 	}
 }
 
@@ -214,7 +283,9 @@ export async function getExport(req: Request, res: Response) {
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
-		const audioFileData: AudioFileData = await s3.getExportFile(projectId);
+		const audioFileData: AudioFileData|null = await s3.getExportFile(projectId);
+		if (!audioFileData) {throw new Error("File not found in S3");}
+		
 		const buffer64 = audioFileData.buffer64;
 
 		res.setHeader('Content-Type', 'text/plain');
@@ -291,15 +362,25 @@ export async function getFront(req: Request, res: Response) {
 }
 
 export async function publish(req: Request, res: Response) {
-    try {
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
+	try {
 		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
-		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
-		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+		if (!userId) {
+			await session.abortTransaction();
+			return res.status(401).json({ success: false, message: "Authentication required" });
+		}
+		if (!projectId) {
+			await session.abortTransaction();
+			return res.status(400).json({ success: false, message: "Project ID is required" });
+		}
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
 		if (!metadataDoc) {
 			console.error('Error creating ProjectFront: No metadata found');
+			await session.abortTransaction();
 			res.status(500).json({ 
 				success: false, 
 				error: 'Failed to create project front' 
@@ -313,19 +394,21 @@ export async function publish(req: Request, res: Response) {
 		if (frontDoc) {
 			// update
 			frontDoc.description = description;
-			await frontDoc.save();
+			await frontDoc.save({ session });
 		} else {
 			// create new
-			frontDoc = await ProjectFrontModel.create({
+			[frontDoc] = await ProjectFrontModel.create({
 				projectId,
 				title: metadataDoc!.title,
 				description,
 				projectMetadataId: metadataDoc!._id,
-			});
+			}, { session });
 		}
 
 		metadataDoc.isReleased = true;
-		await metadataDoc.save();
+		await metadataDoc.save({ session });
+
+		await session.commitTransaction();
         
         res.json({ 
             success: true, 
@@ -333,24 +416,37 @@ export async function publish(req: Request, res: Response) {
         });
         
     } catch (error) {
+		await session.abortTransaction();
         console.error('Error creating ProjectFront:', error);
         res.status(500).json({ 
             success: false, 
             error: 'Failed to create project front' 
         });
-    }
+    } finally {
+		session.endSession();
+	}
 }
 
 export async function unpublish(req: Request, res: Response) {
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
 	try {
 		const projectId = req.params.projectId;
 		const userId = req.auth?.sub;
-		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
-		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+		if (!userId) {
+			await session.abortTransaction();
+			return res.status(401).json({ success: false, message: "Authentication required" });
+		}
+		if (!projectId) {
+			await session.abortTransaction();
+			return res.status(400).json({ success: false, message: "Project ID is required" });
+		}
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
 		if (!metadataDoc) {
 			console.error('Error unpublishing: No metadata found');
+			await session.abortTransaction();
 			res.status(404).json({ 
 				success: false, 
 				error: 'Project not found' 
@@ -360,24 +456,31 @@ export async function unpublish(req: Request, res: Response) {
 
 		const frontDoc = await db.findFrontByProjectId(projectId);
 		if (frontDoc) {
-			await db.deleteProjectComments(projectId);
-			await db.deleteProjectLikes(projectId);
-			await db.deleteFrontByProjectId(projectId);
+			await Promise.all([
+				db.deleteProjectComments(projectId, session),
+				db.deleteProjectLikes(projectId, session),
+				db.deleteFrontByProjectId(projectId, session)
+			]);
 		}
 
 		metadataDoc.isReleased = false;
-		await metadataDoc.save();
+		await metadataDoc.save({ session });
+
+		await session.commitTransaction();
         
 		res.json({ 
 			success: true
 		});
         
 	} catch (error) {
+		await session.abortTransaction();
 		console.error('Error unpublishing project:', error);
 		res.status(500).json({ 
 			success: false, 
 			error: 'Failed to unpublish project' 
 		});
+	} finally {
+		session.endSession();
 	}
 }
 

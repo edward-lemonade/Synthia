@@ -20,10 +20,10 @@ import { StateService } from '../../../state/state.service';
 			<span [innerHTML]="getKeyDisplayHtml(key())"></span>
 		</button>
 	
-		<mat-menu #keyMenu="matMenu" [class]="'key-menu'">
+		<mat-menu #keyMenu="matMenu" class="key-menu">
 			<div class="key-type-toggle">
-				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
-				<button mat-button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>
+				<button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'maj'" (click)="$event.stopPropagation(); setKeyType('maj')">Major</button>
+				<button class="key-type-btn" [class.selected]="KEY_INFO[key()].type === 'min'" (click)="$event.stopPropagation(); setKeyType('min')">Minor</button>
 			</div>
 			<div class="key-grid">
 				<div class="accidentals-row">
@@ -33,7 +33,6 @@ import { StateService } from '../../../state/state.service';
 							<span class="key-opt-space"></span>
 						</ng-container>
 						<button *ngIf="listedKey"
-							mat-button
 							class="key-option"
 							[class.selected]="key() == listedKey"
 							(click)="key.set(listedKey); $event.stopPropagation()">
@@ -44,7 +43,6 @@ import { StateService } from '../../../state/state.service';
 				<div class="naturals-row">
 					<ng-container *ngFor="let listedKey of KeyListAligned[KEY_INFO[key()].type]['nat']; let i = index">
 						<button
-							mat-button
 							class="key-option"
 							[class.selected]="key() == listedKey"
 							(click)="key.set(listedKey); $event.stopPropagation()">

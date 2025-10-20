@@ -39,7 +39,7 @@ export async function makeCacheAudioFile(audioFileData: AudioFileData) {
 
 	const audioContext = new AudioContext();
 	const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice());
-	console.log(audioFileData.waveformData ? 'waveform data found' : 'no waveform data, generating...');
+	//console.log(audioFileData.waveformData ? 'waveform data found' : 'no waveform data, generating...');
 	const waveformData = audioFileData.waveformData ?? await generateAudioWaveformF(arrayBuffer);
 
 	const cachedFile: CachedAudioFile = {

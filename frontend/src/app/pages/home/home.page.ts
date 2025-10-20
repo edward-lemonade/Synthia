@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 
+import { v4 as uuidv4 } from 'uuid';
+
 @Component({
 	selector: 'app-home',
 	standalone: true,
@@ -28,7 +30,10 @@ import { AuthService } from '@auth0/auth0-angular';
 				</div>
 			</div>
 
-			<button class="btn btn-discover" (click)="discover()">Explore community</button>
+			<div class="lower-btns">
+				<button class="btn btn-studio" (click)="studio()">Enter studio</button>
+				<button class="btn btn-discover" (click)="discover()">Explore community</button>
+			</div>
 
 			<div class="desc">A digital audio workstation and social platform - actively updated to bring new features every week.</div>
 		</div>
@@ -64,5 +69,16 @@ export class HomePage {
 
 	discover() {
 		this.router.navigate(['/discover']);
+	}
+
+	studio() {
+		try {
+			const projectId = uuidv4();
+			this.router.navigate(['/studio', projectId], {queryParams: {
+				isNew: true,
+			}});
+		} catch (err) {
+			console.error('Error during project creation:', err);
+		}
 	}
 }

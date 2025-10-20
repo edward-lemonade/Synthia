@@ -81,21 +81,19 @@ import { CardSunsetComponent } from "@src/app/components/card-sunset/card-sunset
 						[matMenuTriggerFor]="extraSettings">
 						<mat-icon>more_vert</mat-icon>
 					</button>
-					<mat-menu #extraSettings="matMenu" class="extra-options-menu">
-						<div class="extra-options-menu-content">
-							<button mat-menu-item class="extra-options-menu-btn" (click)="onRenameButton()">
-								<mat-icon>edit</mat-icon>
-								Rename
-							</button>
-							<button mat-menu-item class="extra-options-menu-btn" (click)="onDeleteButton()">
-								<mat-icon color="red">delete</mat-icon>
-								Delete
-							</button>
-							<button mat-menu-item class="extra-options-menu-btn" (click)="onPublishButton()">
-								<mat-icon>cloud_upload</mat-icon>
-								Publish
-							</button>
-						</div>
+					<mat-menu #extraSettings="matMenu" class="glass-menu">
+						<button mat-menu-item class="glass-menu-btn" (click)="onRenameButton()">
+							<mat-icon>edit</mat-icon>
+							Rename
+						</button>
+						<button mat-menu-item class="glass-menu-btn" (click)="onDeleteButton()">
+							<mat-icon color="red">delete</mat-icon>
+							Delete
+						</button>
+						<button mat-menu-item class="glass-menu-btn" (click)="onPublishButton()">
+							<mat-icon>cloud_upload</mat-icon>
+							Publish
+						</button>
 					</mat-menu>
 				</div>
 
