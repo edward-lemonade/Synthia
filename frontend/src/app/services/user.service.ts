@@ -1,10 +1,11 @@
 import { computed, Injectable, signal, inject } from '@angular/core';
 import { Author, User } from '@shared/types';
-import { HttpClient } from '@angular/common/http';
 import { AppAuthService } from './app-auth.service';
 import { AuthService, User as UserAuth } from '@auth0/auth0-angular';
 import { Router } from '@angular/router';
 import { ApiService } from './api.service';
+import { filter, switchMap, take } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +16,6 @@ export class UserService {
 	private router = inject(Router);
 
 	constructor(
-		private http: HttpClient,
 		private auth: AuthService,
 		private appAuthService: AppAuthService,
 		private apiService: ApiService,
@@ -35,24 +35,36 @@ export class UserService {
 		}
 	});
 	gotUser = false;
+	private returnUrl: string | null = null;
+	private userFetchInProgress = false;
+	private userFetchPromise: Promise<User|null> | null = null;
 
-	private async initializeUser() {
-		try {
-			if (this.auth.isAuthenticated$) {
+	async initializeUser() {
+		// Automatically fetch user when authenticated
+		this.appAuthService.isAuthenticated$().pipe(
+			filter(isAuthenticated => isAuthenticated === true),
+			switchMap(() => this.appAuthService.getUserAuth$()),
+			filter(userAuth => !!userAuth),
+			take(1) // Only trigger once per authentication session
+		).subscribe(async () => {
+			try {
 				await this.getUser();
 				this.checkAndRedirect();
-			} else {
-				console.log("Proceed as guest")
+			} catch (err) {
+				console.error('Error fetching user after authentication:', err);
 			}
-		} catch (err) {
-			console.error('Error initializing user:', err);
-		}
+		});
 	}
-	checkAndRedirect() {
+
+	checkAndRedirect(saveUrl = true) {
 		if (this.needsAccountSetup()) {
+			if (saveUrl) {
+				this.returnUrl = this.router.url;
+			}
 			this.router.navigate(['/registration']);
 		}
 	}
+
 	needsAccountSetup(): boolean {
 		if (!this.gotUser) { return false; }
 		const user = this.user();
@@ -60,20 +72,76 @@ export class UserService {
 	}
 
 	// ====================================================================================
+	// Wait for User/Author
+
+	async waitForUser(): Promise<User|null> {
+		if (this.gotUser) {
+			return this.user();
+		}
+
+		if (this.userFetchInProgress && this.userFetchPromise) { // fetch in progress
+			return this.userFetchPromise;
+		}
+
+		await this.appAuthService.waitForAuthCheck();
+
+		const isAuthenticated = await firstValueFrom(this.appAuthService.isAuthenticated$());
+		if (!isAuthenticated) {
+			return null;
+		}
+
+		if (this.userFetchInProgress && this.userFetchPromise) {
+			return this.userFetchPromise;
+		}
+
+		// Try fetching again
+		if (!this.gotUser) {
+			return this.getUser();
+		}
+
+		return this.user();
+	}
+
+	async waitForAuthor(): Promise<Author|null> {
+		const user = await this.waitForUser();
+		if (!user) {
+			return null;
+		}
+		return this.author();
+	}
+
+	// ====================================================================================
 	// API Calls
 
 	async getUser(): Promise<User|null> {		
+		if (this.userFetchInProgress && this.userFetchPromise) {
+			return this.userFetchPromise;
+		}
+
+		this.userFetchInProgress = true;
+		
+		this.userFetchPromise = (async () => {
+			try {
+				const res = await ApiService.instance.routes.getMe();
+
+				this.user.set(res.data.user);
+				this.isNewUser.set(res.data.isNew);
+				this.gotUser = true;
+				return res.data.user;
+
+			} catch (err) {
+				console.log('Unable to get user, either user does not exist or user is a guest.', err);
+				this.gotUser = true; // Mark as complete even on error
+				return null;
+			}
+		})();
+
 		try {
-			const res = await ApiService.instance.routes.getMe();
-
-			this.user.set(res.data.user);
-			this.isNewUser.set(res.data.isNew);
-			this.gotUser = true;
-			return res.data.user;
-
-		} catch (err) {
-			console.log('Unable to get user, either user does not exist or user is a guest.', err);
-			return null;
+			const user = await this.userFetchPromise;
+			return user;
+		} finally {
+			this.userFetchInProgress = false;
+			this.userFetchPromise = null;
 		}
 	}
 
@@ -111,6 +179,12 @@ export class UserService {
 			this.isNewUser.set(false);
 			this.gotUser = true;
 
+			// Navigate back to the stored URL if it exists
+			if (this.returnUrl) {
+				this.router.navigateByUrl(this.returnUrl);
+				this.returnUrl = null; // Clear the stored URL
+			}
+
 			return user;
 		} catch (err: any) {
 			console.error('Error creating user:', err);
@@ -128,7 +202,7 @@ export class UserService {
 			this.user.set(user);
 
 			// Check if user still needs account setup after profile update
-			this.checkAndRedirect();
+			this.checkAndRedirect(false);
 
 			return user;
 		} catch (err: any) {
@@ -151,7 +225,7 @@ export class UserService {
 			this.user.set(newUser);
 
 			// Check if user still needs account setup after profile picture update
-			this.checkAndRedirect();
+			this.checkAndRedirect(false);
 			return this.user()!;
 		} catch (err: any) {
 			console.error('Error updating profile picture:', err);
