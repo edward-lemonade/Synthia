@@ -140,11 +140,11 @@
 		letter-spacing: 1px;
 	}
 	.btn-discover {
-		width: 300px;
+		width: 350px;
 		background: transparent;
-		color: white;
-		border: 2px solid rgba(255, 255, 255, 0.6);
-		box-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
+		color: rgb(255,255,255,0.7);
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 		transition: 0.2s;
 		
 		&:hover {
@@ -152,6 +152,49 @@
 			transform: translateY(-2px);
 			box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
 		}
+	}
+	.btn-studio {
+		width: 300px;
+		background: linear-gradient(
+			45deg,
+			rgba(147, 51, 234, 0.3),
+			rgba(236, 72, 153, 0.3),
+			rgba(59, 130, 246, 0.3),
+			rgba(147, 51, 234, 0.3)
+		);
+		background-size: 300% 300%;
+		animation: gradient-shift 4s ease infinite;
+		color: white;
+		border: 2px solid rgba(255, 255, 255, 0.6);
+		box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+		transition: 0.2s;
+		font-size: 1.5rem;
+		
+		&:hover {
+			border-color: white;
+			transform: translateY(-2px);
+			box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+			animation: gradient-shift 2s ease infinite;
+		}
+	}
+	
+	@keyframes gradient-shift {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
+	}
+	.lower-btns {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.desc {

@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AuthService as Auth0Service, User as UserAuth } from '@auth0/auth0-angular';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
-import { filter, distinctUntilChanged } from 'rxjs/operators';
+import { filter, distinctUntilChanged, take } from 'rxjs/operators';
 import { environment } from '@src/environments/environment.dev';
+import { UserService } from './user.service';
+import { Router } from '@angular/router';
 
 
 @Injectable({ providedIn: 'root' })
@@ -10,9 +12,13 @@ export class AppAuthService {
 	private static _instance: AppAuthService;
 	static get instance(): AppAuthService { return AppAuthService._instance; }
 
-	constructor(private auth0: Auth0Service) {
+	constructor(
+		private auth0: Auth0Service,
+		private router: Router
+	) {
 		AppAuthService._instance = this;
 		this.initializeAuth();
+		this.handleAuthCallback();
 	}
 
 	private userAuth: UserAuth | null = null;
@@ -33,7 +39,6 @@ export class AppAuthService {
 			this.authCheckCompleteSubject.next(true);
 		});
 
-		// Listen to user changes
 		this.auth0.user$.subscribe(user => {
 			this.userAuth = user || null;
 			this.userAuthSubject.next(this.userAuth);
@@ -71,5 +76,18 @@ export class AppAuthService {
 			console.log('User not authenticated, proceeding without auth headers');
 		}
 		return null;
+	}
+
+	private handleAuthCallback() {
+		this.auth0.appState$.pipe(
+			filter(appState => !!appState),
+			take(1)
+		).subscribe(async (appState) => {
+			if (appState && appState.target) {
+				const targetUrl = appState.target;
+				await UserService.instance.initializeUser();
+				this.router.navigateByUrl(targetUrl);
+			}
+		});
 	}
 }
