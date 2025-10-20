@@ -9,6 +9,9 @@ import { arrayBufferToBase64, base64ToArrayBuffer, CachedAudioFile, fileToArrayB
 import { WaveformData } from '@shared/types';
 import { environment } from '@src/environments/environment.dev';
 import { ApiService } from '@src/app/services/api.service';
+import { UserService } from '@src/app/services/user.service';
+
+const AUDIO_SESSION_STORAGE_KEY = 'synthia_guest_audio_files';
 
 @Injectable()
 export class AudioCacheService {
@@ -24,6 +27,7 @@ export class AudioCacheService {
 
 	constructor(
 		private auth: AppAuthService,
+		private userService: UserService,
 	) {
 		AudioCacheService._instance = this;
 
@@ -36,24 +40,117 @@ export class AudioCacheService {
 		if (this.isReady) return;
 		this.cache.clear();
 
-		try {
-			const fileRefs = this.audioFileRefs();
-			const res = await ApiService.instance.routes.loadProjectFiles({data: {fileRefs}}, StateService.instance.projectId!);
+		const user = await this.userService.waitForUser();
+		const isSignedOut = !user;
 
-			if (res.data) {				
-				const uncachedFiles: AudioFileData[] = res.data;
-				
-				console.log("Got files from backend: ", uncachedFiles.length, uncachedFiles)
-				await Promise.all(
-					uncachedFiles.map(file => this.cacheAudioFile(file))
-				);
-				this.isReady = true;
-				this.readyResolve();
+		try {
+			if (isSignedOut || StateService.instance.hasSessionStorageData) {
+				// Load from sessionStorage for guest users
+				const sessionFiles = this.loadAudioFilesFromSessionStorage();
+				if (sessionFiles.length > 0) {
+					console.log("Loading audio files from sessionStorage: ", sessionFiles.length);
+					await Promise.all(
+						sessionFiles.map(file => this.cacheAudioFile(file))
+					);
+				}
 			} else {
-				console.error("FAILED retrieving files from backend.")
+				// Load from backend for authenticated users
+				const fileRefs = this.audioFileRefs();
+				const res = await ApiService.instance.routes.loadProjectFiles({data: {fileRefs}}, StateService.instance.projectId!);
+
+				if (res.data) {				
+					const uncachedFiles: AudioFileData[] = res.data;
+					
+					console.log("Got files from backend: ", uncachedFiles.length, uncachedFiles);
+					await Promise.all(
+						uncachedFiles.map(file => this.cacheAudioFile(file))
+					);
+				} else {
+					console.error("FAILED retrieving files from backend.");
+				}
 			}
-			return res.data;
+
+			this.isReady = true;
+			this.readyResolve();
 		} catch (err) {
+			throw err;
+		}
+	}
+
+	// ==============================================================
+	// SessionStorage Methods
+
+	private saveAudioFilesToSessionStorage(audioFileDatas: AudioFileData[]): void {
+		try {
+			const existing = this.loadAudioFilesFromSessionStorage();
+			const updated = [...existing, ...audioFileDatas];
+			sessionStorage.setItem(AUDIO_SESSION_STORAGE_KEY, JSON.stringify(updated));
+			console.log('Audio files saved to sessionStorage:', audioFileDatas.length);
+		} catch (error) {
+			console.error('Failed to save audio files to sessionStorage:', error);
+		}
+	}
+
+	private loadAudioFilesFromSessionStorage(): AudioFileData[] {
+		try {
+			const stored = sessionStorage.getItem(AUDIO_SESSION_STORAGE_KEY);
+			if (stored) {
+				const files = JSON.parse(stored) as AudioFileData[];
+				console.log('Audio files loaded from sessionStorage:', files.length);
+				return files;
+			}
+		} catch (error) {
+			console.error('Failed to load audio files from sessionStorage:', error);
+		}
+		return [];
+	}
+
+	private clearAudioSessionStorage(): void {
+		try {
+			sessionStorage.removeItem(AUDIO_SESSION_STORAGE_KEY);
+			console.log('Audio sessionStorage cleared');
+		} catch (error) {
+			console.error('Failed to clear audio sessionStorage:', error);
+		}
+	}
+
+	// ==============================================================
+	// Sync Method (called when user logs in with session data)
+
+	public async syncSessionAudioFilesToBackend(): Promise<boolean> {
+		const sessionFiles = this.loadAudioFilesFromSessionStorage();
+		if (sessionFiles.length === 0) {
+			return true;
+		}
+
+		try {
+			const formData = new FormData();
+			
+			// Convert stored audio data back to blobs and add to form data
+			for (const fileData of sessionFiles) {
+				const arrayBuffer = base64ToArrayBuffer(fileData.buffer64);
+				const blob = new Blob([arrayBuffer], { type: fileData.mimeType });
+				formData.append("files", blob);
+				formData.append("fileIds", fileData.fileId);
+			}
+
+			const projectId = StateService.instance.projectId!;
+			formData.append("projectId", projectId);
+
+			const res = await ApiService.instance.routes.saveProjectFiles({
+				headers: {"Content-Type": "multipart/form-data"},
+				data: formData
+			}, projectId);
+
+			if (res.data.success) {
+				console.log('Successfully synced session audio files to backend:', sessionFiles.length);
+				this.clearAudioSessionStorage();
+				return true;
+			} else {
+				throw Error("Error syncing audio files to backend");
+			}
+		} catch (err) {
+			console.error('Failed to sync session audio files:', err);
 			throw err;
 		}
 	}
@@ -63,6 +160,8 @@ export class AudioCacheService {
 
 	public async addAudioFiles(files: FileList | File[]): Promise<CachedAudioFile[]> {
 		const fileArray = Array.from(files);
+		const user = await this.userService.waitForUser();
+		const isSignedOut = !user;
 
 		const results = await Promise.all(fileArray.map(async file => {
 			const arrayBuffer = await fileToArrayBuffer(file);
@@ -93,28 +192,34 @@ export class AudioCacheService {
 		const cachedAudioFiles = results.map(r => r.cachedAudioFile);			
 
 		try {
-			const token = await this.auth.getAccessToken();
-			console.log('Got JWT token:', token ? 'Token received' : 'No token');
-
-			const formData = new FormData();
-			cachedAudioFiles.forEach((file, i) => {
-				formData.append("files", file.blob);
-				formData.append("fileIds", audioFileDatas[i].fileId);
-			});
-
-			const projectId = StateService.instance.projectId!;
-			formData.append("projectId", projectId);
-
-			const res = await ApiService.instance.routes.saveProjectFiles({
-				headers: {"Content-Type": "multipart/form-data"},
-				data: formData
-			}, projectId)
-
-			if (res.data.success) {
+			if (isSignedOut) {
+				// Save to sessionStorage for guest users
+				this.saveAudioFilesToSessionStorage(audioFileDatas);
 				this.audioFileRefs.update(files => [...files, ...audioFileRefs]);
+				console.log('Audio files stored in sessionStorage for guest user');
 				return cachedAudioFiles;
 			} else {
-				throw Error("Error saving audio file to backend");
+				// Save to backend for authenticated users
+				const formData = new FormData();
+				cachedAudioFiles.forEach((file, i) => {
+					formData.append("files", file.blob);
+					formData.append("fileIds", audioFileDatas[i].fileId);
+				});
+
+				const projectId = StateService.instance.projectId!;
+				formData.append("projectId", projectId);
+
+				const res = await ApiService.instance.routes.saveProjectFiles({
+					headers: {"Content-Type": "multipart/form-data"},
+					data: formData
+				}, projectId);
+
+				if (res.data.success) {
+					this.audioFileRefs.update(files => [...files, ...audioFileRefs]);
+					return cachedAudioFiles;
+				} else {
+					throw Error("Error saving audio file to backend");
+				}
 			}
 		} catch (err) {
 			throw err;

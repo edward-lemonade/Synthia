@@ -69,7 +69,9 @@ export async function audio(req: Request, res: Response) {
 	const { projectId } = req.params;
 
 	try {
-		const audioFileData: AudioFileData = await s3.getExportFile(projectId);
+		const audioFileData: AudioFileData|null = await s3.getExportFile(projectId);
+		if (!audioFileData) {throw new Error("File not found in S3");}
+
 		const audioFileDataWithWaveform: AudioFileData = {
 			...audioFileData,
 			waveformData: await s3.getWaveformData(projectId),

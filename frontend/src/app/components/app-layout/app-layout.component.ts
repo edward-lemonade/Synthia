@@ -12,6 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { AvatarComponent } from '@src/app/components/avatar/avatar.component';
 import { ApiService } from '@src/app/services/api.service';
 
+import { v4 as uuidv4 } from 'uuid';
+
 @Component({
 	selector: 'app-appbar-layout',
 	imports: [CommonModule, RouterModule, MatButtonModule, MatMenuModule, MatIconModule, AvatarComponent],
@@ -24,6 +26,11 @@ import { ApiService } from '@src/app/services/api.service';
 					</div>
 
 					<div class="nav">
+						<button 
+							class="appbar-btn-fill" 
+							(click)="studio()">
+							Studio
+						</button>
 						<button 
 							class="appbar-btn" 
 							routerLink="/projects" 
@@ -91,6 +98,11 @@ import { ApiService } from '@src/app/services/api.service';
 					</div>
 
 					<div class="nav">
+						<button 
+							class="appbar-btn-fill" 
+							(click)="studio()">
+							Studio
+						</button>
 						<button 
 							class="appbar-btn" 
 							routerLink="/discover" 
@@ -173,4 +185,17 @@ export class AppLayoutComponent {
 		})
 	}
 
+	studio() {
+		try {
+			//const token = await this.auth.getAccessToken();
+			//if (!token) { console.error('No valid token'); return; }
+
+			const projectId = uuidv4();
+			this.router.navigate(['/studio', projectId], {queryParams: {
+				isNew: true,
+			}});
+		} catch (err) {
+			console.error('Error during project creation:', err);
+		}
+	}
 }

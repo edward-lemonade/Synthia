@@ -214,7 +214,9 @@ export async function getExport(req: Request, res: Response) {
 		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
 		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
 
-		const audioFileData: AudioFileData = await s3.getExportFile(projectId);
+		const audioFileData: AudioFileData|null = await s3.getExportFile(projectId);
+		if (!audioFileData) {throw new Error("File not found in S3");}
+		
 		const buffer64 = audioFileData.buffer64;
 
 		res.setHeader('Content-Type', 'text/plain');
