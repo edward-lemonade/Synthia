@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { AuthService as Auth0Service, User as UserAuth } from '@auth0/auth0-angular';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { filter, distinctUntilChanged, take } from 'rxjs/operators';
@@ -14,7 +14,8 @@ export class AppAuthService {
 
 	constructor(
 		private auth0: Auth0Service,
-		private router: Router
+		private router: Router,
+		private injector: Injector
 	) {
 		AppAuthService._instance = this;
 		this.initializeAuth();
@@ -85,7 +86,11 @@ export class AppAuthService {
 		).subscribe(async (appState) => {
 			if (appState && appState.target) {
 				const targetUrl = appState.target;
+
+				const { UserService } = await import('./user.service'); // lazy load so no circular deps
+				const userService = this.injector.get(UserService);
 				await UserService.instance.initializeUser();
+
 				this.router.navigateByUrl(targetUrl);
 			}
 		});
