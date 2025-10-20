@@ -58,3 +58,43 @@ $my-slider-color: $accent-yellow;
 		background: transparent;
 	}
 }
+
+.glass-menu.mat-mdc-menu-panel {
+	background: linear-gradient(225deg,
+		color-mix(in srgb, $night-purple 80%, rgba(0,0,0,0.2)) 0%,
+		color-mix(in srgb, $night-blue 80%, rgba(0,0,0,0.2)) 100%
+	);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: 0;
+
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+	padding: 0 0;
+	margin: 0 0;
+
+	.mat-mdc-menu-content {
+		padding: 0 0;
+		margin: 0 0;
+
+		.glass-menu-btn {
+			height: 30px;
+	
+			font-size: 14px;
+			font-weight: 500;
+			color: $appbar-text !important;
+			background: transparent;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			display: flex;
+			align-items: center;
+			justify-content: left;
+	
+			&:hover {
+				background: rgba(255,255,255,0.1);
+				border-color: $appbar-accent-1;
+			}
+		}
+	}
+}

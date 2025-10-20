@@ -1,6 +1,6 @@
 import { IProjectFrontDocument, IProjectMetadataDocument, IProjectStudioDocument, ProjectFrontModel, ProjectMetadataModel, ProjectStudioModel } from "@src/models";
 import { ProjectMetadata, ProjectFront, ProjectStudio } from "@shared/types";
-import mongoose from "mongoose";
+import mongoose, { ClientSession } from "mongoose";
 
 import { MONGO_STRING } from "@src/env";
 import { UserModel } from "@src/models/User.model";
@@ -64,16 +64,30 @@ export async function findFrontByProjectId(projectId: string): Promise<IProjectF
 // ===========================================================
 
 
-export async function deleteMetadataByProjectId(projectId: string) {
-	const res = await ProjectMetadataModel.deleteOne({ projectId: projectId });
+export async function deleteMetadataByProjectId(projectId: string, session?: ClientSession) {
+	const query = ProjectMetadataModel.deleteOne({ projectId: projectId });
+	if (session) {
+		query.session(session);
+	}
+	const res = await query;
 	return res;
 }
-export async function deleteStudioByProjectId(projectId: string) {
-	const res = await ProjectStudioModel.deleteOne({ projectId: projectId });
+
+export async function deleteStudioByProjectId(projectId: string, session?: ClientSession) {
+	const query = ProjectStudioModel.deleteOne({ projectId: projectId });
+	if (session) {
+		query.session(session);
+	}
+	const res = await query;
 	return res;
 }
-export async function deleteFrontByProjectId(projectId: string) {
-	const res = await ProjectFrontModel.deleteOne({ projectId: projectId });
+
+export async function deleteFrontByProjectId(projectId: string, session?: ClientSession) {
+	const query = ProjectFrontModel.deleteOne({ projectId: projectId });
+	if (session) {
+		query.session(session);
+	}
+	const res = await query;
 	return res;
 }
 
@@ -164,9 +178,13 @@ export async function deleteUserLike(projectId: string, userId: string) {
 	}
 }
 
-export async function deleteProjectLikes(projectId: string) {
+export async function deleteProjectLikes(projectId: string, session?: ClientSession) {
 	try {
-		const result = await LikeModel.deleteMany({ projectId });
+		const query = LikeModel.deleteMany({ projectId });
+		if (session) {
+			query.session(session);
+		}
+		const result = await query;
 		return result.deletedCount;
 	} catch (error) {
 		console.error('Error deleting project likes:', error);
@@ -229,17 +247,25 @@ export async function createUserComment(projectId: string, userId: string, comme
 	}
 }
 
-export async function deleteUserComment(commentId: string) {
-	const res = await CommentModel.deleteOne({ commentId: commentId });
+export async function deleteUserComment(commentId: string, session?: ClientSession) {
+	const query = CommentModel.deleteOne({ commentId: commentId });
+	if (session) {
+		query.session(session);
+	}
+	const res = await query;
 	return res;
 }
 
-export async function deleteProjectComments(projectId: string) {
+export async function deleteProjectComments(projectId: string, session?: ClientSession) {
 	try {
-		const result = await CommentModel.deleteMany({ projectId });
+		const query = CommentModel.deleteMany({ projectId });
+		if (session) {
+			query.session(session);
+		}
+		const result = await query;
 		return result.deletedCount;
 	} catch (error) {
-		console.error('Error deleting project likes:', error);
+		console.error('Error deleting project comments:', error);
 		throw error;
 	}
 }
