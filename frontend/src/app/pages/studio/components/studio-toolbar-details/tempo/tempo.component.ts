@@ -47,7 +47,7 @@ import { StateService } from '../../../state/state.service';
 			</button>
 		</div>
 
-		<mat-menu #timeSigMenu="matMenu" [class]="'time-sig-menu'">
+		<mat-menu #timeSigMenu="matMenu" class="time-sig-menu">
 			<div class="time-sig-menu-content">
 				<div class="time-sig-column">
 					<div class="time-sig-grid">

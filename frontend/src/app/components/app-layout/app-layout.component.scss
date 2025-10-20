@@ -109,6 +109,25 @@
 			box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
 		}
 	}
+	.appbar-btn-fill {
+		padding: 8px 20px;
+		border: none;
+		border-radius: 40px;
+		font-size: 14px;
+		font-weight: 500;
+		color: $appbar-bg;
+		cursor: pointer;
+		
+		background: $near-white;
+		
+		transition: all 0.2s ease;
+		
+		&:hover {
+			background: rgba(255, 255, 255);
+			transform: translateY(-2px);
+			box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+		}
+	}
 
 	.login-btn {
 		padding: 8px 20px;
@@ -156,44 +175,6 @@
 	::ng-deep > * {
 		width: 100%;
 		flex: 1;
-	}
-}
-
-
-::ng-deep .user-settings-menu {
-	background: $appbar-bg !important;
-	border-radius: 0px !important;
-
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-start;
-	align-items: center;
-}
-
-.user-settings-menu-content {
-	background: $appbar-bg;
-	display: flex;
-	flex-direction: column;
-	
-	.user-settings-menu-btn {
-		height: 30px;
-
-		font-size: 14px;
-		font-weight: 500;
-		color: $appbar-text !important;
-		background: transparent;
-		border: 1px solid transparent;
-		border-radius: 4px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		display: flex;
-		align-items: center;
-		justify-content: left;
-
-		&:hover {
-			background: $appbar-accent-1;
-			border-color: $appbar-accent-1;
-		}
 	}
 }
 

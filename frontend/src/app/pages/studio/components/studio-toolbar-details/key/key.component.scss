@@ -2,6 +2,7 @@
 @use "./../../../studio-vars" as *;
 
 ::ng-deep .key-menu {
+	display: flex;
 	padding: 8px !important;
 	background: $appbar-bg-l !important;
 	border: $border-width solid $border-color !important;
@@ -23,14 +24,18 @@
 
 	cursor: pointer;
 	transition: all 0.2s ease;
+
+	sup {
+		vertical-align: super;
+		line-height: 0;
+	}
+
+	&:hover {
+		background: $appbar-accent-3;
+	}
+	
 }
-.key-menu-btn sup {
-	vertical-align: super;
-	line-height: 0;
-}
-.key-menu-btn:hover {
-	background: $appbar-accent-3;
-}
+
 
 
 .key-type-toggle {
@@ -55,11 +60,13 @@
 	transition: background-color 0.1s;
 	background: transparent; 
 	box-shadow: 0 0 0 2px $accent-orange inset; 
+
+	&:hover 	{ 
+		background: $accent-orange-l !important; 
+		color: $appbar-bg-l !important;
+	}
 }
-.key-type-btn:hover 	{ 
-	background: $accent-orange-l !important; 
-	color: $appbar-bg-l !important;
-}
+
 
 .key-grid {
 	display: flex;
@@ -77,38 +84,42 @@
 .key-opt-space-half {
 	width: 15px; /* idk why 16 isnt centered */
 }
-::ng-deep .key-option.mat-mdc-button {
-	width: 32px !important;       
-	height: 32px !important;
-	min-width: 32px !important;      
-	min-height: 32px !important;
-	max-width: 32px !important;
-	max-height: 32px !important;
 
-	padding: 0 !important;    
-	display: flex !important;
-	align-items: center !important;
-	justify-content: center !important;
-	box-sizing: border-box !important;
+.key-option {
+	width: 32px;       
+	height: 32px;
+	min-width: 32px;      
+	min-height: 32px;
+	max-width: 32px;
+	max-height: 32px;
 
-	line-height: 1 !important;
-	border: 2px solid $appbar-accent-2 !important;
-	border-radius: 8px !important;
+	padding: 0 0;    
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
 
-	background: $appbar-accent-1 !important;
-	color: $accent-orange !important;
-	border-color: $appbar-bg !important;
-}
-.key-option.selected {
-	background: $accent-orange-l !important;
-	color: $appbar-bg-l !important;
-	border-color: $accent-orange !important;
-}
-.key-option:hover {
-	background: $appbar-accent-2 !important;
-	color: $accent-orange !important;
-}
-.key-option sup {
-	vertical-align: super;
-	line-height: 0;
+	line-height: 1;
+	border: 2px solid $appbar-accent-2;
+	border-radius: 8px;
+
+	background: $appbar-accent-1;
+	color: $accent-orange;
+	border-color: $appbar-bg;
+
+	&.selected {
+		background: $accent-orange-l;
+		color: $appbar-bg-l;
+		border-color: $accent-orange;
+	}
+
+	&:hover {
+		background: $appbar-accent-2;
+		color: $accent-orange;
+	}
+
+	sup {
+		vertical-align: super;
+		line-height: 0;
+	}
 }

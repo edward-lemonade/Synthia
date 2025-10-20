@@ -51,7 +51,7 @@ export async function loadAudioFiles(req: Request, res: Response) {
 		const fileRefs: BaseFileRef[] = req.body.fileRefs;
 
 		const audioDataPromises = fileRefs.map(async (fileRef) => await getAudioFile(projectId, fileRef.fileId));
-		const audioDatas: AudioFileData[] = await Promise.all(audioDataPromises);
+		const audioDatas: (AudioFileData | null)[] = await Promise.all(audioDataPromises);
 
 		res.setHeader('Content-Type', 'application/json');
 		res.setHeader('Transfer-Encoding', 'chunked');
@@ -60,6 +60,7 @@ export async function loadAudioFiles(req: Request, res: Response) {
 		res.write('[');
 		for (let i = 0; i < audioDatas.length; i++) {
 			const audioData = audioDatas[i];
+			if (!audioData) {continue;}
 
 			res.write('{"fileId":"' + audioData.fileId + '","mimeType":"' + audioData.mimeType + '","buffer64":"');
 

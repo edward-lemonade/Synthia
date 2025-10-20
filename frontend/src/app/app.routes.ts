@@ -64,7 +64,6 @@ export const routes: Routes = [
 		path: 'studio/:projectId',
 		loadComponent: () =>
 			import('./pages/studio/studio.page').then(m => m.StudioPage),
-		canActivate: [AuthGuard],
 	},
 	{ path: '**', redirectTo: '' },
 ];
