@@ -67,21 +67,21 @@ import { v4 as uuidv4 } from 'uuid';
 						</button>
 					</div>
 
-					<mat-menu #userSettings="matMenu" class="user-settings-menu">
-						<div class="user-settings-menu-content">
-							<button mat-menu-item class="user-settings-menu-btn" (click)="profile()">
+					<mat-menu #userSettings="matMenu" class="glass-menu">
+
+							<button mat-menu-item class="glass-menu-btn" (click)="profile()">
 								<mat-icon>account_box</mat-icon>
 								Profile
 							</button>
-							<button mat-menu-item class="user-settings-menu-btn" (click)="settings()">
+							<button mat-menu-item class="glass-menu-btn" (click)="settings()">
 								<mat-icon>settings</mat-icon>
 								Settings
 							</button>
-							<button mat-menu-item class="user-settings-menu-btn" (click)="logout()">
+							<button mat-menu-item class="glass-menu-btn" (click)="logout()">
 								<mat-icon>logout</mat-icon>
 								Log out
 							</button>
-						</div>
+
 					</mat-menu>
 
 				</div>
