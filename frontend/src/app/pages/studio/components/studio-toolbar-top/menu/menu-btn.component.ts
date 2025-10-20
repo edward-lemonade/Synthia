@@ -12,7 +12,7 @@ import { StateService } from '../../../state/state.service';
 			<mat-icon>menu</mat-icon>
 		</button>
 
-		<mat-menu #optionsMenu="matMenu" [class]="'options-menu'">
+		<mat-menu #optionsMenu="matMenu" class="options-menu">
 			<div class="options-menu-content">
 				<button class="options-menu-btn" (click)="saveExit()">
 					<mat-icon>save</mat-icon>

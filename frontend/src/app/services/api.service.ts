@@ -130,13 +130,16 @@ export class ApiService {
 		},
 		needAuth: boolean = false
 	): Promise<AxiosResponse<ResType>> {
+		//console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data)
+
 		if (needAuth) {
-			await this.auth.waitForUserInit();
+			await this.auth.waitForAuthCheck();
 		}
-		const headers = await this.auth.getAuthHeaders();
+		let headers = await this.auth.getAuthHeaders();
 		if (needAuth && !headers) {
 			throw new Error('Not logged in!');
 		}
+		headers = headers ?? {}
 
 		//console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data, { headers: {...headers, ...params.headers}, signal: params.signal });
 	
