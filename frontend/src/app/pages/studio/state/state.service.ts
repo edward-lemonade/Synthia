@@ -85,7 +85,6 @@ export class StateService { // SINGLETON
 	private saveToSessionStorage(state: ProjectState): void {
 		try {
 			sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-			console.log('State saved to sessionStorage for guest user');
 		} catch (error) {
 			console.error('Failed to save state to sessionStorage:', error);
 		}
@@ -96,7 +95,6 @@ export class StateService { // SINGLETON
 			const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
 			if (stored) {
 				const state = JSON.parse(stored) as ProjectState;
-				console.log('State loaded from sessionStorage for guest user');
 				return state;
 			}
 		} catch (error) {
@@ -108,7 +106,6 @@ export class StateService { // SINGLETON
 	private clearSessionStorage(): void {
 		try {
 			sessionStorage.removeItem(SESSION_STORAGE_KEY);
-			console.log('SessionStorage cleared');
 		} catch (error) {
 			console.error('Failed to clear sessionStorage:', error);
 		}
@@ -120,7 +117,6 @@ export class StateService { // SINGLETON
 	async initState(author: Author, projectId: string, isNew: boolean) {
 		// Check if user is not authenticated and has sessionStorage data
 		if (this.isSignedOut) {
-			console.log("signed out")
 			const sessionData = this.loadFromSessionStorage();
 			if (sessionData) {
 				// Restore from sessionStorage
@@ -150,19 +146,15 @@ export class StateService { // SINGLETON
 
 				this.clearSessionStorage();
 				this.hasSessionStorageData = false;
-
-				console.log("Syncing session data to backend...");
 				
-				// Sync audio files first
+				// Sync audio files
 				try {
 					await this.audioCacheService.syncSessionAudioFilesToBackend();
-					console.log("Audio files synced successfully");
 				} catch (err) {
 					console.error("Failed to sync audio files:", err);
 				}
 
-				// Then save the state
-				console.log("Saving state to backend...");
+				// Sync state
 				await this.saveState();
 				return;
 			}

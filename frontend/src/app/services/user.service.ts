@@ -75,31 +75,25 @@ export class UserService {
 	// Wait for User/Author
 
 	async waitForUser(): Promise<User|null> {
-		// If we already have a user, return it immediately
 		if (this.gotUser) {
 			return this.user();
 		}
 
-		// If a fetch is already in progress, wait for it
-		if (this.userFetchInProgress && this.userFetchPromise) {
+		if (this.userFetchInProgress && this.userFetchPromise) { // fetch in progress
 			return this.userFetchPromise;
 		}
 
-		// Wait for authentication check to complete first
 		await this.appAuthService.waitForAuthCheck();
 
-		// Check if user is authenticated
 		const isAuthenticated = await firstValueFrom(this.appAuthService.isAuthenticated$());
 		if (!isAuthenticated) {
 			return null;
 		}
 
-		// If still no user and fetch is in progress, wait for it
 		if (this.userFetchInProgress && this.userFetchPromise) {
 			return this.userFetchPromise;
 		}
 
-		// If we still don't have user, something went wrong in initialization
 		// Try fetching again
 		if (!this.gotUser) {
 			return this.getUser();
@@ -120,12 +114,10 @@ export class UserService {
 	// API Calls
 
 	async getUser(): Promise<User|null> {		
-		// If fetch is already in progress, return the existing promise
 		if (this.userFetchInProgress && this.userFetchPromise) {
 			return this.userFetchPromise;
 		}
 
-		// Mark fetch as in progress and create the fetch promise
 		this.userFetchInProgress = true;
 		
 		this.userFetchPromise = (async () => {

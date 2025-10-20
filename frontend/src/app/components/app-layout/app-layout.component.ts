@@ -187,9 +187,6 @@ export class AppLayoutComponent {
 
 	studio() {
 		try {
-			//const token = await this.auth.getAccessToken();
-			//if (!token) { console.error('No valid token'); return; }
-
 			const projectId = uuidv4();
 			this.router.navigate(['/studio', projectId], {queryParams: {
 				isNew: true,

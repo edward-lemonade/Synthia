@@ -48,7 +48,6 @@ export class AudioCacheService {
 				// Load from sessionStorage for guest users
 				const sessionFiles = this.loadAudioFilesFromSessionStorage();
 				if (sessionFiles.length > 0) {
-					console.log("Loading audio files from sessionStorage: ", sessionFiles.length);
 					await Promise.all(
 						sessionFiles.map(file => this.cacheAudioFile(file))
 					);
@@ -61,12 +60,11 @@ export class AudioCacheService {
 				if (res.data) {				
 					const uncachedFiles: AudioFileData[] = res.data;
 					
-					console.log("Got files from backend: ", uncachedFiles.length, uncachedFiles);
 					await Promise.all(
 						uncachedFiles.map(file => this.cacheAudioFile(file))
 					);
 				} else {
-					console.error("FAILED retrieving files from backend.");
+					console.error("Failed retrieving files from backend.");
 				}
 			}
 
@@ -85,7 +83,6 @@ export class AudioCacheService {
 			const existing = this.loadAudioFilesFromSessionStorage();
 			const updated = [...existing, ...audioFileDatas];
 			sessionStorage.setItem(AUDIO_SESSION_STORAGE_KEY, JSON.stringify(updated));
-			console.log('Audio files saved to sessionStorage:', audioFileDatas.length);
 		} catch (error) {
 			console.error('Failed to save audio files to sessionStorage:', error);
 		}
@@ -96,7 +93,6 @@ export class AudioCacheService {
 			const stored = sessionStorage.getItem(AUDIO_SESSION_STORAGE_KEY);
 			if (stored) {
 				const files = JSON.parse(stored) as AudioFileData[];
-				console.log('Audio files loaded from sessionStorage:', files.length);
 				return files;
 			}
 		} catch (error) {
@@ -108,7 +104,6 @@ export class AudioCacheService {
 	private clearAudioSessionStorage(): void {
 		try {
 			sessionStorage.removeItem(AUDIO_SESSION_STORAGE_KEY);
-			console.log('Audio sessionStorage cleared');
 		} catch (error) {
 			console.error('Failed to clear audio sessionStorage:', error);
 		}
@@ -143,7 +138,6 @@ export class AudioCacheService {
 			}, projectId);
 
 			if (res.data.success) {
-				console.log('Successfully synced session audio files to backend:', sessionFiles.length);
 				this.clearAudioSessionStorage();
 				return true;
 			} else {
@@ -196,7 +190,6 @@ export class AudioCacheService {
 				// Save to sessionStorage for guest users
 				this.saveAudioFilesToSessionStorage(audioFileDatas);
 				this.audioFileRefs.update(files => [...files, ...audioFileRefs]);
-				console.log('Audio files stored in sessionStorage for guest user');
 				return cachedAudioFiles;
 			} else {
 				// Save to backend for authenticated users

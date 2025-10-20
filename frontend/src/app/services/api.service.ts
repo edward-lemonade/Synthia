@@ -130,7 +130,7 @@ export class ApiService {
 		},
 		needAuth: boolean = false
 	): Promise<AxiosResponse<ResType>> {
-		console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data)
+		//console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data)
 
 		if (needAuth) {
 			await this.auth.waitForAuthCheck();
