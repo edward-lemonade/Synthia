@@ -53,7 +53,7 @@ export class ApiService {
 			(params: any = {}, projectId: string) => {return this.callApi<{
 				success: boolean, 
 				waveformData: WaveformData,
-			}>(`/projects/${projectId}/waveform`, 'get', params)},
+			}>(`/projects/${projectId}/waveform`, 'get', params, true)},
 		getMyProjectFront:
 			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean, projectFront: ProjectFront}>(`/projects/${projectId}/front`, 'get', params, true)},
 		publishProject:
