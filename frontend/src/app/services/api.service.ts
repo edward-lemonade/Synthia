@@ -53,7 +53,7 @@ export class ApiService {
 			(params: any = {}, projectId: string) => {return this.callApi<{
 				success: boolean, 
 				waveformData: WaveformData,
-			}>(`/projects/${projectId}/waveform`, 'get', params)},
+			}>(`/projects/${projectId}/waveform`, 'get', params, true)},
 		getMyProjectFront:
 			(params: any = {}, projectId: string) => {return this.callApi<{success: boolean, projectFront: ProjectFront}>(`/projects/${projectId}/front`, 'get', params, true)},
 		publishProject:
@@ -68,7 +68,7 @@ export class ApiService {
 			(params: any = {}, projectId: string) => {return this.callApi<AudioFileData[]>(`/projects/${projectId}/files/get_all`, 'post', {...params, responseType: "json"}, true)},
 
 		streamTrack: 
-			(params: any = {}, projectId: string) => {return this.callApi<{bytes: Buffer[]}>(`/track/${projectId}/stream`, 'get', params)},
+			(params: any = {}, projectId: string) => {return this.callApi<{bytes: Uint8Array[]}>(`/track/${projectId}/stream`, 'get', params)},
 		downloadTrack: 
 			(params: any = {}, projectId: string) => {return this.callApi<Blob>(`/track/${projectId}/download`, 'get', params)},
 		getTrack:
