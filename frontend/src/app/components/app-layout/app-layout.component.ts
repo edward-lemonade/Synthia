@@ -116,12 +116,12 @@ import { v4 as uuidv4 } from 'uuid';
 						<button 
 							class="appbar-btn"
 							(click)="auth.loginWithRedirect({
-							appState: { target: '/projects/all-projects' }
+							appState: { target: '/projects' }
 						})"> Register </button>
 						<button 
 							class="login-btn"
 							(click)="auth.loginWithRedirect({
-							appState: { target: '/projects/all-projects' }
+							appState: { target: '/projects' }
 						})"> Login </button>
 					</div>
 				</div>
