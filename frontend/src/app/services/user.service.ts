@@ -82,7 +82,7 @@ export class UserService {
 		if (this.userFetchInProgress && this.userFetchPromise) { // fetch in progress
 			return this.userFetchPromise;
 		}
-
+		
 		await this.appAuthService.waitForAuthCheck();
 
 		const isAuthenticated = await firstValueFrom(this.appAuthService.isAuthenticated$());
