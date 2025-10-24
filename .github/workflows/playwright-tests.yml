@@ -29,9 +29,6 @@ jobs:
       with:
         node-version: '20'
     
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-
     - name: Install dependencies in shared
       working-directory: ./shared
       run: npm ci
