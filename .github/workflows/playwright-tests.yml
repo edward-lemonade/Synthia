@@ -40,6 +40,12 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: npm ci
+
+    - name: Install Playwright Test and Browsers
+      working-directory: ./frontend
+      run: |
+        npm install -D @playwright/test
+        npx playwright install --with-deps
     
     - name: Install wait-on
       run: npm install -g wait-on
