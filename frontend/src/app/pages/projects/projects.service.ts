@@ -94,8 +94,9 @@ export class ProjectsService {
 
 	public async openProject(project: ProjectMetadata) {
 		try {
-			const token = await this.auth.getAccessToken();
-			if (!token) { console.error('No valid token'); return; }
+			//const token = await this.auth.getAccessToken();
+			//if (!token) { console.error('No valid token'); return; }
+			console.log("Opening project: ", project);
 
 			this.router.navigate(['/studio', project.projectId], {queryParams: {
 				isNew: false,
@@ -107,8 +108,8 @@ export class ProjectsService {
 
 	public async publishProject(project: ProjectMetadata) {
 		try {
-			const token = await this.auth.getAccessToken();
-			if (!token) { console.error('No valid token'); return; }
+			//const token = await this.auth.getAccessToken();
+			//if (!token) { console.error('No valid token'); return; }
 
 			this.router.navigate(['/publish', project.projectId]);
 		} catch (err) {

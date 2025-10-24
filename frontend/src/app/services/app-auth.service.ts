@@ -88,7 +88,6 @@ export class AppAuthService {
 				const targetUrl = appState.target;
 
 				const { UserService } = await import('./user.service'); // lazy load so no circular deps
-				const userService = this.injector.get(UserService);
 				await UserService.instance.initializeUser();
 
 				this.router.navigateByUrl(targetUrl);
