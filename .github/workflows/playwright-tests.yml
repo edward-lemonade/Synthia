@@ -71,6 +71,7 @@ jobs:
       working-directory: ./frontend
       run: npx start-server-and-test 'npm start' http://localhost:4200 'npx playwright test'
       env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
         PORT: 4200
         PRODUCTION: true
         API_URL: http://localhost:5000
