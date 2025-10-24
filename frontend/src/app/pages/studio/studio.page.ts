@@ -25,7 +25,7 @@ import { LoadingSpinnerComponent } from "@src/app/components/loading-spinner/loa
 @Component({
 	selector: 'app-studio',
 	imports: [StudioToolbarTopComponent, StudioToolbarDetailsComponent, StudioEditorComponent, StudioCabnetComponent, LoadingSpinnerComponent],
-	providers: [StateService, TracksService, HistoryService, AppAuthService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, TimelinePlaybackService, CabnetService, AudioRecordingService, TimelineExportService, SynthesizerService, InstantSynthesizerService],
+	providers: [StateService, TracksService, HistoryService, ViewportService, RegionSelectService, RegionService, RegionDragService, AudioCacheService, TimelinePlaybackService, CabnetService, AudioRecordingService, TimelineExportService, SynthesizerService, InstantSynthesizerService],
 	standalone: true,
 	template: `
 		<div class="page-container">

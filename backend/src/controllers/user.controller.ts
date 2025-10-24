@@ -14,7 +14,8 @@ export async function getUser(req: Request, res: Response) {
 			return res.status(401).json({ error: 'No sub claim in token' });
 		}
 
-		const userDoc = await UserModel.findOne({ auth0Id: sub });
+		const query = UserModel.findOne({ auth0Id: sub });
+		const userDoc = await query;
 		
 		if (!userDoc) {
 			return res.json({ user: null, isNew: true });
@@ -37,7 +38,8 @@ export async function createUser(req: Request, res: Response) {
 			return res.status(401).json({ error: 'No sub claim in token' });
 		}
 
-		let userDoc = await UserModel.findOne({ auth0Id: sub });
+		const query = UserModel.findOne({ auth0Id: sub });
+		let userDoc = await query;
 		let isNew = false;
 
 		if (!userDoc) {
@@ -84,10 +86,11 @@ export async function updateUserProfile(req: Request, res: Response) {
 		}
 
 		if (displayName) {
-			const existingUser = await UserModel.findOne({ 
+			const query = UserModel.findOne({ 
 				displayName: displayName, 
 				auth0Id: { $ne: sub } 
 			});
+			const existingUser = await query;
 			if (existingUser) {
 				return res.status(400).json({ error: 'Display name is already taken' });
 			}

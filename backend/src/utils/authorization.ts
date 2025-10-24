@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { IProjectMetadataDocument, ProjectMetadataModel } from '@src/models';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { ProjectMetadata } from '@shared/types';
 import * as db from '../db/mongo_client'
 
 
-export async function assertProjectAccess(projectId: string, userId: string): Promise<{success: boolean, metadataDoc?: IProjectMetadataDocument}> {
-	const project = await db.findMetadataByProjectId(projectId);
+export async function assertProjectAccess(projectId: string, userId: string, session?: ClientSession): Promise<{success: boolean, metadataDoc?: IProjectMetadataDocument}> {
+	const project = await db.findMetadataByProjectId(projectId, session);
 	if (!project) {
 		return {success: false};
 	} else if (assertAuthorship(project, userId)) {
