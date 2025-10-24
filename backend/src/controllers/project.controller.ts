@@ -414,19 +414,21 @@ export async function publish(req: Request, res: Response) {
 
 		const description = req.body.description;
 
-		let frontDoc = await db.findFrontByProjectId(projectId);
+		let frontDoc = await db.findFrontByProjectId(projectId, session);
+
 		if (frontDoc) {
 			// update
 			frontDoc.description = description;
 			await frontDoc.save({ session });
 		} else {
 			// create new
-			[frontDoc] = await ProjectFrontModel.create({
+			console.log(metadataDoc!._id);
+			[frontDoc] = await ProjectFrontModel.create([{
 				projectId,
 				title: metadataDoc!.title,
 				description,
 				projectMetadataId: metadataDoc!._id,
-			}, { session });
+			}], { session });
 		}
 
 		metadataDoc.isReleased = true;

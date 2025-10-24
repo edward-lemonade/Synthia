@@ -1,0 +1,97 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies in shared
+      working-directory: ./shared
+      run: npm ci
+
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Install Playwright Test and Browsers
+      working-directory: ./frontend
+      run: npx playwright install --with-deps
+    
+    - name: Install wait-on
+      run: npm install -g wait-on
+    
+    - name: Start backend server
+      working-directory: ./backend
+      run: npm start &
+      env:
+        NODE_ENV: test
+        PORT: 5000
+        PRODUCTION: true
+        MONGO_STRING: ${{ secrets.BACKEND_MONGO_STRING }}
+        AUTH0_DOMAIN: ${{ secrets.BACKEND_AUTH0_DOMAIN }}
+        AUTH0_CLIENT: ${{ secrets.BACKEND_AUTH0_CLIENT }}
+        AUTH0_SECRET: ${{ secrets.BACKEND_AUTH0_SECRET }}
+        AUTH0_AUDIENCE: ${{ secrets.BACKEND_AUTH0_AUDIENCE }}
+        REDIS_URL: redis://localhost:6379
+        FRONTEND_URL: http://localhost:4200
+    
+    - name: Install start-server-and-test
+      working-directory: ./frontend
+      run: npm install --save-dev start-server-and-test
+
+    - name: Start frontend server
+      working-directory: ./frontend
+      run: npx start-server-and-test 'npm start' http://localhost:4200 'npx playwright test'
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
+        PORT: 4200
+        PRODUCTION: true
+        API_URL: http://localhost:5000
+        AUTH0_DOMAIN: ${{ secrets.FRONTEND_AUTH0_DOMAIN }}
+        AUTH0_CLIENT: ${{ secrets.FRONTEND_AUTH0_CLIENT }}
+        AUTH0_SECRET: ${{ secrets.FRONTEND_AUTH0_SECRET }}
+        AUTH0_API_AUD: ${{ secrets.FRONTEND_AUTH0_API_AUD }}
+        TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+        TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+      
+    #- name: Wait for servers to be ready
+    #  run: npx wait-on http://localhost:4200 --timeout 120000 --interval 2000 --verbose
+    
+    #- name: Run Playwright tests
+    #  working-directory: ./frontend
+    #  run: npx playwright test
+    
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: frontend/playwright-report/
+        retention-days: 30
