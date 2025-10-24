@@ -29,9 +29,11 @@ export class Renderer {
 
 		let audioFiles: Record<string, AudioFileData> = {};
 		const audioDataPromises = fileRefs.map(async (fileRef) => await getAudioFile(projectId, fileRef.fileId));
-		const audioDatas: AudioFileData[] = await Promise.all(audioDataPromises);
+		const audioDatas: (AudioFileData|null)[] = await Promise.all(audioDataPromises);
 		audioDatas.forEach((file) => {
-			audioFiles[file.fileId] = file;
+			if (file) {
+				audioFiles[file.fileId] = file;
+			}
 		});
 		
 		this.audioFiles = audioFiles;
@@ -159,6 +161,11 @@ export class Renderer {
 		trackGainNode: GainNode
 	): Promise<void> {
 		const audioFileData = this.audioFiles[audioRegion.fileId];
+		if (!audioFileData) {
+			console.log("NO AUDIO FILE DATA: ", this.projectState.metadata.projectId, audioRegion.fileId)
+			return;	
+		}
+
 		const audioBuffer = audioFileData.buffer64;
 
 		if (!audioBuffer) {
