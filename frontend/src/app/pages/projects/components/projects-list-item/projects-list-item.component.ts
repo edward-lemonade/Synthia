@@ -141,11 +141,12 @@ export class ProjectsListItemComponent implements AfterViewInit, OnDestroy {
 
 		this.wasRenaming = isCurrentlyRenaming;
 
+		/*
 		if (isCurrentlyRenaming && this.renameInput) {
 			setTimeout(() => {
 				this.renameInput.nativeElement.focus();
 			});
-		}
+		}*/
 	}
 
 	private async initializeWaveform() {
