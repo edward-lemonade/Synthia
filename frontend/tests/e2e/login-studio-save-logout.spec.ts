@@ -11,9 +11,9 @@ test('Guest -> Login -> Studio -> Save -> Logout -> Home page', async ({ page })
   await page.goto('http://localhost:4200/');
   await page.getByRole('button', { name: 'Login' }).click();
   await page.getByRole('textbox', { name: 'Email address' }).click();
-  await page.getByRole('textbox', { name: 'Email address' }).fill('REMOVED');
+  await page.getByRole('textbox', { name: 'Email address' }).fill(process.env["TEST_EMAIL"]!);
   await page.getByText('Password *').click();
-  await page.getByRole('textbox', { name: 'Password' }).fill('REMOVED');
+  await page.getByRole('textbox', { name: 'Password' }).fill(process.env["TEST_PASSWORD"]!);
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByText('test-persistent')).toBeVisible();
   await page.getByRole('main').getByRole('button', { name: 'Studio' }).click();
