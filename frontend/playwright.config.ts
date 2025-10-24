@@ -19,3 +19,6 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
 });
+
+
+// npx playwright codegen --viewport-size="1720,900" http://localhost:4200/             

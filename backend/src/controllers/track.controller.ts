@@ -303,6 +303,7 @@ export async function newest(req: Request, res: Response) {
 		const projects = await Promise.all(
 			projectFrontDocs.map(async (frontDoc) => {
 				const metadataDoc = await db.findMetadataById(frontDoc.projectMetadataId);
+				console.log(frontDoc, metadataDoc);
 				return {
 					front: ProjectFrontTransformer.fromDoc(frontDoc),
 					metadata: ProjectMetadataTransformer.fromDoc(metadataDoc!),
