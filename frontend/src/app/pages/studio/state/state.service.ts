@@ -154,6 +154,7 @@ export class StateService { // SINGLETON
 					console.error("Failed to sync audio files:", err);
 				}
 
+				console.log("session storage exists")
 				// Sync state
 				await this.saveState();
 				return;
@@ -201,6 +202,7 @@ export class StateService { // SINGLETON
 			
 			// Trigger auth flow
 			const currentUrl = window.location.pathname + window.location.search;
+			console.log("triggering login redirect flow")
 			this.auth0.loginWithRedirect({
 				appState: { target: currentUrl }
 			});

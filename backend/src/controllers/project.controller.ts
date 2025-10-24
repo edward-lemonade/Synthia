@@ -47,7 +47,7 @@ export async function saveOverwrite(req: Request, res: Response) {
 		}
 
 		const [{success, metadataDoc}, studioDoc] = await Promise.all([
-			await assertProjectAccess(projectId, userId),
+			await assertProjectAccess(projectId, userId, session),
 			db.findStudioByProjectId(projectId)
 		]);
 
@@ -196,7 +196,7 @@ export async function deleteStudio(req: Request, res: Response) {
 			await session.abortTransaction();
 			return res.status(400).json({ success: false, message: "Project ID is required" });
 		}
-		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
+		const {success, metadataDoc} = await assertProjectAccess(projectId, userId, session);
 
 		const [resM, resS, resF] = await Promise.all([
 			db.deleteMetadataByProjectId(projectId, session),
@@ -234,45 +234,66 @@ export async function deleteStudio(req: Request, res: Response) {
 }
 
 export async function rename(req: Request, res: Response) {	
-	const projectId = req.params.projectId;
-	const userId = req.auth?.sub;
-	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
-	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
-	const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	if (!metadataDoc) { console.error("Failed to find project."); res.json({ success: false }); return }
+	try {
+		const projectId = req.params.projectId;
+		const userId = req.auth?.sub;
+		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+		const {success, metadataDoc} = await assertProjectAccess(projectId, userId, session);
 
-	const newName = req.body.newName;
-	metadataDoc.title = newName;
+		if (!metadataDoc) { console.error("Failed to find project."); res.json({ success: false }); return }
 
-    const savedDoc = await metadataDoc.save();
-	if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
+		const newName = req.body.newName;
+		metadataDoc.title = newName;
 
-	res.json({ success: true });
+		const savedDoc = await metadataDoc.save({session});
+		if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
+
+		res.json({ success: true });
+	} catch (error) {
+		await session.abortTransaction();
+		console.error('Error renaming project:', error);
+		return res.status(500).json({ success: false, message: "Internal server error" });
+	} finally {
+		session.endSession();
+	}
 }
 
 export async function renameFront(req: Request, res: Response) {	
-	const projectId = req.params.projectId;
-	const userId = req.auth?.sub;
-	if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
-	if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
-	const [{success, metadataDoc}, frontDoc] = await Promise.all([
-		await assertProjectAccess(projectId, userId),
-		db.findFrontByProjectId(projectId)
-	]);
+	const session = await mongoose.startSession();
+	session.startTransaction();
 
-	if (!metadataDoc || !frontDoc) { 
-		console.error("Failed to load project metadata."); 
-		return res.status(404).json({ success: false, message: "Project not found" }); 
+	try {
+		const projectId = req.params.projectId;
+		const userId = req.auth?.sub;
+		if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+		if (!projectId) return res.status(400).json({ success: false, message: "Project ID is required" });
+		const [{success, metadataDoc}, frontDoc] = await Promise.all([
+			await assertProjectAccess(projectId, userId, session),
+			db.findFrontByProjectId(projectId)
+		]);
+
+		if (!metadataDoc || !frontDoc) { 
+			console.error("Failed to load project metadata."); 
+			return res.status(404).json({ success: false, message: "Project not found" }); 
+		}
+
+		const newName = req.body.newName;
+		frontDoc.title = newName;
+
+		const savedDoc = await frontDoc.save({session});
+		if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
+
+		res.json({ success: true });
+	} catch (error: any) {
+		session.abortTransaction();
+		console.error('Error renaming project front:', error);
+	} finally {
+		session.endSession();
 	}
-
-	const newName = req.body.newName;
-	frontDoc.title = newName;
-
-	const savedDoc = await frontDoc.save();
-	if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
-
-	res.json({ success: true });
 }
 
 export async function getExport(req: Request, res: Response) {
@@ -376,7 +397,7 @@ export async function publish(req: Request, res: Response) {
 			await session.abortTransaction();
 			return res.status(400).json({ success: false, message: "Project ID is required" });
 		}
-		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
+		const {success, metadataDoc} = await assertProjectAccess(projectId, userId, session);
 
 		if (!metadataDoc) {
 			console.error('Error creating ProjectFront: No metadata found');
@@ -442,7 +463,7 @@ export async function unpublish(req: Request, res: Response) {
 			await session.abortTransaction();
 			return res.status(400).json({ success: false, message: "Project ID is required" });
 		}
-		const {success, metadataDoc} = await assertProjectAccess(projectId, userId);
+		const {success, metadataDoc} = await assertProjectAccess(projectId, userId, session);
 
 		if (!metadataDoc) {
 			console.error('Error unpublishing: No metadata found');

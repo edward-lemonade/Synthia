@@ -23,38 +23,66 @@ export async function connectMongo() {
 
 
 // METADATA QUERIES
-export async function findMetadatasByUser(userId: string): Promise<IProjectMetadataDocument[]> { // TODO HANDLE MULTIPLE RETURNS
-	const metadataDocs = await ProjectMetadataModel.find({"authors.userId": userId});
+export async function findMetadatasByUser(userId: string, session?: ClientSession): Promise<IProjectMetadataDocument[]> { // TODO HANDLE MULTIPLE RETURNS
+	const query = ProjectMetadataModel.find({"authors.userId": userId});
+	if (session) {
+		query.session(session);
+	}
+	const metadataDocs = await query;
 	return metadataDocs;
 }
-export async function findMetadataByProjectId(projectId: string): Promise<IProjectMetadataDocument | null> {
-	const metadataDoc = await ProjectMetadataModel.findOne({projectId: projectId});
+export async function findMetadataByProjectId(projectId: string, session?: ClientSession): Promise<IProjectMetadataDocument | null> {
+	const query = ProjectMetadataModel.findOne({projectId: projectId});
+	if (session) {
+		query.session(session);
+	}
+	const metadataDoc = await query;
 	return metadataDoc;
 }
-export async function findMetadataById(id: mongoose.Types.ObjectId): Promise<IProjectMetadataDocument | null> {
-	const metadataDoc = await ProjectMetadataModel.findById(id);
+export async function findMetadataById(id: mongoose.Types.ObjectId, session?: ClientSession): Promise<IProjectMetadataDocument | null> {
+	const query = ProjectMetadataModel.findById(id);
+	if (session) {
+		query.session(session);
+	}
+	const metadataDoc = await query;
 	return metadataDoc;
 }
 
 // STUDIO QUERIES
-export async function findStudioByMetadata(metadataObj: ProjectMetadata): Promise<IProjectStudioDocument | null> {
+export async function findStudioByMetadata(metadataObj: ProjectMetadata, session?: ClientSession): Promise<IProjectStudioDocument | null> {
 	const projectId = metadataObj.projectId;
-	const studioDoc = await ProjectStudioModel.findOne({projectId: projectId});
+	const query = ProjectStudioModel.findOne({projectId: projectId});
+	if (session) {
+		query.session(session);
+	}
+	const studioDoc = await query;
 	return studioDoc;
 }
-export async function findStudioByProjectId(projectId: string): Promise<IProjectStudioDocument | null> {
-	const studioDoc = await ProjectStudioModel.findOne({projectId: projectId});
+export async function findStudioByProjectId(projectId: string, session?: ClientSession): Promise<IProjectStudioDocument | null> {
+	const query = ProjectStudioModel.findOne({projectId: projectId});
+	if (session) {
+		query.session(session);
+	}
+	const studioDoc = await query;
 	return studioDoc;
 }
 
 // FRONT QUERIES
-export async function findFrontByMetadata(metadataObj: ProjectMetadata): Promise<IProjectFrontDocument | null> {
+export async function findFrontByMetadata(metadataObj: ProjectMetadata, session?: ClientSession): Promise<IProjectFrontDocument | null> {
 	const projectId = metadataObj.projectId;
-	const frontDoc = await ProjectFrontModel.findOne({projectId: projectId});
+	const query = ProjectFrontModel.findOne({projectId: projectId});
+	if (session) {
+		query.session(session);
+	}
+	const frontDoc = await query;
 	return frontDoc;
 }
-export async function findFrontByProjectId(projectId: string): Promise<IProjectFrontDocument | null> {
-	const frontDoc = await ProjectFrontModel.findOne({projectId: projectId});
+export async function findFrontByProjectId(projectId: string, session?: ClientSession): Promise<IProjectFrontDocument | null> {
+	const query = ProjectFrontModel.findOne({projectId: projectId});
+	if (session) {
+		query.session(session);
+	}
+	const frontDoc = await query;
 	return frontDoc;
 }
 
@@ -95,9 +123,13 @@ export async function deleteFrontByProjectId(projectId: string, session?: Client
 // TRACK STATS
 // ===========================================================
 
-export async function hasLikedTrack(projectId: string, userId: string) {
+export async function hasLikedTrack(projectId: string, userId: string, session?: ClientSession) {
 	if (!userId) {return null}
-	const like = await LikeModel.findOne({ userId, projectId }).select('likes');
+	const query = LikeModel.findOne({ userId, projectId }).select('likes');
+	if (session) {
+		query.session(session);
+	}
+	const like = await query;
 	return like;
 }
 
@@ -193,13 +225,17 @@ export async function deleteProjectLikes(projectId: string, session?: ClientSess
 }
 
 
-export async function getTrackComments(projectId: string) {
+export async function getTrackComments(projectId: string, session?: ClientSession) {
 	try {
-		const comments = await CommentModel.find({
+		const query = CommentModel.find({
 			projectId,
 		})
-		.sort({ createdAt: -1 }) // Most recent first
-		.exec();
+		.sort({ createdAt: -1 }); // Most recent first
+		
+		if (session) {
+			query.session(session);
+		}
+		const comments = await query.exec();
 
 		return comments;
 	} catch (error) {
@@ -270,17 +306,21 @@ export async function deleteProjectComments(projectId: string, session?: ClientS
 	}
 }
 
-export async function findRecentUserComments(projectId: string, userId: string, timeWindowMs: number) {
+export async function findRecentUserComments(projectId: string, userId: string, timeWindowMs: number, session?: ClientSession) {
 	try {
 		const cutoffTime = new Date(Date.now() - timeWindowMs);
 		
-		const comments = await CommentModel.find({
+		const query = CommentModel.find({
 			projectId,
 			userId,
 			createdAt: { $gte: cutoffTime }
 		})
-		.sort({ createdAt: -1 }) // Most recent first
-		.exec();
+		.sort({ createdAt: -1 }); // Most recent first
+
+		if (session) {
+			query.session(session);
+		}
+		const comments = await query.exec();
 		
 		return comments;
 	} catch (error) {
