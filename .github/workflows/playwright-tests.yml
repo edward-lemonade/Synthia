@@ -81,7 +81,7 @@ jobs:
       
     - name: Wait for servers to be ready
       run: |
-        npx wait-on http://localhost:5000 http://localhost:4200 --timeout 120000 --interval 2000 --verbose
+        npx wait-on http://localhost:4200 --timeout 120000 --interval 2000 --verbose
     
     - name: Run Playwright tests
       run: npx playwright test
