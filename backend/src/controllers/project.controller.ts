@@ -251,8 +251,9 @@ export async function rename(req: Request, res: Response) {
 
 		const savedDoc = await metadataDoc.save({session});
 		if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
-
 		res.json({ success: true });
+
+		await session.commitTransaction();
 	} catch (error) {
 		await session.abortTransaction();
 		console.error('Error renaming project:', error);
@@ -286,6 +287,8 @@ export async function renameFront(req: Request, res: Response) {
 
 		const savedDoc = await frontDoc.save({session});
 		if (!savedDoc) { console.error("Failed to save new name."); res.json({ success: false }); return }
+
+		await session.commitTransaction();
 
 		res.json({ success: true });
 	} catch (error: any) {
