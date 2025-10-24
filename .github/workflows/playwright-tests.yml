@@ -62,10 +62,11 @@ jobs:
         REDIS_URL: redis://localhost:6379
         FRONTEND_URL: http://localhost:4200
     
-    - name: Start frontend server
+    - name: Build frontend
       working-directory: ./frontend
-      run: npm start &
+      run: npm run build -- --configuration=production
       env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
         PORT: 4200
         PRODUCTION: true
         API_URL: http://localhost:5000
@@ -73,13 +74,14 @@ jobs:
         AUTH0_CLIENT: ${{ secrets.FRONTEND_AUTH0_CLIENT }}
         AUTH0_SECRET: ${{ secrets.FRONTEND_AUTH0_SECRET }}
         AUTH0_API_AUD: ${{ secrets.FRONTEND_AUTH0_API_AUD }}
-        TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
-        TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-
     
+    - name: Start frontend server
+      working-directory: ./frontend
+      run: npx serve -s dist/frontend -l 4200 &
+      
     - name: Wait for servers to be ready
       run: |
-        npx wait-on http://localhost:5000 http://localhost:4200 --timeout 60000
+        npx wait-on http://localhost:5000 http://localhost:4200 --timeout 120000 --interval 2000 --verbose
     
     - name: Run Playwright tests
       run: npx playwright test
