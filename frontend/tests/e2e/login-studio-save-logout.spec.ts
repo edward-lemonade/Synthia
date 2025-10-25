@@ -8,6 +8,7 @@ test.use({
 });
 
 test('Guest -> Login -> Studio -> Save -> Logout -> Home page', async ({ page }) => {
+  page.on('console', msg => console.log(msg.text()));
   await page.goto('http://localhost:4200/');
   await page.getByRole('button', { name: 'Login' }).click();
   await page.getByRole('textbox', { name: 'Email address' }).click();
@@ -16,7 +17,10 @@ test('Guest -> Login -> Studio -> Save -> Logout -> Home page', async ({ page })
   await page.getByRole('textbox', { name: 'Password' }).fill(process.env["TEST_PASSWORD"]!);
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByText('test-persistent')).toBeVisible();
-  await page.getByRole('main').getByRole('button', { name: 'Studio' }).click();
+  await page.getByText('test-persistent')
+    .locator('..')  // Go up to parent container
+    .getByRole('button', { name: 'Studio' })
+    .click();
   await expect(page.locator('canvas').nth(2)).toBeVisible();
   await expect(page.locator('canvas').nth(3)).toBeVisible();
   await expect(page.locator('studio-toolbar-details-tempo')).toContainText('4');
@@ -32,7 +36,10 @@ test('Guest -> Login -> Studio -> Save -> Logout -> Home page', async ({ page })
   await page.getByRole('button').filter({ hasText: 'menu' }).click();
   await page.getByRole('button', { name: 'Exit', exact: true }).click();
   await expect(page.getByText('test-persistent')).toBeVisible();
-  await page.getByRole('main').getByRole('button', { name: 'Studio' }).click();
+  await page.getByText('test-persistent')
+    .locator('..')  // Go up to parent container
+    .getByRole('button', { name: 'Studio' })
+    .click();
   await expect(page.locator('studio-toolbar-details-tempo')).toContainText('5');
   await expect(page.locator('studio-toolbar-details-tempo')).toContainText('8');
   await page.getByRole('button', { name: '| 8' }).click();
@@ -43,7 +50,10 @@ test('Guest -> Login -> Studio -> Save -> Logout -> Home page', async ({ page })
   await expect(page.locator('studio-toolbar-details-tempo')).toContainText('4');
   await page.getByRole('button').filter({ hasText: 'menu' }).click();
   await page.getByRole('button', { name: 'Save and Exit' }).click();
-  await page.getByRole('main').getByRole('button', { name: 'Studio' }).click();
+  await page.getByText('test-persistent')
+    .locator('..')  // Go up to parent container
+    .getByRole('button', { name: 'Studio' })
+    .click();
   await expect(page.locator('studio-toolbar-details-tempo')).toContainText('4');
   await expect(page.locator('studio-toolbar-details-tempo')).toContainText('4');
   await page.getByRole('button').filter({ hasText: 'menu' }).click();

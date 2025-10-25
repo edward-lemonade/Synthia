@@ -26,5 +26,6 @@ dist-ssr
 .env
 *.env
 .secrets
+*.output
 
 uploads

@@ -8,6 +8,7 @@ test.use({
 });
 
 test('Guest -> Login -> Logout -> Home page', async ({ page }) => {
+  page.on('console', msg => console.log(msg.text()));
   await page.goto('http://localhost:4200/');
   await page.getByRole('button', { name: 'Login' }).click();
   await page.getByRole('textbox', { name: 'Email address' }).click();

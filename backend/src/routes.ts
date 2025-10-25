@@ -12,6 +12,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
+router.get('/health', optionalAuth, (req, res) => {
+	res.status(200).json({ status: 'OK' });
+});
+
 router.get('/api/me', requireAuth, UserController.getUser)
 router.post('/api/me', requireAuth, UserController.createUser)
 router.put('/api/me/profile', requireAuth, UserController.updateUserProfile)

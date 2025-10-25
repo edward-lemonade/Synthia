@@ -8,6 +8,7 @@ test.use({
 });
 
 test('Guest -> Studio page -> Home page', async ({ page }) => {
+  page.on('console', msg => console.log(msg.text()));
   await page.goto('http://localhost:4200/');
   await page.getByText('Welcome toSynthiaMake music.').click();
   await page.getByText('Welcome toSynthiaMake music.').click();

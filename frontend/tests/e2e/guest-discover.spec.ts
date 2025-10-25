@@ -8,21 +8,25 @@ test.use({
 });
 
 test('Guest -> Discover page -> Track page -> Home page', async ({ page }) => {
+  page.on('console', msg => console.log(msg.text()));
   await page.goto('http://localhost:4200/');
-  await expect(page.getByRole('button', { name: 'Explore community' })).toBeVisible();
   await page.getByRole('button', { name: 'Explore community' }).click();
-  await expect(page.getByText('Creo - AuroraELECTRIC_BANANARSplay_arrow0favorite1calendar_todaySep 30,')).toBeVisible();
-  await expect(page.getByText('access_timeNewwhatshotHotsearchSearch')).toBeVisible();
-  await page.getByText('Creo - AuroraELECTRIC_BANANARSplay_arrow0favorite1calendar_todaySep 30,').click();
-  await expect(page.locator('div').filter({ hasText: 'ELECTRIC_BANANARS23d agosong' }).nth(5)).toBeVisible();
-  await expect(page.getByText('song is by creo (not by me!)')).toBeVisible();
-  await expect(page.locator('app-card-night')).toContainText('song is by creo (not by me!)');
-  await expect(page.locator('app-card-sunset')).toContainText('Creo - Aurora');
-  await page.getByRole('button', { name: 'Discover' }).click();
-  await page.getByRole('button', { name: 'Discover' }).click();
   await page.getByRole('button', { name: 'Hot' }).click();
-  await expect(page.getByText('BAD CHORDS (WIP)schoolsplay_arrow7favorite3calendar_todaySep 19,')).toBeVisible();
-  await expect(page.getByText('BAD CHORDS (WIP)')).toBeVisible();
-  await page.getByRole('button', { name: 'Load more' }).click();
+  await expect(page.getByText('favorite').first()).toBeVisible();
+  await expect(page.getByText('play_arrow').first()).toBeVisible();
+  await page.getByRole('button', { name: 'New' }).click();
+  await expect(page.getByText('favorite').first()).toBeVisible();
+  await expect(page.getByText('play_arrow').first()).toBeVisible();
+  await page.getByRole('textbox', { name: 'search...' }).click();
+  await page.getByRole('textbox', { name: 'search...' }).fill('MisterRobot');
+  await page.getByRole('button', { name: 'Search' }).click();
+  await expect(page.getByText('MisterRobot')).toBeVisible();
+  await page.getByText('MisterRobotUser').click();
+  await expect(page.getByText('test-uploaded')).toBeVisible();
+  await page.getByText('test-uploadedcalendar_todayOct 24, 2025play_arrow0favorite0').click();
+  await expect(page.getByText('Login to use social features')).toBeVisible();
+  await expect(page.getByText('test-uploaded')).toBeVisible();
+  await expect(page.getByText('MisterRobot')).toBeVisible();
   await page.getByText('Synthia').click();
+  await expect(page.locator('app-home').getByText('Synthia')).toBeVisible();
 });
