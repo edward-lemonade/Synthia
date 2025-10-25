@@ -2,7 +2,7 @@ import { IProjectFrontDocument, IProjectMetadataDocument, IProjectStudioDocument
 import { ProjectMetadata, ProjectFront, ProjectStudio } from "@shared/types";
 import mongoose, { ClientSession } from "mongoose";
 
-import { MONGO_STRING } from "@src/env";
+import { AUTH0_DOMAIN, MONGO_STRING } from "@src/env";
 import { UserModel } from "@src/models/User.model";
 import { CommentModel } from "@src/models/Comment.model";
 import { LikeModel } from "@src/models/Like.model";

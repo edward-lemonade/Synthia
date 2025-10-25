@@ -28,7 +28,14 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-    
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-1  # or ${{ secrets.AWS_REGION }}
+
     - name: Install dependencies in shared
       working-directory: ./shared
       run: npm ci
@@ -47,48 +54,46 @@ jobs:
     
     - name: Install wait-on
       run: npm install -g wait-on
-    
-    - name: Start backend server
-      working-directory: ./backend
-      run: npm start &
+
+    - name: Install start-server-and-test
+      run: npm install -g start-server-and-test
+
+    - name: Start backend + frontend and run Playwright
+      run: |
+        npm start --prefix backend > backend.log 2>&1 &
+        backend_pid=$!
+        echo "Backend started (PID $backend_pid)"
+
+        npx wait-on http://localhost:5000/health
+        echo "Backend ready!"
+
+        npm start --prefix frontend > frontend.log 2>&1 &
+        frontend_pid=$!
+        echo "Frontend started (PID $frontend_pid)"
+
+        npx wait-on http://localhost:4200
+        echo "Frontend ready!"
+        
+        cd frontend
+        npx playwright test
+
+        kill $backend_pid
+        kill $frontend_pid
       env:
         NODE_ENV: test
         PORT: 5000
-        PRODUCTION: true
+        REDIS_URL: redis://localhost:6379
+        API_URL: http://localhost:5000
+        FRONTEND_URL: http://localhost:4200
         MONGO_STRING: ${{ secrets.BACKEND_MONGO_STRING }}
         AUTH0_DOMAIN: ${{ secrets.BACKEND_AUTH0_DOMAIN }}
         AUTH0_CLIENT: ${{ secrets.BACKEND_AUTH0_CLIENT }}
         AUTH0_SECRET: ${{ secrets.BACKEND_AUTH0_SECRET }}
         AUTH0_AUDIENCE: ${{ secrets.BACKEND_AUTH0_AUDIENCE }}
-        REDIS_URL: redis://localhost:6379
-        FRONTEND_URL: http://localhost:4200
-    
-    - name: Install start-server-and-test
-      working-directory: ./frontend
-      run: npm install --save-dev start-server-and-test
-
-    - name: Start frontend server
-      working-directory: ./frontend
-      run: npx start-server-and-test 'npm start' http://localhost:4200 'npx playwright test'
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
-        PORT: 4200
-        PRODUCTION: true
-        API_URL: http://localhost:5000
-        AUTH0_DOMAIN: ${{ secrets.FRONTEND_AUTH0_DOMAIN }}
-        AUTH0_CLIENT: ${{ secrets.FRONTEND_AUTH0_CLIENT }}
-        AUTH0_SECRET: ${{ secrets.FRONTEND_AUTH0_SECRET }}
         AUTH0_API_AUD: ${{ secrets.FRONTEND_AUTH0_API_AUD }}
         TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
         TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-      
-    #- name: Wait for servers to be ready
-    #  run: npx wait-on http://localhost:4200 --timeout 120000 --interval 2000 --verbose
-    
-    #- name: Run Playwright tests
-    #  working-directory: ./frontend
-    #  run: npx playwright test
-    
+
     - uses: actions/upload-artifact@v4
       if: always()
       with:

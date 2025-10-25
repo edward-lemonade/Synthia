@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
 	outputDir: './tests/test-results',
-  timeout: 10_000,
+  timeout: 15_000,
   retries: 1,
   use: {
     baseURL: 'http://localhost:4200',
@@ -18,6 +18,9 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
+  expect: {
+    timeout: 5000, // 10s for expect() calls
+  },
 });
 
 

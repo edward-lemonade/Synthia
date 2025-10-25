@@ -130,7 +130,7 @@ export class ApiService {
 		},
 		needAuth: boolean = false
 	): Promise<AxiosResponse<ResType>> {
-		//console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data)
+		console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data)
 
 		if (needAuth) {
 			await this.auth.waitForAuthCheck();
@@ -141,7 +141,7 @@ export class ApiService {
 		}
 		headers = headers ?? {}
 
-		//console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data, { headers: {...headers, ...params.headers}, signal: params.signal });
+		console.log(`${environment.API_URL}/api${apiEndpoint}`, params.data, { headers: {...headers, ...params.headers}, signal: params.signal });
 	
 		let res;
 		if (method === 'post' || method === 'put' || method === 'patch') {
